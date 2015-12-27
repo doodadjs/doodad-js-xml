@@ -1,5 +1,5 @@
 //! REPLACE_BY("// Copyright 2015 Claude Petit, licensed under Apache License version 2.0\n")
-// dOOdad - Class library for Javascript (BETA) with some extras (ALPHA)
+// dOOdad - Object-oriented programming framework with some extras
 // File: Tools_Xml_Parsers_Sax_Loader.js - Loader for SAX parser (client-side)
 // Project home: https://sourceforge.net/projects/doodad-js/
 // Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
@@ -26,89 +26,103 @@
 (function() {
 	var global = this;
 	
-	global.DD_MODULES = (global.DD_MODULES || {});
-	global.DD_MODULES['Doodad.Tools.Xml.Parsers.Sax.Loader'] = {
-		type: null,
-		version: '0b',
-		namespaces: null,
-		dependencies: ['Doodad.Types', 'Doodad.Tools', 'Doodad.Tools.Xml'],
-		
-		create: function create(root, /*optional*/_options) {
-			"use strict";
-
-			//===================================
-			// Get namespaces
-			//===================================
-				
-			var doodad = root.Doodad,
-				types = doodad.Types,
-				tools = doodad.Tools,
-				xml = tools.Xml,
-				xmlParsers = xml.Parsers,
-				sax = xmlParsers.Sax,
-				saxLoader = sax.Loader;
-				
-			//===================================
-			// Internal
-			//===================================
-				
-			// <FUTURE> Thread context
-			var __Internal__ = {
-				xmlEntities: null,
-			};
-				
-			//===================================
-			// SAX Parser
-			//===================================
-
-			// NOTE: SAX is optional
-			saxLoader.getSAX = root.DD_DOC(
-				//! REPLACE_BY("null")
-				{
-						author: "Claude Petit",
-						revision: 0,
-						params: null,
-						returns: 'object',
-						description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
-				}
-				//! END_REPLACE()
-				, function getSAX() {
-					return global.sax;
-				});
+	var exports = {};
+	if (global.process) {
+		module.exports = exports;
+	};
+	
+	exports.add = function add(DD_MODULES) {
+		DD_MODULES = (DD_MODULES || {});
+		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax.Loader'] = {
+			type: null,
+			version: '0b',
+			namespaces: null,
+			dependencies: ['Doodad.Types', 'Doodad.Tools', 'Doodad.Tools.Xml'],
 			
-			
-			saxLoader.applyPatch = root.DD_DOC(
-				//! REPLACE_BY("null")
-				{
-						author: "Claude Petit",
-						revision: 0,
-						params: null,
-						returns: 'undefined',
-						description: "Applies a patch for client-side SAX-JS.",
-				}
-				//! END_REPLACE()
-				, function applyPatch() {
-					// <FIX> sax-js v1.1.4: "Stream.prototype.on" is undefined (client-side)
-					var sax = saxLoader.getSAX();
-					if (sax) {
-						var SAXStream = sax.SAXStream,
-							StreamProto = types.getPrototypeOf(SAXStream.prototype);
-						if (StreamProto && !StreamProto.on) {
-							StreamProto.on = function(ev, handler) {
-								// ...
+			create: function create(root, /*optional*/_options) {
+				"use strict";
+
+				//===================================
+				// Get namespaces
+				//===================================
+					
+				var doodad = root.Doodad,
+					types = doodad.Types,
+					tools = doodad.Tools,
+					xml = tools.Xml,
+					xmlParsers = xml.Parsers,
+					sax = xmlParsers.Sax,
+					saxLoader = sax.Loader;
+					
+				//===================================
+				// Internal
+				//===================================
+					
+				// <FUTURE> Thread context
+				var __Internal__ = {
+					xmlEntities: null,
+				};
+					
+				//===================================
+				// SAX Parser
+				//===================================
+
+				// NOTE: SAX is optional
+				saxLoader.getSAX = root.DD_DOC(
+					//! REPLACE_BY("null")
+					{
+							author: "Claude Petit",
+							revision: 0,
+							params: null,
+							returns: 'object',
+							description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
+					}
+					//! END_REPLACE()
+					, function getSAX() {
+						return global.sax;
+					});
+				
+				
+				saxLoader.applyPatch = root.DD_DOC(
+					//! REPLACE_BY("null")
+					{
+							author: "Claude Petit",
+							revision: 0,
+							params: null,
+							returns: 'undefined',
+							description: "Applies a patch for client-side SAX-JS.",
+					}
+					//! END_REPLACE()
+					, function applyPatch() {
+						// <FIX> sax-js v1.1.4: "Stream.prototype.on" is undefined (client-side)
+						var sax = saxLoader.getSAX();
+						if (sax) {
+							var SAXStream = sax.SAXStream,
+								StreamProto = types.getPrototypeOf(SAXStream.prototype);
+							if (StreamProto && !StreamProto.on) {
+								StreamProto.on = function(ev, handler) {
+									// ...
+								};
 							};
 						};
-					};
-				});
-			
-			
-			//===================================
-			// Init
-			//===================================
-			return function init(/*optional*/options) {
-				// NOTE: You will need to call it manually if SAX-JS is not loaded at this time
-				saxLoader.applyPatch();
-			};
-		},
+					});
+				
+				
+				//===================================
+				// Init
+				//===================================
+				return function init(/*optional*/options) {
+					// NOTE: You will need to call it manually if SAX-JS is not loaded at this time
+					saxLoader.applyPatch();
+				};
+			},
+		};
+		
+		return DD_MODULES;
+	};
+	
+	if (!global.process) {
+		// <PRB> export/import are not yet supported in browsers
+		global.DD_MODULES = exports.add(global.DD_MODULES);
 	};
 })();
