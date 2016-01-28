@@ -1,5 +1,5 @@
-//! REPLACE_BY("// Copyright 2015 Claude Petit, licensed under Apache License version 2.0\n")
-// dOOdad - Object-oriented programming framework with some extras
+//! REPLACE_BY("// Copyright 2016 Claude Petit, licensed under Apache License version 2.0\n")
+// dOOdad - Object-oriented programming framework
 // File: Tools_Xml_Parsers_Sax.js - SAX XML parser
 // Project home: https://sourceforge.net/projects/doodad-js/
 // Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
@@ -8,7 +8,7 @@
 // Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !
 // License: Apache V2
 //
-//	Copyright 2015 Claude Petit
+//	Copyright 2016 Claude Petit
 //
 //	Licensed under the Apache License, Version 2.0 (the "License");
 //	you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 	var global = this;
 	
 	var exports = {};
-	if (global.process) {
+	if (typeof process === 'object') {
 		module.exports = exports;
 	};
 	
@@ -35,9 +35,18 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax'] = {
 			type: null,
-			version: '0b',
+			version: '1r',
 			namespaces: null,
-			dependencies: ['Doodad.Types', 'Doodad.Tools', 'Doodad.IO', 'Doodad.Tools.Xml', 'Doodad.Tools.Xml.Parsers.Sax.Loader'],
+			dependencies: [
+				'Doodad.Types', 
+				'Doodad.Tools', 
+				{
+					name: 'Doodad.IO',
+					version: '0.2',
+				}, 
+				'Doodad.Tools.Xml', 
+				'Doodad.Tools.Xml.Parsers.Sax.Loader',
+			],
 			
 			create: function create(root, /*optional*/_options) {
 				"use strict";
@@ -61,14 +70,7 @@
 				// Internal
 				//===================================
 				
-				var __Internal__ = {
-					reduceEntities: function(entities) {
-						return tools.reduce(entities, function(newEntities, value, name) {
-							newEntities[name.replace(/[&;]/g, '')] = value.characters;
-							return newEntities;
-						}, {});
-					},
-				};
+				//var __Internal__ = {};
 				
 				//===================================
 				// SAX Parser
@@ -90,10 +92,10 @@
 						
 						var entities = types.get(options, 'entities', null);
 						if (entities) {
-							parser.ENTITIES = __Internal__.reduceEntities(entities);
+							parser.ENTITIES = entities;
 						} else {
 							// NOTE: We reduce default entities only once when they are loaded (see 'init' below).
-							parser.ENTITIES = __Internal__.reduceEntities(xml.getEntities());
+							parser.ENTITIES = xml.getEntities();
 						};
 						
 						var aborted = false,
@@ -358,16 +360,16 @@
 						if (types.isString(stream)) {
 							// For client-side which do not support streams
 							var str = stream;
-							stream = null; // for "onerror"
+							stream = null; // for "onerror" and "onend"
 							parser.write(str).close();
 						} else {
 							stream.onReady.attach(this, function(ev) {
 								try {
-									var data = ev.data;
-									if (data.raw === io.EOF) {
+									var value = ev.data.valueOf();
+									if (value === io.EOF) {
 										parser.close();
 									} else {
-										parser.write(data.text);
+										parser.write(value);
 									};
 									ev.preventDefault();
 								} catch(ex) {
@@ -396,8 +398,8 @@
 		return DD_MODULES;
 	};
 	
-	if (!global.process) {
+	if (typeof process !== 'object') {
 		// <PRB> export/import are not yet supported in browsers
 		global.DD_MODULES = exports.add(global.DD_MODULES);
 	};
-})();
+}).call((typeof global !== 'undefined') ? global : ((typeof window !== 'undefined') ? window : this));
