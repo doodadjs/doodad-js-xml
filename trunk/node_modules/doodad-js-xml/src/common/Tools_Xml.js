@@ -1,5 +1,5 @@
-//! REPLACE_BY("// Copyright 2015 Claude Petit, licensed under Apache License version 2.0\n")
-// dOOdad - Object-oriented programming framework with some extras
+//! REPLACE_BY("// Copyright 2016 Claude Petit, licensed under Apache License version 2.0\n")
+// dOOdad - Object-oriented programming framework
 // File: Tools_Xml.js - XML tools
 // Project home: https://sourceforge.net/projects/doodad-js/
 // Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
@@ -8,7 +8,7 @@
 // Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !
 // License: Apache V2
 //
-//	Copyright 2015 Claude Petit
+//	Copyright 2016 Claude Petit
 //
 //	Licensed under the Apache License, Version 2.0 (the "License");
 //	you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 	var global = this;
 	
 	var exports = {};
-	if (global.process) {
+	if (typeof process === 'object') {
 		module.exports = exports;
 	};
 	
@@ -35,7 +35,7 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml'] = {
 			type: null,
-			version: '0b',
+			version: '1.1r',
 			namespaces: ['Parsers'],
 			dependencies: ['Doodad.Types', 'Doodad.Tools'],
 			
@@ -50,8 +50,6 @@
 					types = doodad.Types,
 					tools = doodad.Tools,
 					namespaces = doodad.Namespaces,
-					files = tools.Files,
-					config = tools.Config,
 					xml = tools.Xml,
 					xmlParsers = xml.Parsers;
 					
@@ -212,14 +210,8 @@
 				// XML Tools
 				//===================================
 
-				__Internal__.parseEntities = function parseEntities(err, data) {
-					if (!err) {
-						__Internal__.xmlEntities = types.extend(__Internal__.xmlEntities || {}, data);
-					};
-				};
-				
-				xml.loadXmlEntities = function loadXmlEntities(path, /*optional*/callback) {
-					return config.loadFile(path, {async: true, watch: true, encoding: 'utf8'}, [__Internal__.parseEntities, callback]);
+				xml.addXmlEntities = function addXmlEntities(entites) {
+					__Internal__.xmlEntities = types.extend(__Internal__.xmlEntities || {}, entites);
 				};
 				
 				xml.registerParser = function registerParser(parser) {
@@ -243,12 +235,11 @@
 					if (!parser || !parser.isAvailable()) {
 						throw new types.ParseError('The XML parser is not available.');
 					};
-					if (!__Internal__.xmlEntities) {
-						throw new types.ParseError('Entities (file "entities.json") failed to load.');
+					if (__Internal__.xmlEntities && !types.hasKey(options, 'entities')) {
+						options = types.extend({
+							entities: __Internal__.xmlEntities,
+						}, options);
 					};
-					options = types.extend({
-						entities: __Internal__.xmlEntities,
-					}, options);
 					return parser.parse(stream, options);
 				};
 				
@@ -269,8 +260,8 @@
 		return DD_MODULES;
 	};
 	
-	if (!global.process) {
+	if (typeof process !== 'object') {
 		// <PRB> export/import are not yet supported in browsers
 		global.DD_MODULES = exports.add(global.DD_MODULES);
 	};
-})();
+}).call((typeof global !== 'undefined') ? global : ((typeof window !== 'undefined') ? window : this));
