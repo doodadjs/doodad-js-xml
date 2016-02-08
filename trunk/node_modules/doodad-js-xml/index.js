@@ -34,7 +34,7 @@
 	exports.add = function add(DD_MODULES) {
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES[MODULE_NAME] = {
-			type: null,
+			type: 'Package',
 			version: '0b',
 			namespaces: null,
 			dependencies: ['Doodad.Modules'],
@@ -47,20 +47,18 @@
 					modules = doodad.Modules;
 				
 				var fromSource = root.getOptions().settings.fromSource,
-					promise;
+					files = [];
 
-				promise = modules.load(MODULE_NAME, (fromSource ? (global.process ? 'src/common/Tools_Xml.js' : 'Tools_Xml.js') : 'Tools_Xml.min.js'), _options);
-				
+				files.push(fromSource ? (global.process ? 'src/common/Tools_Xml.js' : 'Tools_Xml.js') : 'Tools_Xml.min.js');
+					
 				if (!_options || !_options.noSAX) {
-					promise = promise.then(function() {
-							return modules.load(MODULE_NAME, (fromSource ? (global.process ? 'src/common/Tools_Xml_Parsers_Sax.js' : 'Tools_Xml_Parsers_Sax.js') : 'Tools_Xml_Parsers_Sax.min.js'), _options);
-						})
-						.then(function() {
-							return modules.load(MODULE_NAME, (fromSource ? (global.process ? 'src/server/Tools_Xml_Parsers_Sax_Loader.js' : 'Tools_Xml_Parsers_Sax_Loader.js') : 'Tools_Xml_Parsers_Sax_Loader.min.js'), _options);
-						});
+					files.push(
+						(fromSource ? (global.process ? 'src/common/Tools_Xml_Parsers_Sax.js' : 'Tools_Xml_Parsers_Sax.js') : 'Tools_Xml_Parsers_Sax.min.js'),
+						(fromSource ? (global.process ? 'src/server/Tools_Xml_Parsers_Sax_Loader.js' : 'Tools_Xml_Parsers_Sax_Loader.js') : 'Tools_Xml_Parsers_Sax_Loader.min.js')
+					);
 				};
 				
-				return promise;
+				return modules.load(MODULE_NAME, files, _options);
 			},
 		};
 		return DD_MODULES;
