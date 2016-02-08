@@ -215,7 +215,7 @@
 				};
 				
 				xml.registerParser = function registerParser(parser) {
-					__Internal__.parsers = tools.unique(__Internal__.parsers, [parser]);
+					__Internal__.parsers = types.unique(__Internal__.parsers, [parser]);
 				};
 				
 				xml.getEntities = function getEntities() {
