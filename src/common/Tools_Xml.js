@@ -223,6 +223,7 @@
 				};
 				
 				xml.parse = function parse(stream, /*optional*/options, /*optional*/parser) {
+					// TODO: MemoryStream for Strings
 					if (parser) {
 						if ((__Internal__.parsers.indexOf(parser) < 0)) {
 							throw new types.ParseError('Invalid XML parser.');
