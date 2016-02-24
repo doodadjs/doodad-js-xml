@@ -77,6 +77,7 @@
 				//===================================
 
 				sax.parse = function(stream, /*optional*/options) {
+					// TODO: MemoryStream to replace strings
 					root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
 					
 					var sax = saxLoader.getSAX(),
