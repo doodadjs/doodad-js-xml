@@ -41,7 +41,7 @@ Now we can parse an XML document :
         });
     };
 
-    root.Doodad.Namespaces.loadNamespaces( startup, false, null, modules )
+    root.Doodad.Namespaces.loadNamespaces( modules, startup )
         ['catch'](function(err) {
             console.error(err);
         });

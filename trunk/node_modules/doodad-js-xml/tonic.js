@@ -17,7 +17,7 @@ function startup() {
     });
 };
 
-root.Doodad.Namespaces.loadNamespaces( /*callback*/ startup, /*donThrow*/ false, /*options*/ null, modules )
+root.Doodad.Namespaces.loadNamespaces( modules, startup )
     ['catch'](function(err) {
         console.error(err);
     });

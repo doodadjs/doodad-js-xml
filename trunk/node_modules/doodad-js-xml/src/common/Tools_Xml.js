@@ -35,7 +35,7 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml'] = {
 			type: null,
-			version: '1.1r',
+			version: '1.2.0r',
 			namespaces: ['Parsers'],
 			dependencies: ['Doodad.Types', 'Doodad.Tools'],
 			

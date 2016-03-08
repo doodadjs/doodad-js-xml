@@ -28,9 +28,9 @@ module.exports = {
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['doodad-js-xml'] = {
 			type: null,
-			version: '0a',
+			version: '1.2.0r',
 			namespaces: null,
-			dependencies: [],
+			dependencies: null,
 			exports: module.exports,
 			
 			create: function create(root, /*optional*/_options) {
@@ -40,39 +40,21 @@ module.exports = {
 				} catch(ex) {
 				};
 				
-				var fromSource = root.getOptions().settings.fromSource,
-					modules = {};
+				var modules = {};
 				
-				if (fromSource) {
-					require("./dist/doodad-js-xml/Tools_Xml.js").add(modules);
-					if (!_options || !_options.noSAX) {
-						try {
-							require('sax');
-						} catch(ex) {
-						};
-						require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax.js").add(modules);
-						require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax_Loader.js").add(modules);
+				require("./dist/doodad-js-xml/Tools_Xml.js").add(modules);
+				
+				if (!_options || !_options.noSAX) {
+					try {
+						require('sax');
+					} catch(ex) {
 					};
-				} else {
-					// TODO: Find a way to prevent browserify to bundle both versions.
-					//require("./dist/doodad-js-xml/Tools_Xml.min.js").add(modules);
 					
-					require("./dist/doodad-js-xml/Tools_Xml.js").add(modules);
-					if (!_options || !_options.noSAX) {
-						try {
-							require('sax');
-						} catch(ex) {
-						};
-						// TODO: Find a way to prevent browserify to bundle both versions.
-						//require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax.min.js").add(modules);
-						//require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax_Loader.min.js").add(modules);
-						
-						require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax.js").add(modules);
-						require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax_Loader.js").add(modules);
-					};
+					require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax.js").add(modules);
+					require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax_Loader.js").add(modules);
 				};
 				
-				return root.Doodad.Namespaces.loadNamespaces(null, false, config, modules);
+				return root.Doodad.Namespaces.loadNamespaces(modules, null, config, false);
 			},
 		};
 		return DD_MODULES;

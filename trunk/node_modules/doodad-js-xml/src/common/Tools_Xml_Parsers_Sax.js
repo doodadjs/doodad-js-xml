@@ -35,14 +35,14 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax'] = {
 			type: null,
-			version: '1r',
+			version: '1.2.0r',
 			namespaces: null,
 			dependencies: [
 				'Doodad.Types', 
 				'Doodad.Tools', 
 				{
 					name: 'Doodad.IO',
-					version: '0.2',
+					version: '0.4.0',
 				}, 
 				'Doodad.Tools.Xml', 
 				'Doodad.Tools.Xml.Parsers.Sax.Loader',
@@ -85,7 +85,7 @@
 						callback = types.get(options, 'callback', false),
 						discardEntities = types.get(options, 'discardEntities', false);
 
-					var Promise = tools.getPromise();
+					var Promise = types.getPromise();
 					return new Promise(function(resolve, reject) {
 						var doc = (nodoc ? null : new xml.Document()),
 							currentNode = doc,
