@@ -1,5 +1,5 @@
 // dOOdad - Object-oriented programming framework
-// File: main.js - Module startup file for 'browserify'.
+// File: browserify.js - Module startup file for 'browserify'.
 // Project home: https://sourceforge.net/projects/doodad-js/
 // Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
 // Author: Claude Petit, Quebec city
@@ -28,7 +28,7 @@ module.exports = {
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['doodad-js-xml'] = {
 			type: null,
-			version: '1.2.0r',
+			version: '1.2.2r',
 			namespaces: null,
 			dependencies: null,
 			exports: module.exports,
@@ -42,7 +42,7 @@ module.exports = {
 				
 				var modules = {};
 				
-				require("./dist/doodad-js-xml/Tools_Xml.js").add(modules);
+				require("./dist/doodad-js-xml/Tools_Xml.min.js").add(modules);
 				
 				if (!_options || !_options.noSAX) {
 					try {
@@ -50,8 +50,8 @@ module.exports = {
 					} catch(ex) {
 					};
 					
-					require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax.js").add(modules);
-					require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax_Loader.js").add(modules);
+					require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax.min.js").add(modules);
+					require("./dist/doodad-js-xml/Tools_Xml_Parsers_Sax_Loader.min.js").add(modules);
 				};
 				
 				return root.Doodad.Namespaces.loadNamespaces(modules, null, config, false);
