@@ -35,14 +35,14 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax'] = {
 			type: null,
-			version: '1.2.0r',
+			version: '1.2.2r',
 			namespaces: null,
 			dependencies: [
 				'Doodad.Types', 
 				'Doodad.Tools', 
 				{
 					name: 'Doodad.IO',
-					version: '0.4.0',
+					version: '1.0.0',
 				}, 
 				'Doodad.Tools.Xml', 
 				'Doodad.Tools.Xml.Parsers.Sax.Loader',
@@ -366,11 +366,10 @@
 						} else {
 							stream.onReady.attach(this, function(ev) {
 								try {
-									var value = ev.data.valueOf();
-									if (value === io.EOF) {
+									if (ev.data.raw === io.EOF) {
 										parser.close();
 									} else {
-										parser.write(value);
+										parser.write(ev.data.valueOf());
 									};
 									ev.preventDefault();
 								} catch(ex) {

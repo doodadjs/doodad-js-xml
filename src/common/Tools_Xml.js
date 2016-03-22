@@ -35,7 +35,7 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml'] = {
 			type: null,
-			version: '1.2.0r',
+			version: '1.2.2r',
 			namespaces: ['Parsers'],
 			dependencies: ['Doodad.Types', 'Doodad.Tools'],
 			
@@ -163,7 +163,7 @@
 									} else {
 										throw new types.ParseError("Invalid child node type.");
 									};
-								} else if ([xml.NodeTypes.Element, xml.NodeTypes.Text, xml.NodeTypes.CDATASection, xml.NodeTypes.Comment].indexOf(nodeType) >= 0) {
+								} else if (tools.indexOf([xml.NodeTypes.Element, xml.NodeTypes.Text, xml.NodeTypes.CDATASection, xml.NodeTypes.Comment], nodeType) >= 0) {
 									parentNode.childNodes.push(this);
 								} else {
 									throw new types.ParseError("Invalid child node type.");
@@ -225,7 +225,7 @@
 				xml.parse = function parse(stream, /*optional*/options, /*optional*/parser) {
 					// TODO: MemoryStream for Strings
 					if (parser) {
-						if ((__Internal__.parsers.indexOf(parser) < 0)) {
+						if ((tools.indexOf(__Internal__.parsers, parser) < 0)) {
 							throw new types.ParseError('Invalid XML parser.');
 						};
 					} else {
