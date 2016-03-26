@@ -35,9 +35,9 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml'] = {
 			type: null,
-			version: '1.2.2r',
+			//! INSERT("version:'" + VERSION('doodad-js-xml') + "',")
 			namespaces: ['Parsers'],
-			dependencies: ['Doodad.Types', 'Doodad.Tools'],
+			dependencies: null,
 			
 			create: function create(root, /*optional*/_options) {
 				"use strict";

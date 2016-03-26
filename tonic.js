@@ -2,7 +2,7 @@
 
 require('sax'); // Force load
 
-const root = require('doodad-js').createRoot( /*bootstrapModules*/ null, /*options*/ { node_env: 'development' } );
+const root = require('doodad-js').createRoot();
 
 const modules = {};
 require('doodad-js-io').add(modules);

@@ -1,5 +1,5 @@
 // dOOdad - Object-oriented programming framework
-// File: index.js - XML module startup file
+// File: index.js - Will get replaced on build.
 // Project home: https://sourceforge.net/projects/doodad-js/
 // Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
 // Author: Claude Petit, Quebec city
@@ -21,51 +21,6 @@
 //	See the License for the specific language governing permissions and
 //	limitations under the License.
 
-(function() {
-	var global = this;
+"use strict";
 
-	var exports = {};
-	if (typeof process === 'object') {
-		module.exports = exports;
-	};
-	
-	var MODULE_NAME = 'doodad-js-xml';
-	
-	exports.add = function add(DD_MODULES) {
-		DD_MODULES = (DD_MODULES || {});
-		DD_MODULES[MODULE_NAME] = {
-			type: 'Package',
-			version: '1.2.2r',
-			namespaces: null,
-			dependencies: ['Doodad.Modules'],
-			exports: exports,
-			
-			create: function create(root, /*optional*/_options) {
-				"use strict";
-				
-				var doodad = root.Doodad,
-					modules = doodad.Modules;
-				
-				var fromSource = root.getOptions().settings.fromSource,
-					files = [];
-
-				files.push(fromSource ? (global.process ? 'src/common/Tools_Xml.js' : 'Tools_Xml.js') : 'Tools_Xml.min.js');
-					
-				if (!_options || !_options.noSAX) {
-					files.push(
-						(fromSource ? (global.process ? 'src/common/Tools_Xml_Parsers_Sax.js' : 'Tools_Xml_Parsers_Sax.js') : 'Tools_Xml_Parsers_Sax.min.js'),
-						(fromSource ? (global.process ? 'src/server/Tools_Xml_Parsers_Sax_Loader.js' : 'Tools_Xml_Parsers_Sax_Loader.js') : 'Tools_Xml_Parsers_Sax_Loader.min.js')
-					);
-				};
-				
-				return modules.load(MODULE_NAME, files, _options);
-			},
-		};
-		return DD_MODULES;
-	};
-	
-	if (typeof process !== 'object') {
-		// <PRB> export/import are not yet supported in browsers
-		global.DD_MODULES = exports.add(global.DD_MODULES);
-	};
-}).call((typeof global !== 'undefined') ? global : ((typeof window !== 'undefined') ? window : this));
+module.exports = require('./src/common/index.js');

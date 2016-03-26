@@ -1,6 +1,5 @@
-//! REPLACE_BY("// Copyright 2016 Claude Petit, licensed under Apache License version 2.0\n")
 // dOOdad - Object-oriented programming framework
-// File: Tools_Xml_Parsers_Sax_Loader.js - Loader for SAX parser (server-side with NodeJS)
+// File: index.js - XML module startup file
 // Project home: https://sourceforge.net/projects/doodad-js/
 // Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
 // Author: Claude Petit, Quebec city
@@ -21,82 +20,58 @@
 //	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //	See the License for the specific language governing permissions and
 //	limitations under the License.
-//! END_REPLACE()
 
 (function() {
 	var global = this;
-	
+
 	var exports = {};
 	if (typeof process === 'object') {
 		module.exports = exports;
 	};
 	
+	var MODULE_NAME = 'doodad-js-xml';
+	
 	exports.add = function add(DD_MODULES) {
 		DD_MODULES = (DD_MODULES || {});
-		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax.Loader'] = {
-			type: null,
+		DD_MODULES[MODULE_NAME] = {
+			type: 'Package',
 			//! INSERT("version:'" + VERSION('doodad-js-xml') + "',")
 			namespaces: null,
 			dependencies: [
-				'Doodad.Tools.Xml',
+				{
+					name: 'doodad-js',
+					//! INSERT("version:'" + VERSION('doodad-js') + "',")
+				}, 
+				{
+					name: 'doodad-js-io',
+					//! INSERT("version:'" + VERSION('doodad-js-io') + "',")
+				}, 
 			],
 			
 			create: function create(root, /*optional*/_options) {
 				"use strict";
+				
+				var doodad = root.Doodad,
+					modules = doodad.Modules;
+				
+				var fromSource = root.getOptions().settings.fromSource,
+					files = [];
 
-				//===================================
-				// Get namespaces
-				//===================================
+				files.push(fromSource ? (global.process ? 'src/common/Tools_Xml.js' : 'Tools_Xml.js') : 'Tools_Xml.min.js');
 					
-				const doodad = root.Doodad,
-					types = doodad.Types,
-					tools = doodad.Tools,
-					xml = tools.Xml,
-					xmlParsers = xml.Parsers,
-					sax = xmlParsers.Sax,
-					saxLoader = sax.Loader;
-					
-				//===================================
-				// Internal
-				//===================================
-					
-				// <FUTURE> Thread context
-				const __Internal__ = {
-					xmlEntities: null,
+				if (!_options || !_options.noSAX) {
+					files.push(
+						(fromSource ? (global.process ? 'src/common/Tools_Xml_Parsers_Sax.js' : 'Tools_Xml_Parsers_Sax.js') : 'Tools_Xml_Parsers_Sax.min.js'),
+						(fromSource ? (global.process ? 'src/server/Tools_Xml_Parsers_Sax_Loader.js' : 'Tools_Xml_Parsers_Sax_Loader.js') : 'Tools_Xml_Parsers_Sax_Loader.min.js')
+					);
 				};
-					
-				//===================================
-				// SAX Parser
-				//===================================
-
-				// NOTE: SAX is optional
-				saxLoader.getSAX = root.DD_DOC(
-					//! REPLACE_BY("null")
-					{
-							author: "Claude Petit",
-							revision: 0,
-							params: null,
-							returns: 'object',
-							description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
-					}
-					//! END_REPLACE()
-					, function getSAX() {
-						try {
-							return require('sax');
-						} catch(ex) {
-							return undefined;
-						};
+				
+				return modules.load(MODULE_NAME, files, _options)
+					.then(function() {
+						// Returns nothing
 					});
-				
-				
-				//===================================
-				// Init
-				//===================================
-				//return function init(/*optional*/options) {
-				//};
 			},
 		};
-		
 		return DD_MODULES;
 	};
 	

@@ -1,6 +1,7 @@
 {
   "name": "doodad-js-xml",
-  "version": "1.2.2",
+  "version": "1.3.0",
+  "stage": "r",
   "description": "XML DOM Parser",
   "homepage": "https://sourceforge.net/projects/doodad-js/",
   "main": "index.js",
