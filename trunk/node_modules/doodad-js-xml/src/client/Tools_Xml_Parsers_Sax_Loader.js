@@ -35,9 +35,11 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax.Loader'] = {
 			type: null,
-			version: '1.2.2r',
+			//! INSERT("version:'" + VERSION('doodad-js-xml') + "',")
 			namespaces: null,
-			dependencies: ['Doodad.Types', 'Doodad.Tools', 'Doodad.Tools.Xml'],
+			dependencies: [
+				'Doodad.Tools.Xml',
+			],
 			
 			create: function create(root, /*optional*/_options) {
 				"use strict";
