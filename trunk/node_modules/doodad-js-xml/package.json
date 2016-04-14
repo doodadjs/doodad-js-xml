@@ -1,6 +1,6 @@
 {
   "name": "doodad-js-xml",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "stage": "r",
   "description": "XML DOM Parser",
   "files": [
