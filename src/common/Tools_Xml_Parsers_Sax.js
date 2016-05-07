@@ -81,9 +81,14 @@
 					
 					var sax = saxLoader.getSAX(),
 						nodoc = types.get(options, 'nodoc', false),
-						callback = types.get(options, 'callback', false),
+						callback = types.get(options, 'callback'),
 						discardEntities = types.get(options, 'discardEntities', false);
 
+					if (callback) {
+						var cbObj = types.get(options, 'callbackObj');
+						callback = new doodad.Callback(cbObj, callback);
+					};
+					
 					var Promise = types.getPromise();
 					return new Promise(function(resolve, reject) {
 						var doc = (nodoc ? null : new xml.Document()),
@@ -104,9 +109,11 @@
 						
 						if (!nodoc && !discardEntities) {
 							tools.forEach(parser.ENTITIES, function(value, name) {
-								var node = new xml.Node(doc, xml.NodeTypes.Entity, name, null, null, value);
+								var node = new xml.Entity(name, value);
 								if (nodoc) {
 									callback(node);
+								} else {
+									doc.getEntities().append(node);
 								};
 							});
 						};
@@ -130,11 +137,13 @@
 						parser.ontext = function(text) {
 							if (!aborted) {
 								try {
-									var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.Text, "", null, null, text); 
+									var node = new xml.Text(text);
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
 										callback(node);
+									} else {
+										currentNode.getChildren().append(node);
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -145,11 +154,13 @@
 						parser.onscript = function(script) {
 							if (!aborted) {
 								try {
-									var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.CDATASection, "", null, null, script); 
+									var node = new xml.CDATASection(script); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
 										callback(node);
+									} else {
+										currentNode.getChildren().append(node);
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -174,12 +185,13 @@
 										prefix = null;
 									};
 									
-									var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.Element, name, prefix, uri, ""); 
+									var node = new xml.Element(name, prefix, uri); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
-										callback(currentNode);
+										callback(node);
 									} else {
+										currentNode.getChildren().append(node);
 										currentNode = node;
 									};
 									// <PRB> 'onattribute' is called before 'onopentag' !
@@ -201,11 +213,13 @@
 										} else {
 											prefix = null;
 										};
-										var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.Attr, name, prefix, uri, attr.value);
-										node.fileLine = line + 1;
-										node.fileColumn = column + 1;
+										var node = new xml.Attribute(name, attr.value, prefix, uri); 
+										node.fileLine = parser.line + 1;
+										node.fileColumn = parser.column + 1;
 										if (nodoc) {
 											callback(node);
+										} else {
+											currentNode.getAttrs().append(node);
 										};
 									};
 									attributes.length = 0;
@@ -218,7 +232,7 @@
 						parser.onclosetag = function(tagName) {
 							if (!aborted) {
 								if (!nodoc) {
-									currentNode = currentNode.parentNode;
+									currentNode = currentNode.getParent();
 								};
 							};
 						};
@@ -233,11 +247,13 @@
 						parser.ondoctype = function(doctype) {
 							if (!aborted) {
 								try {
-									var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.DocumentType, "", null, null, doctype); 
+									var node = new xml.DocumentType(doctype); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
 										callback(node);
+									} else {
+										doc.setDocumentType(node);
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -248,11 +264,13 @@
 						parser.onprocessinginstruction = function(instr) {
 							if (!aborted) {
 								try {
-									var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.ProcessingInstruction, instr.name, null, null, instr.body); 
+									var node = new xml.ProcessingInstruction(instr.name, instr.body); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
 										callback(node);
+									} else {
+										doc.getInstructions().append(node);
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -263,11 +281,13 @@
 						parser.oncomment = function(comment) {
 							if (!aborted) {
 								try {
-									var node = new xml.Node((nodoc ? null : currentNode), xml.NodeTypes.Comment, "", null, null, comment); 
+									var node = new xml.Comment(comment); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
 										callback(node);
+									} else {
+										currentNode.getChildren().append(node);
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -279,9 +299,11 @@
 							if (!aborted) {
 								try {
 									if (!nodoc) {
-										currentNode = new xml.Node(currentNode, xml.NodeTypes.CDATASection, "", null, null, ""); 
-										currentNode.fileLine = parser.line + 1;
-										currentNode.fileColumn = parser.column + 1;
+										var node = new xml.CDATASection(""); 
+										node.fileLine = parser.line + 1;
+										node.fileColumn = parser.column + 1;
+										currentNode.getChildren().append(node);
+										currentNode = node;
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -293,12 +315,12 @@
 							if (!aborted) {
 								try {
 									if (nodoc) {
-										var node = new xml.Node(currentNode, xml.NodeTypes.CDATASection, "", null, null, cdata);
+										var node = new xml.CDATASection(cdata); 
 										node.fileLine = parser.line + 1;
 										node.fileColumn = parser.column + 1;
 										callback(node);
 									} else {
-										currentNode.nodeValue += cdata;
+										currentNode.__value += cdata;
 									};
 								} catch(ex) {
 									parser.onerror(ex);
@@ -309,7 +331,7 @@
 						parser.onclosecdata = function() {
 							if (!aborted) {
 								if (!nodoc) {
-									currentNode = currentNode.parentNode;
+									currentNode = currentNode.getParent();
 								};
 							};
 						};
