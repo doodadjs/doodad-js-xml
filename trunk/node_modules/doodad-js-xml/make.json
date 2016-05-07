@@ -27,14 +27,12 @@
 	"dependencies": [
 		{
 			"name": "doodad-js",
-			"optional": false,
 			"client": true,
 			"server": true,
 			"browserify": true
 		},
 		{
 			"name": "doodad-js-io",
-			"optional": false,
 			"client": true,
 			"server": true,
 			"browserify": true
