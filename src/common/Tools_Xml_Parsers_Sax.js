@@ -125,11 +125,10 @@
 								try {
 									if (stream) {
 										stream.stopListening();
-										stream.destroy();
 										stream = null;
 									};
 									parser.close();
-								} catch(ex) {
+								} catch(o) {
 								};
 							};
 						};
@@ -345,7 +344,6 @@
 									resolve(doc);
 									if (stream) {
 										stream.stopListening();
-										stream.destroy();
 										stream = null;
 									};
 								} catch(ex) {
@@ -357,7 +355,7 @@
 						parser.onopennamespace = function(namespace) {
 							if (!aborted) {
 								try {
-									if (types.hasKey(ns, namespace.prefix)) {
+									if (types.has(ns, namespace.prefix)) {
 										ns[namespace.prefix].push(namespace.uri);
 									} else {
 										ns[namespace.prefix] = [namespace.uri];
