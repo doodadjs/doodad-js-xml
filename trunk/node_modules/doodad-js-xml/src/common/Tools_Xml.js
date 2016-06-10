@@ -71,7 +71,7 @@
 					
 				var __Natives__ = {
 					windowArray: global.Array,
-					windowSymbolIterator: (types.isSymbol(global.Symbol.iterator) ? global.Symbol.iterator : undefined),
+					symbolIterator: (types.isSymbol(global.Symbol.iterator) ? global.Symbol.iterator : undefined),
 				};
 					
 				//===================================
@@ -79,11 +79,11 @@
 				//===================================
 				
 				__Internal__.iterProto = null;
-				if (types.hasSymbols() && types.hasGenerators() && __Natives__.windowSymbolIterator) {
+				if (types.hasSymbols() && types.hasGenerators() && __Natives__.symbolIterator) {
 					// NOTE: Must use "eval" to compile with old browsers
 					__Internal__.iterProto = types.evalStrict(
 						"({" +
-							"[ctx.natives.windowSymbolIterator]: function* iter() {" +
+							"[ctx.natives.symbolIterator]: function* iter() {" +
 								"this.__changed = false;" +
 								"for (let i = 0; i < this.__nodes.length; i++) {" +
 									"yield this.__nodes[i];" +
@@ -729,7 +729,7 @@
 					if (!parser || !parser.isAvailable()) {
 						throw new types.ParseError('The XML parser is not available.');
 					};
-					if (__Internal__.xmlEntities && !types.hasKey(options, 'entities')) {
+					if (__Internal__.xmlEntities && !types.has(options, 'entities')) {
 						options = types.extend({
 							entities: __Internal__.xmlEntities,
 						}, options);
