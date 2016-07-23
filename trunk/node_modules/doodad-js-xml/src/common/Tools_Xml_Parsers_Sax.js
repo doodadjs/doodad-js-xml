@@ -90,7 +90,7 @@
 					};
 					
 					var Promise = types.getPromise();
-					return new Promise(function(resolve, reject) {
+					return Promise.create(function saxParserPromise(resolve, reject) {
 						var doc = (nodoc ? null : new xml.Document()),
 							currentNode = doc,
 							parser = sax.parser(true, types.extend({}, options, {xmlns: true, position: true}));
