@@ -44,7 +44,7 @@
 			version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE() */,
 			namespaces: ['Parsers'],
 			
-			create: function create(root, /*optional*/_options) {
+			create: function create(root, /*optional*/_options, _shared) {
 				"use strict";
 
 				//===================================
@@ -69,17 +69,17 @@
 					parsers: [],
 				};
 					
-				var __Natives__ = {
+				types.complete(_shared.Natives, {
 					windowArray: global.Array,
 					symbolIterator: (types.isSymbol(global.Symbol.iterator) ? global.Symbol.iterator : undefined),
-				};
+				});
 					
 				//===================================
 				// XML Types
 				//===================================
 				
 				__Internal__.iterProto = null;
-				if (types.hasSymbols() && types.hasGenerators() && __Natives__.symbolIterator) {
+				if (types.hasSymbols() && types.hasGenerators() && _shared.Natives.symbolIterator) {
 					// NOTE: Must use "eval" to compile with old browsers
 					__Internal__.iterProto = types.evalStrict(
 						"({" +
@@ -93,10 +93,10 @@
 								"};" +
 							"}," +
 						"})"
-					, {natives: __Natives__});
+					, {natives: _shared.Natives});
 				};
 				
-				xml.NodesList = types.CustomEventTarget.$inherit(
+				xml.NodesList = types.INIT(types.CustomEventTarget.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'NodesList',
@@ -212,9 +212,9 @@
 						},
 						__Internal__.iterProto
 					)
-				);
+				));
 					
-				xml.Node = types.Type.$inherit(
+				xml.Node = types.INIT(types.Type.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Node',
@@ -230,9 +230,9 @@
 							return this.__parentNode;
 						},
 					}
-				);
+				));
 					
-				xml.Element = xml.Node.$inherit(
+				xml.Element = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Element',
@@ -291,9 +291,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.Attribute = xml.Node.$inherit(
+				xml.Attribute = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Attribute',
@@ -341,9 +341,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.Text = xml.Node.$inherit(
+				xml.Text = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Text',
@@ -366,9 +366,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.CDATASection = xml.Node.$inherit(
+				xml.CDATASection = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'CDATASection',
@@ -391,10 +391,10 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
 				/*
-				xml.EntityReference = xml.Node.$inherit(
+				xml.EntityReference = types.INIT(xml.Node.$inherit(
 					/ *typeProto* /
 					{
 						$TYPE_NAME: 'EntityReference',
@@ -425,10 +425,10 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 				*/
 					
-				xml.Entity = xml.Node.$inherit(
+				xml.Entity = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Entity',
@@ -459,9 +459,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.ProcessingInstruction = xml.Node.$inherit(
+				xml.ProcessingInstruction = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'ProcessingInstruction',
@@ -492,9 +492,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.Comment = xml.Node.$inherit(
+				xml.Comment = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Comment',
@@ -517,9 +517,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.DocumentType = xml.Node.$inherit(
+				xml.DocumentType = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'DocumentType',
@@ -542,9 +542,9 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
-				xml.DocumentFragment = xml.Node.$inherit(
+				xml.DocumentFragment = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'DocumentFragment',
@@ -567,10 +567,10 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 				
 				/*				
-				xml.Notation = xml.Node.$inherit(
+				xml.Notation = types.INIT(xml.Node.$inherit(
 					/ *typeProto* /
 					{
 						$TYPE_NAME: 'Notation',
@@ -601,10 +601,10 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 				*/
 					
-				xml.Document = xml.Node.$inherit(
+				xml.Document = types.INIT(xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Document',
@@ -697,7 +697,7 @@
 						//toString: function() {
 						//},
 					}
-				);
+				));
 					
 				//===================================
 				// XML Tools
