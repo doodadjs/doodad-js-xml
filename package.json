@@ -1,8 +1,8 @@
 {
   "name": "doodad-js-xml",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "stage": "r",
-  "description": "XML DOM Parser",
+  "description": "XML Parser",
   "files": [
 	"tonic.js"
   ],
@@ -12,6 +12,14 @@
   ],
   "optionalDependencies": {
     "sax": "^1.1.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodadjs/doodad-js-xml.git"
+  },
+  "bugs": {
+    "url": "https://github.com/doodadjs/doodad-js-xml/issues",
+    "email": "doodadjs@gmail.com"
   },
   "tonicExampleFilename": "tonic.js"
 }
