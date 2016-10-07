@@ -91,8 +91,7 @@ module.exports = {
 						};
 						
 						var aborted = false,
-							attributes = [], // <PRB> 'onattribute' is called before 'onopentag' !
-							ns = {};
+							attributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
 						
 						if (!nodoc && !discardEntities) {
 							tools.forEach(parser.ENTITIES, function(value, name) {
@@ -157,19 +156,9 @@ module.exports = {
 						parser.onopentag = function(node) {
 							if (!aborted) {
 								try {
-									var name = node.name,
-										prefix = tools.split(name, ':', 2),
-										uri = null;
-									if (prefix.length > 1) {
-										name = prefix[1];
-										prefix = prefix[0];
-										uri = types.get(ns, prefix, null);
-										if (uri && uri.length) {
-											uri = uri[uri.length - 1];
-										};
-									} else {
-										prefix = null;
-									};
+									var name = node.local,
+										prefix = node.prefix || null,
+										uri = node.uri || null;
 									
 									var node = new xml.Element(name, prefix, uri); 
 									node.fileLine = parser.line + 1;
@@ -186,19 +175,9 @@ module.exports = {
 											line = attr[1],
 											column = attr[2];
 										attr = attr[0];
-										var name = attr.name,
-											prefix = tools.split(name, ':', 2),
-											uri = null;
-										if (prefix.length > 1) {
-											name = prefix[1];
-											prefix = prefix[0];
-											uri = types.get(ns, prefix, null);
-											if (uri && uri.length) {
-												uri = uri[uri.length - 1];
-											};
-										} else {
-											prefix = null;
-										};
+										var name = attr.local,
+											prefix = attr.prefix || null,
+											uri = attr.uri || null;
 										var node = new xml.Attribute(name, attr.value, prefix, uri); 
 										node.fileLine = line + 1;
 										node.fileColumn = column + 1;
@@ -333,31 +312,6 @@ module.exports = {
 										stream.stopListening();
 										stream = null;
 									};
-								} catch(ex) {
-									parser.onerror(ex);
-								};
-							};
-						};
-
-						parser.onopennamespace = function(namespace) {
-							if (!aborted) {
-								try {
-									if (types.has(ns, namespace.prefix)) {
-										ns[namespace.prefix].push(namespace.uri);
-									} else {
-										ns[namespace.prefix] = [namespace.uri];
-									};
-								} catch(ex) {
-									parser.onerror(ex);
-								};
-							};
-						};
-
-						parser.onclosenamespace = function(namespace) {
-							if (!aborted) {
-								try {
-									var result = ns[namespace.prefix].pop();
-									root.DD_ASSERT && root.DD_ASSERT(result === namespace.uri);
 								} catch(ex) {
 									parser.onerror(ex);
 								};

@@ -73,7 +73,6 @@ module.exports = {
 					__listening: doodad.PROTECTED(false),
 					__xmlParser: doodad.PROTECTED(null),
 					__xmlAttributes: doodad.PROTECTED(null), // <PRB> 'onattribute' is called before 'onopentag' !
-					__xmlNamespaces: doodad.PROTECTED(null),
 					__xmlLevel: doodad.PROTECTED(0),
 
 					$Modes: doodad.PUBLIC(doodad.TYPE({
@@ -197,22 +196,10 @@ module.exports = {
 						}, true);
 						
 						parser.onopentag = new doodad.Callback(this, function onopentag(node) {
-							var name = node.name,
-								prefix = name.split(':', 2),
-								uri = null,
-								node;
+							var name = node.local,
+								prefix = node.prefix || null,
+								uri = node.uri || null;
 								
-							if (prefix.length > 1) {
-								name = prefix[1];
-								prefix = prefix[0];
-								uri = types.get(this.__xmlNamespaces, prefix, null);
-								if (uri && uri.length) {
-									uri = uri[uri.length - 1];
-								};
-							} else {
-								prefix = null;
-							};
-							
 							this.__xmlLevel++;
 							
 							node = {
@@ -247,19 +234,9 @@ module.exports = {
 									line = attr[1],
 									column = attr[2];
 								attr = attr[0];
-								var name = attr.name,
-									prefix = name.split(':', 2),
-									uri = null;
-								if (prefix.length > 1) {
-									name = prefix[1];
-									prefix = prefix[0];
-									uri = types.get(this.__xmlNamespaces, prefix, null);
-									if (uri && uri.length) {
-										uri = uri[uri.length - 1];
-									};
-								} else {
-									prefix = null;
-								};
+								var name = attr.local,
+									prefix = attr.prefix || null,
+									uri = attr.uri || null;
 								node = {
 									mode: type.$Modes.Attribute,
 									name: name,
@@ -419,22 +396,8 @@ module.exports = {
 							this.push(io.EOF, {output: false});
 						}, true);
 
-						parser.onopennamespace = new doodad.Callback(this, function onopennamespace(namespace) {
-							if (types.has(this.__xmlNamespaces, namespace.prefix)) {
-								this.__xmlNamespaces[namespace.prefix].push(namespace.uri);
-							} else {
-								this.__xmlNamespaces[namespace.prefix] = [namespace.uri];
-							};
-						}, true);
-
-						parser.onclosenamespace = new doodad.Callback(this, function onclosenamespace(namespace) {
-							var result = this.__xmlNamespaces[namespace.prefix].pop();
-							root.DD_ASSERT && root.DD_ASSERT(result === namespace.uri);
-						}, true);
-						
 						this.__xmlParser = parser;
 						this.__xmlAttributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
-						this.__xmlNamespaces = {};
 						this.__xmlLevel = 0;
 						
 						this.__listening = false;
