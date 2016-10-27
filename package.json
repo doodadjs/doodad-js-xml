@@ -1,8 +1,7 @@
 {
   "name": "doodad-js-xml",
-  "version": "3.0.0",
-  "stage": "r",
   "description": "XML Parser",
+  "version": "0.0.0",
   "files": [
 	"tonic.js"
   ],
