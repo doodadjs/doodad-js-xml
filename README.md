@@ -15,34 +15,23 @@ $ npm install doodad-js-xml
 
 ## Quick Start
 
-By default, we use the SAX parser :
-
-```bash
-$ npm install sax
-```
-
-Now we can parse an XML document :
-
 ```js
     "use strict";
-
-    const root = require('doodad-js').createRoot( null, { node_env: 'development' } );
 
     const modules = {};
 	require('doodad-js-io').add(modules);
 	require('doodad-js-xml').add(modules);
 
-    function startup() {
-        const xml = root.Doodad.Tools.Xml;
-        return xml.parse(
-            "<songs><song><title>Another Me In Lack'ech</title><artist>Epica</artist></song><song><title>Silent Lucidity</title><artist>Queensryche</artist></song><song><title>One</title><artist>Metallica</artist></song></songs>"
-        ).then(function(doc) {
-            console.log(doc);
-        });
-    };
-
-    root.Doodad.Namespaces.load( modules, startup )
-        ['catch'](function(err) {
+    require('doodad-js').createRoot(modules);
+		.then(root => {
+			const xml = root.Doodad.Tools.Xml;
+			// NOTE: Random songs
+			return xml.parse("<songs><song><title>Another Me In Lack'ech</title><artist>Epica</artist></song><song><title>Silent Lucidity</title><artist>Queensryche</artist></song><song><title>One</title><artist>Metallica</artist></song></songs>")
+		})
+		.then(doc => {
+			console.log(doc);
+		})
+        .catch(err => {
             console.error(err);
         });
 ```
