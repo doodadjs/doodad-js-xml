@@ -107,12 +107,14 @@ module.exports = {
 						//		this.push(node, {output: false});
 						//	});
 						
-						parser.onerror = new doodad.Callback(this, function onerror(err) {
+						// TODO: Combine extracted datas from a chunk of 15K (Node.js's default) to a single "push" call in an Array so that we don't need a buffer size of 100000 !
+
+						parser.onerror = doodad.Callback(this, function onerror(err) {
 							this.onError(new doodad.ErrorEvent(err));
 						}, true);
 						
 						// TODO: onopentext, onclosetext
-						parser.ontext = new doodad.Callback(this, function ontext(text) {
+						parser.ontext = doodad.Callback(this, function ontext(text) {
 							this.__xmlLevel++;
 							node = {
 								mode: type.$Modes.Text,
@@ -120,11 +122,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							var node = {
 								mode: type.$Modes.Text,
@@ -132,11 +134,11 @@ module.exports = {
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
 								level: this.__xmlLevel,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								Modes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							this.__xmlLevel--;
 							node = {
@@ -145,15 +147,15 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 
 						// TODO: onopenscript, onclosescript
-						parser.onscript = new doodad.Callback(this, function onscript(script) {
+						parser.onscript = doodad.Callback(this, function onscript(script) {
 							var node;
 							
 							this.__xmlLevel++;
@@ -163,11 +165,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							node = {
 								mode: type.$Modes.CData,
@@ -175,11 +177,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							this.__xmlLevel--;
 							node = {
@@ -188,14 +190,14 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
-						parser.onopentag = new doodad.Callback(this, function onopentag(node) {
+						parser.onopentag = doodad.Callback(this, function onopentag(node) {
 							var name = node.local,
 								prefix = node.prefix || null,
 								uri = node.uri || null;
@@ -208,11 +210,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							node = {
 								mode: type.$Modes.Element,
@@ -222,11 +224,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							// <PRB> 'onattribute' is called before 'onopentag' !
 							for (var i = 0; i < this.__xmlAttributes.length; i++) {
@@ -246,17 +248,17 @@ module.exports = {
 									level: this.__xmlLevel,
 									fileLine: line + 1,
 									fileColumn: column + 1,
-									valueOf: function() {return this;},
+									valueOf: function() {return this.raw;},
 									NodeTypes: type.$Modes,
 								};
 								node.raw = node;
-								this.push(node, {output: false});
+								this.push(node, {noEvents: true});
 							};
 							
 							this.__xmlAttributes.length = 0;
 						}, true);
 						
-						parser.onclosetag = new doodad.Callback(this, function onclosetag(tagName) {
+						parser.onclosetag = doodad.Callback(this, function onclosetag(tagName) {
 							this.__xmlLevel--;
 							var node = {
 								mode: type.$Modes.CloseElement,
@@ -264,33 +266,33 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
-						parser.onattribute = new doodad.Callback(this, function onattribute(attr) {
+						parser.onattribute = doodad.Callback(this, function onattribute(attr) {
 							// <PRB> 'onattribute' is called before 'onopentag' !
 							this.__xmlAttributes.push([attr, this.__xmlParser.line, this.__xmlParser.column]);
 						}, true);
 						
-						parser.ondoctype = new doodad.Callback(this, function ondoctype(doctype) {
+						parser.ondoctype = doodad.Callback(this, function ondoctype(doctype) {
 							var node = {
 								mode: type.$Modes.DocumentType,
 								value: doctype,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
-						parser.onprocessinginstruction = new doodad.Callback(this, function onprocessinginstruction(instr) {
+						parser.onprocessinginstruction = doodad.Callback(this, function onprocessinginstruction(instr) {
 							var node = {
 								mode: type.$Modes.ProcessingInstruction,
 								name: instr.name,
@@ -298,15 +300,15 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
 						// TODO: onopencomment, onclosecomment
-						parser.oncomment = new doodad.Callback(this, function oncomment(comment) {
+						parser.oncomment = doodad.Callback(this, function oncomment(comment) {
 							var node;
 							
 							this.__xmlLevel++;
@@ -316,11 +318,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							node = {
 								mode: type.$Modes.Comment,
@@ -328,11 +330,11 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 							
 							this.__xmlLevel--;
 							node = {
@@ -341,14 +343,14 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
-						parser.onopencdata = new doodad.Callback(this, function onopencdata() {
+						parser.onopencdata = doodad.Callback(this, function onopencdata() {
 							this.__xmlLevel++;
 							var node = {
 								mode: type.$Modes.OpenCData,
@@ -356,28 +358,28 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 
-						parser.oncdata = new doodad.Callback(this, function oncdata(cdata) {
+						parser.oncdata = doodad.Callback(this, function oncdata(cdata) {
 							var node = {
 								mode: type.$Modes.CData,
 								value: cdata,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
-						parser.onclosecdata = new doodad.Callback(this, function onclosecdata() {
+						parser.onclosecdata = doodad.Callback(this, function onclosecdata() {
 							this.__xmlLevel--;
 							var node = {
 								mode: type.$Modes.CloseCData,
@@ -385,15 +387,16 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								valueOf: function() {return this;},
+								valueOf: function() {return this.raw;},
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {output: false});
+							this.push(node, {noEvents: true});
 						}, true);
 						
-						parser.onend = new doodad.Callback(this, function onend() {
-							this.push(io.EOF, {output: false});
+						parser.onend = doodad.Callback(this, function onend() {
+							var dta = this.transform({raw: io.EOF});
+							this.push(dta, {noEvents: true});
 						}, true);
 
 						this.__xmlParser = parser;
@@ -425,16 +428,42 @@ module.exports = {
 
 					onWrite: doodad.OVERRIDE(function onWrite(ev) {
 						var retval = this._super(ev);
-						if (!ev.prevent) {
-							ev.preventDefault();
 
-							var data = ev.data;
-							if (data.raw === io.EOF) {
+						var data = ev.data;
+
+						ev.preventDefault();
+						data.consumed = true;   // Will be consumed later
+
+						var aborted = false;
+
+						if (data.raw === io.EOF) {
+							try {
 								this.__xmlParser.close();
-							} else {
+							} catch(ex) {
+								this.onError(new doodad.ErrorEvent(ex));
+								aborted = true;
+							};
+						} else {
+							try {
 								this.__xmlParser.write(data.valueOf());
+							} catch(ex) {
+								this.onError(new doodad.ErrorEvent(ex));
+								aborted = true;
 							};
 						};
+							
+						if (!aborted) {
+							if (this.options.autoFlush) {
+								this.flush(types.extend({}, this.options.autoFlushOptions, {callback: doodad.Callback(this, function() {
+									data.consumed = false;
+									this.__consumeData(data);
+								})}));
+							} else {
+								data.consumed = false;
+								this.__consumeData(data);
+							};
+						};
+
 						return retval;
 					}),
 				}));

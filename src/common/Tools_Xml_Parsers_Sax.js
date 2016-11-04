@@ -73,7 +73,7 @@ module.exports = {
 
 					if (callback) {
 						var cbObj = types.get(options, 'callbackObj');
-						callback = new doodad.Callback(cbObj, callback);
+						callback = doodad.Callback(cbObj, callback);
 					};
 					
 					var Promise = types.getPromise();
