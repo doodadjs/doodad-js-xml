@@ -116,7 +116,8 @@ module.exports = {
 						// TODO: onopentext, onclosetext
 						parser.ontext = doodad.Callback(this, function ontext(text) {
 							this.__xmlLevel++;
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.Text,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -126,8 +127,9 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.Text,
 								value: text,
@@ -138,10 +140,11 @@ module.exports = {
 								Modes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
 							this.__xmlLevel--;
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.Text,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -151,15 +154,14 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 
 						// TODO: onopenscript, onclosescript
 						parser.onscript = doodad.Callback(this, function onscript(script) {
-							var node;
-							
 							this.__xmlLevel++;
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.CData,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -169,9 +171,10 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.CData,
 								value: script,
 								level: this.__xmlLevel,
@@ -181,10 +184,11 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
 							this.__xmlLevel--;
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.CData,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -194,7 +198,7 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						parser.onopentag = doodad.Callback(this, function onopentag(node) {
@@ -204,7 +208,8 @@ module.exports = {
 								
 							this.__xmlLevel++;
 							
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.Element,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -214,9 +219,10 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.Element,
 								name: name,
 								prefix: prefix,
@@ -228,7 +234,7 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
 							// <PRB> 'onattribute' is called before 'onopentag' !
 							for (var i = 0; i < this.__xmlAttributes.length; i++) {
@@ -252,7 +258,7 @@ module.exports = {
 									NodeTypes: type.$Modes,
 								};
 								node.raw = node;
-								this.push(node, {noEvents: true});
+								this.push(node);
 							};
 							
 							this.__xmlAttributes.length = 0;
@@ -260,6 +266,7 @@ module.exports = {
 						
 						parser.onclosetag = doodad.Callback(this, function onclosetag(tagName) {
 							this.__xmlLevel--;
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.CloseElement,
 								isOpenClose: true,
@@ -270,7 +277,7 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						parser.onattribute = doodad.Callback(this, function onattribute(attr) {
@@ -279,6 +286,7 @@ module.exports = {
 						}, true);
 						
 						parser.ondoctype = doodad.Callback(this, function ondoctype(doctype) {
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.DocumentType,
 								value: doctype,
@@ -289,10 +297,11 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						parser.onprocessinginstruction = doodad.Callback(this, function onprocessinginstruction(instr) {
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.ProcessingInstruction,
 								name: instr.name,
@@ -304,15 +313,14 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						// TODO: onopencomment, onclosecomment
 						parser.oncomment = doodad.Callback(this, function oncomment(comment) {
-							var node;
-							
 							this.__xmlLevel++;
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.OpenComment,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -322,9 +330,10 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.Comment,
 								value: comment,
 								level: this.__xmlLevel,
@@ -334,10 +343,11 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 							
 							this.__xmlLevel--;
-							node = {
+							// TODO: Transform
+							var node = {
 								mode: type.$Modes.CloseComment,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -347,11 +357,12 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						parser.onopencdata = doodad.Callback(this, function onopencdata() {
 							this.__xmlLevel++;
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.OpenCData,
 								isOpenClose: true,
@@ -362,10 +373,11 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 
 						parser.oncdata = doodad.Callback(this, function oncdata(cdata) {
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.CData,
 								value: cdata,
@@ -376,11 +388,12 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						parser.onclosecdata = doodad.Callback(this, function onclosecdata() {
 							this.__xmlLevel--;
+							// TODO: Transform
 							var node = {
 								mode: type.$Modes.CloseCData,
 								isOpenClose: true,
@@ -391,12 +404,12 @@ module.exports = {
 								NodeTypes: type.$Modes,
 							};
 							node.raw = node;
-							this.push(node, {noEvents: true});
+							this.push(node);
 						}, true);
 						
 						parser.onend = doodad.Callback(this, function onend() {
 							var dta = this.transform({raw: io.EOF});
-							this.push(dta, {noEvents: true});
+							this.push(dta);
 						}, true);
 
 						this.__xmlParser = parser;
@@ -432,36 +445,15 @@ module.exports = {
 						var data = ev.data;
 
 						ev.preventDefault();
-						data.consumed = true;   // Will be consumed later
-
-						var aborted = false;
 
 						if (data.raw === io.EOF) {
-							try {
-								this.__xmlParser.close();
-							} catch(ex) {
-								this.onError(new doodad.ErrorEvent(ex));
-								aborted = true;
-							};
+							this.__xmlParser.close();
 						} else {
-							try {
-								this.__xmlParser.write(data.valueOf());
-							} catch(ex) {
-								this.onError(new doodad.ErrorEvent(ex));
-								aborted = true;
-							};
+							this.__xmlParser.write(data.valueOf());
 						};
 							
-						if (!aborted) {
-							if (this.options.autoFlush) {
-								this.flush(types.extend({}, this.options.autoFlushOptions, {callback: doodad.Callback(this, function() {
-									data.consumed = false;
-									this.__consumeData(data);
-								})}));
-							} else {
-								data.consumed = false;
-								this.__consumeData(data);
-							};
+						if (this.options.flushMode === 'half') {
+							this.flush(this.options.autoFlushOptions);
 						};
 
 						return retval;
