@@ -83,7 +83,7 @@ module.exports = {
 					, {natives: _shared.Natives});
 				};
 				
-				xml.NodesList = types.INIT(types.CustomEventTarget.$inherit(
+				xml.ADD('NodesList', types.CustomEventTarget.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'NodesList',
@@ -201,7 +201,7 @@ module.exports = {
 					)
 				));
 					
-				xml.Node = types.INIT(types.Type.$inherit(
+				xml.ADD('Node', types.Type.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Node',
@@ -219,7 +219,7 @@ module.exports = {
 					}
 				));
 					
-				xml.Element = types.INIT(xml.Node.$inherit(
+				xml.ADD('Element', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Element',
@@ -280,7 +280,7 @@ module.exports = {
 					}
 				));
 					
-				xml.Attribute = types.INIT(xml.Node.$inherit(
+				xml.ADD('Attribute', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Attribute',
@@ -330,7 +330,7 @@ module.exports = {
 					}
 				));
 					
-				xml.Text = types.INIT(xml.Node.$inherit(
+				xml.ADD('Text', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Text',
@@ -355,7 +355,7 @@ module.exports = {
 					}
 				));
 					
-				xml.CDATASection = types.INIT(xml.Node.$inherit(
+				xml.ADD('CDATASection', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'CDATASection',
@@ -381,7 +381,7 @@ module.exports = {
 				));
 					
 				/*
-				xml.EntityReference = types.INIT(xml.Node.$inherit(
+				xml.ADD('EntityReference', xml.Node.$inherit(
 					/ *typeProto* /
 					{
 						$TYPE_NAME: 'EntityReference',
@@ -415,7 +415,7 @@ module.exports = {
 				));
 				*/
 					
-				xml.Entity = types.INIT(xml.Node.$inherit(
+				xml.ADD('Entity', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Entity',
@@ -448,7 +448,7 @@ module.exports = {
 					}
 				));
 					
-				xml.ProcessingInstruction = types.INIT(xml.Node.$inherit(
+				xml.ADD('ProcessingInstruction', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'ProcessingInstruction',
@@ -481,7 +481,7 @@ module.exports = {
 					}
 				));
 					
-				xml.Comment = types.INIT(xml.Node.$inherit(
+				xml.ADD('Comment', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Comment',
@@ -506,7 +506,7 @@ module.exports = {
 					}
 				));
 					
-				xml.DocumentType = types.INIT(xml.Node.$inherit(
+				xml.ADD('DocumentType', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'DocumentType',
@@ -531,7 +531,7 @@ module.exports = {
 					}
 				));
 					
-				xml.DocumentFragment = types.INIT(xml.Node.$inherit(
+				xml.ADD('DocumentFragment', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'DocumentFragment',
@@ -557,7 +557,7 @@ module.exports = {
 				));
 				
 				/*				
-				xml.Notation = types.INIT(xml.Node.$inherit(
+				xml.ADD('Notation', xml.Node.$inherit(
 					/ *typeProto* /
 					{
 						$TYPE_NAME: 'Notation',
@@ -591,7 +591,7 @@ module.exports = {
 				));
 				*/
 					
-				xml.Document = types.INIT(xml.Node.$inherit(
+				xml.ADD('Document', xml.Node.$inherit(
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Document',
@@ -690,19 +690,19 @@ module.exports = {
 				// XML Tools
 				//===================================
 
-				xml.addXmlEntities = function addXmlEntities(entities) {
+				xml.ADD('addXmlEntities', function addXmlEntities(entities) {
 					__Internal__.xmlEntities = types.extend(__Internal__.xmlEntities || {}, entities);
-				};
+				});
 				
-				xml.registerParser = function registerParser(parser) {
+				xml.ADD('registerParser', function registerParser(parser) {
 					__Internal__.parsers = types.unique(__Internal__.parsers, [parser]);
-				};
+				});
 				
-				xml.getEntities = function getEntities() {
+				xml.ADD('getEntities', function getEntities() {
 					return __Internal__.xmlEntities;
-				};
+				});
 				
-				xml.parse = function parse(stream, /*optional*/options, /*optional*/parser) {
+				xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
 					// TODO: MemoryStream for Strings
 					if (parser) {
 						if ((tools.indexOf(__Internal__.parsers, parser) < 0)) {
@@ -722,13 +722,13 @@ module.exports = {
 						}, options);
 					};
 					return parser.parse(stream, options);
-				};
+				});
 				
-				xml.isAvailable = function isAvailable() {
+				xml.ADD('isAvailable', function isAvailable() {
 					return !!tools.filter(__Internal__.parsers, function(parser) {
 						return parser.isAvailable();
 					}).length;
-				};
+				});
 				
 				
 				//===================================

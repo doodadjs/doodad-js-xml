@@ -62,7 +62,7 @@ module.exports = {
 				// SAX Parser
 				//===================================
 
-				sax.parse = function(stream, /*optional*/options) {
+				sax.ADD('parse', function(stream, /*optional*/options) {
 					// TODO: MemoryStream to replace strings
 					root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
 					
@@ -340,11 +340,11 @@ module.exports = {
 							stream.listen();
 						};
 					});
-				};
+				});
 				
-				sax.isAvailable = function isAvailable() {
+				sax.ADD('isAvailable', function isAvailable() {
 					return !!saxLoader.getSAX();
-				};
+				});
 				
 				//===================================
 				// Init

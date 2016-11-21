@@ -62,7 +62,7 @@ module.exports = {
 				//===================================
 
 				// NOTE: SAX is optional
-				saxLoader.getSAX = root.DD_DOC(
+				saxLoader.ADD('getSAX', root.DD_DOC(
 					//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 							author: "Claude Petit",
@@ -74,10 +74,10 @@ module.exports = {
 					//! END_REPLACE()
 					, function getSAX() {
 						return global.sax;
-					});
+					}));
 				
 				
-				saxLoader.applyPatch = root.DD_DOC(
+				saxLoader.ADD('applyPatch', root.DD_DOC(
 					//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 							author: "Claude Petit",
@@ -99,7 +99,7 @@ module.exports = {
 								};
 							};
 						};
-					});
+					}));
 				
 				
 				//===================================
