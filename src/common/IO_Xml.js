@@ -69,6 +69,7 @@ module.exports = {
 									io.TextOutputStream,
 				{
 					$TYPE_NAME: 'Stream',
+					$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Stream')), true) */,
 
 					__listening: doodad.PROTECTED(false),
 					__xmlParser: doodad.PROTECTED(null),

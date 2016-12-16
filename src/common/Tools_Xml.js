@@ -87,6 +87,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'NodesList',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('NodesList')), true) */,
 					},
 					/*instanceProto*/
 					types.extend(
@@ -205,6 +206,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Node',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Node')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -223,6 +225,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Element',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Element')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -284,6 +287,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Attribute',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Attribute')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -334,6 +338,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Text',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Text')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -359,6 +364,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'CDATASection',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('CDATASection')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -385,6 +391,7 @@ module.exports = {
 					/ *typeProto* /
 					{
 						$TYPE_NAME: 'EntityReference',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('EntityReference')), true) * /,
 					},
 					/ *instanceProto* /
 					{
@@ -419,6 +426,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Entity',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Entity')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -452,6 +460,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'ProcessingInstruction',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('ProcessingInstruction')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -485,6 +494,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Comment',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Comment')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -510,6 +520,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'DocumentType',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('DocumentType')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -535,6 +546,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'DocumentFragment',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('DocumentFragment')), true) */,
 					},
 					/*instanceProto*/
 					{
@@ -561,6 +573,7 @@ module.exports = {
 					/ *typeProto* /
 					{
 						$TYPE_NAME: 'Notation',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Notation')), true) * /,
 					},
 					/ *instanceProto* /
 					{
@@ -595,6 +608,7 @@ module.exports = {
 					/*typeProto*/
 					{
 						$TYPE_NAME: 'Document',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Document')), true) */,
 					},
 					/*instanceProto*/
 					{
