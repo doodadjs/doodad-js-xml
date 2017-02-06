@@ -65,24 +65,37 @@ module.exports = {
 				// XML Types
 				//===================================
 				
-				__Internal__.iterProto = null;
-				if (types.hasSymbols() && types.hasGenerators() && _shared.Natives.symbolIterator) {
-					// NOTE: Must use "eval" to compile with old browsers
-					__Internal__.iterProto = types.evalStrict(
-						"({" +
-							"[ctx.natives.symbolIterator]: function* iter() {" +
-								"this.__changed = false;" +
-								"for (let i = 0; i < this.__nodes.length; i++) {" +
-									"yield this.__nodes[i];" +
-									"if (this.__changed) {" +
-										"throw new types.Error('The list has been modified.');" +
-									"};" +
-								"};" +
-							"}," +
-						"})"
-					, {natives: _shared.Natives});
-				};
-				
+				__Internal__.NodesListIterator = types.INIT(types.Iterator.$inherit(
+					/*typeProto*/
+					{
+						$TYPE_NAME: 'NodesListIterator',
+						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('NodesListIterator')), true) */,
+					},
+					/*instanceProto*/
+					{
+						__index: types.NOT_ENUMERABLE(0),
+						__nodes: types.NOT_ENUMERABLE(types.READ_ONLY(null)),
+						
+						_new: types.SUPER(function _new(nodesList) {
+							this._super();
+							_shared.setAttribute(this, '__nodes', types.clone(nodesList.__nodes));
+						}),
+
+						next: function next() {
+							var ar = this.__nodes;
+							if (this.__index < ar.length) {
+								return {
+									value: ar[this.__index++],
+								};
+							} else {
+								return {
+									done: true,
+								};
+							};
+						},
+					}));
+					
+
 				xml.ADD('NodesList', types.CustomEventTarget.$inherit(
 					/*typeProto*/
 					{
@@ -90,118 +103,125 @@ module.exports = {
 						$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('NodesList')), true) */,
 					},
 					/*instanceProto*/
-					types.extend(
-						{
-							__parentNode: null,
-							__nodeTypes: null,
-							__nodes: null,
-							__changed: false,
+					{
+						__parentNode: null,
+						__nodeTypes: null,
+						__nodes: null,
+						__changed: false,
 							
-							_new: types.SUPER(function _new(parentNode, nodeTypes) {
-								this._super();
-								if (!types.isArray(nodeTypes)) {
-									nodeTypes = [nodeTypes];
-								};
-								this.__parentNode = parentNode;
-								this.__nodeTypes = nodeTypes;
-								this.__nodes = [];
-							}),
+						_new: types.SUPER(function _new(parentNode, nodeTypes) {
+							this._super();
+							if (!types.isArray(nodeTypes)) {
+								nodeTypes = [nodeTypes];
+							};
+							this.__parentNode = parentNode;
+							this.__nodeTypes = nodeTypes;
+							this.__nodes = [];
+						}),
 							
-							append: function append(node) {
-								if (!types._instanceof(node, this.__nodeTypes)) {
-									throw new types.TypeError("Invalid node type.");
-								};
-								this.__nodes.push(node);
-								node.__parentNode = this.__parentNode;
-								this.__changed = true;
-								this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
-								return this;
-							},
-							prepend: function prepend(node) {
-								if (!types._instanceof(node, this.__nodeTypes)) {
-									throw new types.TypeError("Invalid node type.");
-								};
-								this.__nodes.unshift(node);
-								node.__parentNode = this.__parentNode;
-								this.__changed = true;
-								this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
-								return this;
-							},
-							insertAt: function insertAt(pos, node) {
-								if (!types._instanceof(node, this.__nodeTypes)) {
-									throw new types.TypeError("Invalid node type.");
-								};
-								this.__nodes.splice(pos, 0, node);
-								node.__parentNode = this.__parentNode;
-								this.__changed = true;
-								this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
-								return this;
-							},
-							remove: function remove(node) {
-								for (var i = 0; i < this.__nodes.length; i++) {
-									if (this.__nodes[i] === node) {
-										this.__nodes.splice(i, 1);
-										node.__parentNode = null;
-										this.__changed = true;
-										this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
-										break;
-									};
-								};
-								return this;
-							},
-							removeAt: function removeAt(pos) {
-								var node = this.__nodes.splice(pos, 1)[0];
-								if (node) {
-									node.__parentNode = null;
-									this.__changed = true;
-									this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
-								};
-								return this;
-							},
-							clear: function clear() {
-								for (var i = 0; i < this.__nodes.length; i++) {
-									var node = this.__nodes[i];
-									node.__parentNode = null;
-									this.__changed = true;
-									this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
-								};
-								this.__nodes = [];
-								return this;
-							},
-							find: function find(name) {
-								var result = [];
-								for (var i = 0; i < this.__nodes.length; i++) {
-									var node = this.__nodes[i];
-									if (node.__name === name) {
-										result.push(node);
-									};
-								};
-								return result;
-							},
-							forEach: function forEach(fn, /*optional*/thisObj) {
-								this.__changed = false;
-								for (var i = 0; i < this.__nodes.length; i++) {
-									fn.call(thisObj, this.__nodes[i], i, this.__nodes);
-									if (this.__changed) {
-										throw new types.Error('The list has been modified.');
-									};
-								};
-								return this;
-							},
-							getCount: function getCount() {
-								return this.__nodes.length;
-							},
-							getAt: function getAt(pos) {
-								return this.__nodes[pos];
-							},
-							getParent: function getParent() {
-								return this.__parentNode;
-							},
+						append: function append(node) {
+							if (!types._instanceof(node, this.__nodeTypes)) {
+								throw new types.TypeError("Invalid node type.");
+							};
+							this.__nodes.push(node);
+							node.__parentNode = this.__parentNode;
+							this.__changed = true;
+							this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
+							return this;
 						},
-						__Internal__.iterProto
-					)
+						prepend: function prepend(node) {
+							if (!types._instanceof(node, this.__nodeTypes)) {
+								throw new types.TypeError("Invalid node type.");
+							};
+							this.__nodes.unshift(node);
+							node.__parentNode = this.__parentNode;
+							this.__changed = true;
+							this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
+							return this;
+						},
+						insertAt: function insertAt(pos, node) {
+							if (!types._instanceof(node, this.__nodeTypes)) {
+								throw new types.TypeError("Invalid node type.");
+							};
+							this.__nodes.splice(pos, 0, node);
+							node.__parentNode = this.__parentNode;
+							this.__changed = true;
+							this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
+							return this;
+						},
+						remove: function remove(node) {
+							for (var i = 0; i < this.__nodes.length; i++) {
+								if (this.__nodes[i] === node) {
+									this.__nodes.splice(i, 1);
+									node.__parentNode = null;
+									this.__changed = true;
+									this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
+									break;
+								};
+							};
+							return this;
+						},
+						removeAt: function removeAt(pos) {
+							var node = this.__nodes.splice(pos, 1)[0];
+							if (node) {
+								node.__parentNode = null;
+								this.__changed = true;
+								this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
+							};
+							return this;
+						},
+						clear: function clear() {
+							for (var i = 0; i < this.__nodes.length; i++) {
+								var node = this.__nodes[i];
+								node.__parentNode = null;
+								this.__changed = true;
+								this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
+							};
+							this.__nodes = [];
+							return this;
+						},
+						find: function find(name) {
+							var result = [];
+							for (var i = 0; i < this.__nodes.length; i++) {
+								var node = this.__nodes[i];
+								if (node.__name === name) {
+									result.push(node);
+								};
+							};
+							return result;
+						},
+						forEach: function forEach(fn, /*optional*/thisObj) {
+							this.__changed = false;
+							for (var i = 0; i < this.__nodes.length; i++) {
+								fn.call(thisObj, this.__nodes[i], i, this.__nodes);
+								if (this.__changed) {
+									throw new types.Error('The list has been modified.');
+								};
+							};
+							return this;
+						},
+						items: function items() {
+							return new __Internal__.NodesListIterator(this);
+						},
+						getCount: function getCount() {
+							return this.__nodes.length;
+						},
+						getAt: function getAt(pos) {
+							return this.__nodes[pos];
+						},
+						getParent: function getParent() {
+							return this.__parentNode;
+						},
+					}
 				));
 					
+				if (_shared.Natives.symbolIterator) {
+					_shared.setAttribute(xml.NodesList.prototype, _shared.Natives.symbolIterator, function() {
+						return this.items();
+					}, {});
+				};
+				
+
 				xml.ADD('Node', types.Type.$inherit(
 					/*typeProto*/
 					{
