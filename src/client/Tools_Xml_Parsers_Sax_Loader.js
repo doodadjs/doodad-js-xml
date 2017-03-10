@@ -40,7 +40,7 @@ module.exports = {
 				// Get namespaces
 				//===================================
 					
-				var doodad = root.Doodad,
+				const doodad = root.Doodad,
 					types = doodad.Types,
 					tools = doodad.Tools,
 					xml = tools.Xml,
@@ -53,7 +53,7 @@ module.exports = {
 				//===================================
 					
 				// <FUTURE> Thread context
-				var __Internal__ = {
+				const __Internal__ = {
 					xmlEntities: null,
 				};
 					
@@ -89,9 +89,9 @@ module.exports = {
 					//! END_REPLACE()
 					, function applyPatch() {
 						// <FIX> sax-js v1.1.4: "Stream.prototype.on" is undefined (client-side)
-						var sax = saxLoader.getSAX();
+						const sax = saxLoader.getSAX();
 						if (sax) {
-							var SAXStream = sax.SAXStream,
+							const SAXStream = sax.SAXStream,
 								StreamProto = types.getPrototypeOf(SAXStream.prototype);
 							if (StreamProto && !StreamProto.on) {
 								StreamProto.on = function(ev, handler) {

@@ -41,7 +41,7 @@ module.exports = {
 				// Get namespaces
 				//===================================
 					
-				var doodad = root.Doodad,
+				const doodad = root.Doodad,
 					types = doodad.Types,
 					tools = doodad.Tools,
 					xml = tools.Xml,
@@ -56,7 +56,7 @@ module.exports = {
 				//===================================
 					
 				//// <FUTURE> Thread context
-				//var __Internal__ = {
+				//const __Internal__ = {
 				//};
 					
 				//types.complete(_shared.Natives, {
@@ -91,11 +91,11 @@ module.exports = {
 					//}),
 					
 					reset: doodad.OVERRIDE(function reset() {
-						var sax = saxLoader.getSAX();
-						var parser = sax.parser(true, types.extend({}, this.options, {xmlns: true, position: true}));
-						var type = types.getType(this);
+						const sax = saxLoader.getSAX();
+						const parser = sax.parser(true, types.extend({}, this.options, {xmlns: true, position: true}));
+						const type = types.getType(this);
 						
-						var entities = types.get(this.options, 'entities', null);
+						const entities = types.get(this.options, 'entities', null);
 						if (entities) {
 							parser.ENTITIES = entities;
 						} else {
@@ -104,7 +104,7 @@ module.exports = {
 						};
 						
 						//	tools.forEach(parser.ENTITIES, function(value, name) {
-						//		var node = new xml.Entity(name, value);
+						//		const node = new xml.Entity(name, value);
 						//		this.push(node, {output: false});
 						//	});
 						
@@ -116,9 +116,11 @@ module.exports = {
 						
 						// TODO: onopentext, onclosetext
 						parser.ontext = doodad.Callback(this, function ontext(text) {
+							let node;
+
 							this.__xmlLevel++;
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.Text,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -131,7 +133,7 @@ module.exports = {
 							this.push(node);
 							
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.Text,
 								value: text,
 								fileLine: this.__xmlParser.line + 1,
@@ -145,7 +147,7 @@ module.exports = {
 							
 							this.__xmlLevel--;
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.Text,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -161,8 +163,11 @@ module.exports = {
 						// TODO: onopenscript, onclosescript
 						parser.onscript = doodad.Callback(this, function onscript(script) {
 							this.__xmlLevel++;
+
+							let node;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CData,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -175,7 +180,7 @@ module.exports = {
 							this.push(node);
 							
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CData,
 								value: script,
 								level: this.__xmlLevel,
@@ -189,7 +194,7 @@ module.exports = {
 							
 							this.__xmlLevel--;
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CData,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -202,15 +207,17 @@ module.exports = {
 							this.push(node);
 						}, true);
 						
-						parser.onopentag = doodad.Callback(this, function onopentag(node) {
-							var name = node.local,
-								prefix = node.prefix || null,
-								uri = node.uri || null;
+						parser.onopentag = doodad.Callback(this, function onopentag(tag) {
+							const name = tag.local,
+								prefix = tag.prefix || null,
+								uri = tag.uri || null;
 								
 							this.__xmlLevel++;
 							
+							let node;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.Element,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -223,7 +230,7 @@ module.exports = {
 							this.push(node);
 							
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.Element,
 								name: name,
 								prefix: prefix,
@@ -238,12 +245,12 @@ module.exports = {
 							this.push(node);
 							
 							// <PRB> 'onattribute' is called before 'onopentag' !
-							for (var i = 0; i < this.__xmlAttributes.length; i++) {
-								var attr = this.__xmlAttributes[i],
-									line = attr[1],
-									column = attr[2];
-								attr = attr[0];
-								var name = attr.local,
+							for (let i = 0; i < this.__xmlAttributes.length; i++) {
+								const attrDef = this.__xmlAttributes[i],
+									attr = attrDef[0],
+									line = attrDef[1],
+									column = attrDef[2];
+								const name = attr.local,
 									prefix = attr.prefix || null,
 									uri = attr.uri || null;
 								node = {
@@ -267,8 +274,11 @@ module.exports = {
 						
 						parser.onclosetag = doodad.Callback(this, function onclosetag(tagName) {
 							this.__xmlLevel--;
+
+							let node;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CloseElement,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -287,8 +297,10 @@ module.exports = {
 						}, true);
 						
 						parser.ondoctype = doodad.Callback(this, function ondoctype(doctype) {
+							let node;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.DocumentType,
 								value: doctype,
 								level: this.__xmlLevel,
@@ -302,8 +314,10 @@ module.exports = {
 						}, true);
 						
 						parser.onprocessinginstruction = doodad.Callback(this, function onprocessinginstruction(instr) {
+							let node;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.ProcessingInstruction,
 								name: instr.name,
 								value: instr.body,
@@ -319,9 +333,11 @@ module.exports = {
 						
 						// TODO: onopencomment, onclosecomment
 						parser.oncomment = doodad.Callback(this, function oncomment(comment) {
+							let node;
+
 							this.__xmlLevel++;
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.OpenComment,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -334,7 +350,7 @@ module.exports = {
 							this.push(node);
 							
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.Comment,
 								value: comment,
 								level: this.__xmlLevel,
@@ -348,7 +364,7 @@ module.exports = {
 							
 							this.__xmlLevel--;
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CloseComment,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -362,9 +378,11 @@ module.exports = {
 						}, true);
 						
 						parser.onopencdata = doodad.Callback(this, function onopencdata() {
+							let node;
+
 							this.__xmlLevel++;
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.OpenCData,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -378,8 +396,10 @@ module.exports = {
 						}, true);
 
 						parser.oncdata = doodad.Callback(this, function oncdata(cdata) {
+							let node;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CData,
 								value: cdata,
 								level: this.__xmlLevel,
@@ -393,9 +413,12 @@ module.exports = {
 						}, true);
 						
 						parser.onclosecdata = doodad.Callback(this, function onclosecdata() {
+							let node;
+
 							this.__xmlLevel--;
+
 							// TODO: Transform
-							var node = {
+							node = {
 								mode: type.$Modes.CloseCData,
 								isOpenClose: true,
 								level: this.__xmlLevel,
@@ -409,7 +432,7 @@ module.exports = {
 						}, true);
 						
 						parser.onend = doodad.Callback(this, function onend() {
-							var dta = this.transform({raw: io.EOF});
+							const dta = this.transform({raw: io.EOF});
 							this.push(dta);
 						}, true);
 
@@ -441,9 +464,9 @@ module.exports = {
 					}),
 
 					onWrite: doodad.OVERRIDE(function onWrite(ev) {
-						var retval = this._super(ev);
+						const retval = this._super(ev);
 
-						var data = ev.data;
+						const data = ev.data;
 
 						ev.preventDefault();
 

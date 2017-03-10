@@ -38,7 +38,7 @@ module.exports = {
 				// Get namespaces
 				//===================================
 					
-				var doodad = root.Doodad,
+				const doodad = root.Doodad,
 					types = doodad.Types,
 					tools = doodad.Tools,
 					namespaces = doodad.Namespaces,
@@ -51,7 +51,7 @@ module.exports = {
 				//===================================
 					
 				// <FUTURE> Thread context
-				var __Internal__ = {
+				const __Internal__ = {
 					xmlEntities: null,
 					parsers: [],
 				};
@@ -82,7 +82,7 @@ module.exports = {
 						}),
 
 						next: function next() {
-							var ar = this.__nodes;
+							const ar = this.__nodes;
 							if (this.__index < ar.length) {
 								return {
 									value: ar[this.__index++],
@@ -150,7 +150,7 @@ module.exports = {
 							return this;
 						},
 						remove: function remove(node) {
-							for (var i = 0; i < this.__nodes.length; i++) {
+							for (let i = 0; i < this.__nodes.length; i++) {
 								if (this.__nodes[i] === node) {
 									this.__nodes.splice(i, 1);
 									node.__parentNode = null;
@@ -162,7 +162,7 @@ module.exports = {
 							return this;
 						},
 						removeAt: function removeAt(pos) {
-							var node = this.__nodes.splice(pos, 1)[0];
+							const node = this.__nodes.splice(pos, 1)[0];
 							if (node) {
 								node.__parentNode = null;
 								this.__changed = true;
@@ -171,8 +171,8 @@ module.exports = {
 							return this;
 						},
 						clear: function clear() {
-							for (var i = 0; i < this.__nodes.length; i++) {
-								var node = this.__nodes[i];
+							for (let i = 0; i < this.__nodes.length; i++) {
+								const node = this.__nodes[i];
 								node.__parentNode = null;
 								this.__changed = true;
 								this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
@@ -181,9 +181,9 @@ module.exports = {
 							return this;
 						},
 						find: function find(name) {
-							var result = [];
-							for (var i = 0; i < this.__nodes.length; i++) {
-								var node = this.__nodes[i];
+							const result = [];
+							for (let i = 0; i < this.__nodes.length; i++) {
+								const node = this.__nodes[i];
 								if (node.__name === name) {
 									result.push(node);
 								};
@@ -192,7 +192,7 @@ module.exports = {
 						},
 						forEach: function forEach(fn, /*optional*/thisObj) {
 							this.__changed = false;
-							for (var i = 0; i < this.__nodes.length; i++) {
+							for (let i = 0; i < this.__nodes.length; i++) {
 								fn.call(thisObj, this.__nodes[i], i, this.__nodes);
 								if (this.__changed) {
 									throw new types.Error('The list has been modified.');
@@ -271,11 +271,11 @@ module.exports = {
 							this.__name = name;
 						},
 						hasAttr: function hasAttr(name) {
-							var result = this.__attributes.find(name);
+							const result = this.__attributes.find(name);
 							return !!result.length;
 						},
 						getAttr: function getAttr(name) {
-							var result = this.__attributes.find(name);
+							const result = this.__attributes.find(name);
 							if (result.length) {
 								return result[0].getValue();
 							};
@@ -656,9 +656,9 @@ module.exports = {
 						__onChildNodesRemove: function __onChildNodesRemove(ev) {
 							if (ev.detail.node === this.__root) {
 								this.__root = null;
-								for (var i = 0; i < this.__childNodes.__nodes.length; i++) {
-									var node = this.__childNodes.__nodes[i];
-									if (node instanceof xml.Element) {
+								for (let i = 0; i < this.__childNodes.__nodes.length; i++) {
+									const node = this.__childNodes.__nodes[i];
+									if (types._instanceof(node, xml.Element)) {
 										this.__root = node;
 										break;
 									};
@@ -690,9 +690,9 @@ module.exports = {
 							if (!(node instanceof xml.Element)) {
 								throw new types.TypeError("Invalid root element.");
 							};
-							var ok = false;
+							let ok = false;
 							if (this.__root) {
-								for (var i = 0; i < this.__childNodes.__nodes.length; i++) {
+								for (let i = 0; i < this.__childNodes.__nodes.length; i++) {
 									if (this.__childNodes.__nodes[i] === this.__root) {
 										this.__root.__parentNode = null;
 										this.__root = null;

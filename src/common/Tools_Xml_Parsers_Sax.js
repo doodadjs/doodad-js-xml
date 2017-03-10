@@ -41,7 +41,7 @@ module.exports = {
 				// Get namespaces
 				//===================================
 					
-				var doodad = root.Doodad,
+				const doodad = root.Doodad,
 					types = doodad.Types,
 					tools = doodad.Tools,
 					namespaces = doodad.Namespaces,
@@ -56,7 +56,7 @@ module.exports = {
 				// Internal
 				//===================================
 				
-				//var __Internal__ = {};
+				//const __Internal__ = {};
 				
 				//===================================
 				// SAX Parser
@@ -66,23 +66,24 @@ module.exports = {
 					// TODO: MemoryStream to replace strings
 					root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
 					
-					var sax = saxLoader.getSAX(),
+					const sax = saxLoader.getSAX(),
 						nodoc = types.get(options, 'nodoc', false),
-						callback = types.get(options, 'callback'),
 						discardEntities = types.get(options, 'discardEntities', false);
 
+					let callback = types.get(options, 'callback');
 					if (callback) {
-						var cbObj = types.get(options, 'callbackObj');
+						const cbObj = types.get(options, 'callbackObj');
 						callback = doodad.Callback(cbObj, callback);
 					};
 					
-					var Promise = types.getPromise();
+					const Promise = types.getPromise();
 					return Promise.create(function saxParserPromise(resolve, reject) {
-						var doc = (nodoc ? null : new xml.Document()),
-							currentNode = doc,
+						const doc = (nodoc ? null : new xml.Document()),
 							parser = sax.parser(true, types.extend({}, options, {xmlns: true, position: true}));
+
+						let currentNode = doc;
 						
-						var entities = types.get(options, 'entities', null);
+						const entities = types.get(options, 'entities', null);
 						if (entities) {
 							parser.ENTITIES = entities;
 						} else {
@@ -90,12 +91,13 @@ module.exports = {
 							parser.ENTITIES = xml.getEntities();
 						};
 						
-						var aborted = false,
-							attributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
+						const attributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
 						
+						let aborted = false;
+
 						if (!nodoc && !discardEntities) {
 							tools.forEach(parser.ENTITIES, function(value, name) {
-								var node = new xml.Entity(name, value);
+								const node = new xml.Entity(name, value);
 								if (nodoc) {
 									callback(node);
 								} else {
@@ -122,7 +124,7 @@ module.exports = {
 						parser.ontext = function(text) {
 							if (!aborted) {
 								try {
-									var node = new xml.Text(text);
+									const node = new xml.Text(text);
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
@@ -139,7 +141,7 @@ module.exports = {
 						parser.onscript = function(script) {
 							if (!aborted) {
 								try {
-									var node = new xml.CDATASection(script); 
+									const node = new xml.CDATASection(script); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
@@ -153,14 +155,14 @@ module.exports = {
 							};
 						};
 						
-						parser.onopentag = function(node) {
+						parser.onopentag = function(tag) {
 							if (!aborted) {
 								try {
-									var name = node.local,
-										prefix = node.prefix || null,
-										uri = node.uri || null;
+									const name = tag.local,
+										prefix = tag.prefix || null,
+										uri = tag.uri || null;
 									
-									var node = new xml.Element(name, prefix, uri); 
+									const node = new xml.Element(name, prefix, uri); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
@@ -170,15 +172,15 @@ module.exports = {
 										currentNode = node;
 									};
 									// <PRB> 'onattribute' is called before 'onopentag' !
-									for (var i = 0; i < attributes.length; i++) {
-										var attr = attributes[i],
-											line = attr[1],
-											column = attr[2];
-										attr = attr[0];
-										var name = attr.local,
+									for (let i = 0; i < attributes.length; i++) {
+										const attrDef = attributes[i],
+											attr = attrDef[0],
+											line = attrDef[1],
+											column = attrDef[2];
+										const name = attr.local,
 											prefix = attr.prefix || null,
 											uri = attr.uri || null;
-										var node = new xml.Attribute(name, attr.value, prefix, uri); 
+										const node = new xml.Attribute(name, attr.value, prefix, uri); 
 										node.fileLine = line + 1;
 										node.fileColumn = column + 1;
 										if (nodoc) {
@@ -212,7 +214,7 @@ module.exports = {
 						parser.ondoctype = function(doctype) {
 							if (!aborted) {
 								try {
-									var node = new xml.DocumentType(doctype); 
+									const node = new xml.DocumentType(doctype); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
@@ -229,7 +231,7 @@ module.exports = {
 						parser.onprocessinginstruction = function(instr) {
 							if (!aborted) {
 								try {
-									var node = new xml.ProcessingInstruction(instr.name, instr.body); 
+									const node = new xml.ProcessingInstruction(instr.name, instr.body); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
@@ -246,7 +248,7 @@ module.exports = {
 						parser.oncomment = function(comment) {
 							if (!aborted) {
 								try {
-									var node = new xml.Comment(comment); 
+									const node = new xml.Comment(comment); 
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									if (nodoc) {
@@ -264,7 +266,7 @@ module.exports = {
 							if (!aborted) {
 								try {
 									if (!nodoc) {
-										var node = new xml.CDATASection(""); 
+										const node = new xml.CDATASection(""); 
 										node.fileLine = parser.line + 1;
 										node.fileColumn = parser.column + 1;
 										currentNode.getChildren().append(node);
@@ -280,7 +282,7 @@ module.exports = {
 							if (!aborted) {
 								try {
 									if (nodoc) {
-										var node = new xml.CDATASection(cdata); 
+										const node = new xml.CDATASection(cdata); 
 										node.fileLine = parser.line + 1;
 										node.fileColumn = parser.column + 1;
 										callback(node);
@@ -320,7 +322,7 @@ module.exports = {
 
 						if (types.isString(stream)) {
 							// For client-side which do not support streams
-							var str = stream;
+							const str = stream;
 							stream = null; // for "onerror" and "onend"
 							parser.write(str).close();
 						} else {
