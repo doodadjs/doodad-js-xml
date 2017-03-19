@@ -65,13 +65,12 @@ module.exports = {
 				
 				// TODO: Test me
 				ioXml.REGISTER(io.Stream.$extend(
-									io.TextInputStream,
+									//io.TextInputStream,
 									io.TextOutputStream,
 				{
 					$TYPE_NAME: 'Stream',
 					$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Stream')), true) */,
 
-					__listening: doodad.PROTECTED(false),
 					__xmlParser: doodad.PROTECTED(null),
 					__xmlAttributes: doodad.PROTECTED(null), // <PRB> 'onattribute' is called before 'onopentag' !
 					__xmlLevel: doodad.PROTECTED(0),
@@ -85,10 +84,6 @@ module.exports = {
 						ProcessingInstruction: 5,
 						Comment: 6,
 					})),
-					
-					//create: doodad.OVERRIDE(function create(/*optional*/options) {
-					//	this._super(options);
-					//}),
 					
 					reset: doodad.OVERRIDE(function reset() {
 						const sax = saxLoader.getSAX();
@@ -402,27 +397,7 @@ module.exports = {
 						this.__xmlAttributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
 						this.__xmlLevel = 0;
 						
-						this.__listening = false;
-						
 						this._super();
-					}),
-
-					isListening: doodad.OVERRIDE(function isListening() {
-						return this.__listening;
-					}),
-					
-					listen: doodad.OVERRIDE(function listen(/*optional*/options) {
-						if (!this.__listening) {
-							this.__listening = true;
-							this.onListen(new doodad.Event());
-						};
-					}),
-					
-					stopListening: doodad.OVERRIDE(function stopListening() {
-						if (this.__listening) {
-							this.__listening = false;
-							this.onStopListening(new doodad.Event());
-						};
 					}),
 
 					onWrite: doodad.OVERRIDE(function onWrite(ev) {
@@ -439,10 +414,6 @@ module.exports = {
 							this.__xmlParser.write(this.transform(data));
 						};
 							
-						if (this.options.flushMode === 'half') {
-							this.flush();
-						};
-
 						return retval;
 					}),
 				}));
