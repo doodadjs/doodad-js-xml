@@ -100,7 +100,7 @@ module.exports = {
 						
 						//	tools.forEach(parser.ENTITIES, function(value, name) {
 						//		const node = new xml.Entity(name, value);
-						//		this.push(new io.Data(node));
+						//		this.submit(new io.Data(node));
 						//	});
 						
 						// TODO: Combine extracted datas from a chunk of 15K (Node.js's default) to a single "push" call in an Array so that we don't need a buffer size of 100000 !
@@ -123,7 +123,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							node = {
 								mode: type.$Modes.Text,
@@ -133,7 +133,7 @@ module.exports = {
 								level: this.__xmlLevel,
 								Modes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							this.__xmlLevel--;
 
@@ -145,7 +145,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 
 						// TODO: onopenscript, onclosescript
@@ -163,7 +163,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							// TODO: Transform
 							node = {
@@ -174,7 +174,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							this.__xmlLevel--;
 
@@ -186,7 +186,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						parser.onopentag = doodad.Callback(this, function onopentag(tag) {
@@ -207,7 +207,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							node = {
 								mode: type.$Modes.Element,
@@ -219,7 +219,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							// <PRB> 'onattribute' is called before 'onopentag' !
 							for (let i = 0; i < this.__xmlAttributes.length; i++) {
@@ -241,7 +241,7 @@ module.exports = {
 									fileColumn: column + 1,
 									NodeTypes: type.$Modes,
 								};
-								this.push(new io.Data(node));
+								this.submit(new io.Data(node));
 							};
 							
 							this.__xmlAttributes.length = 0;
@@ -261,7 +261,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						parser.onattribute = doodad.Callback(this, function onattribute(attr) {
@@ -281,7 +281,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						parser.onprocessinginstruction = doodad.Callback(this, function onprocessinginstruction(instr) {
@@ -297,7 +297,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						// TODO: onopencomment, onclosecomment
@@ -315,7 +315,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							node = {
 								mode: type.$Modes.Comment,
@@ -325,7 +325,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 							
 							this.__xmlLevel--;
 
@@ -337,7 +337,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						parser.onopencdata = doodad.Callback(this, function onopencdata() {
@@ -354,7 +354,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 
 						parser.oncdata = doodad.Callback(this, function oncdata(cdata) {
@@ -369,7 +369,7 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						parser.onclosecdata = doodad.Callback(this, function onclosecdata() {
@@ -386,11 +386,11 @@ module.exports = {
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
-							this.push(new io.Data(node));
+							this.submit(new io.Data(node));
 						}, true);
 						
 						parser.onend = doodad.Callback(this, function onend() {
-							this.push(new io.Data(io.EOF));
+							this.submit(new io.Data(io.EOF));
 						}, true);
 
 						this.__xmlParser = parser;
