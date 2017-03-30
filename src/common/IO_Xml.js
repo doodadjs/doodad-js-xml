@@ -48,6 +48,7 @@ module.exports = {
 					xmlParsers = xml.Parsers,
 					saxLoader = xmlParsers.Sax.Loader,
 					io = doodad.IO,
+					ioMixIns = io.MixIns,
 					ioXml = io.Xml;
 					
 					
@@ -65,8 +66,9 @@ module.exports = {
 				
 				// TODO: Test me
 				ioXml.REGISTER(io.Stream.$extend(
-									//io.TextInputStream,
-									io.TextOutputStream,
+									io.BufferedTextOutputStream,
+									ioMixIns.TextTransformableIn,
+									ioMixIns.ObjectTransformableOut,
 				{
 					$TYPE_NAME: 'Stream',
 					$TYPE_UUID: '' /*! INJECT('+' + TO_SOURCE(UUID('Stream')), true) */,
@@ -411,7 +413,8 @@ module.exports = {
 							this.__xmlParser.close();
 						} else {
 							// NOTE: 'write' will parse synchronously
-							this.__xmlParser.write(this.transform(data));
+							const xml = data.toString();
+							this.__xmlParser.write(xml);
 						};
 							
 						return retval;
