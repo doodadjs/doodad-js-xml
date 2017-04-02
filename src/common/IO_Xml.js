@@ -77,6 +77,8 @@ module.exports = {
 					__xmlAttributes: doodad.PROTECTED(null), // <PRB> 'onattribute' is called before 'onopentag' !
 					__xmlLevel: doodad.PROTECTED(0),
 
+					__consumeCbOnEOF: doodad.PROTECTED(null),
+
 					$Modes: doodad.PUBLIC(doodad.TYPE({
 						Text: 0,
 						CData: 1,
@@ -392,12 +394,15 @@ module.exports = {
 						}, true);
 						
 						parser.onend = doodad.Callback(this, function onend() {
-							this.submit(new io.Data(io.EOF));
+							this.submit(new io.Data(io.EOF), {callback: this.__consumeCbOnEOF});
+							this.__consumeCbOnEOF = null;
 						}, true);
 
 						this.__xmlParser = parser;
 						this.__xmlAttributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
 						this.__xmlLevel = 0;
+
+						this.__consumeCbOnEOF = null;
 						
 						this._super();
 					}),
@@ -410,6 +415,7 @@ module.exports = {
 						ev.preventDefault();
 
 						if (data.raw === io.EOF) {
+							this.__consumeCbOnEOF = data.defer();
 							this.__xmlParser.close();
 						} else {
 							// NOTE: 'write' will parse synchronously
