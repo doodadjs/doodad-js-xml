@@ -3,14 +3,14 @@
   "description": "XML Parser",
   "version": "0.0.0",
   "files": [
-	"tonic.js"
+    "tonic.js"
   ],
   "keywords": [
     "doodad-js",
     "xml"
   ],
   "optionalDependencies": {
-    "sax": "^1.1.4"
+    "sax": "^1.2.2"
   },
   "repository": {
     "type": "git",
