@@ -48,9 +48,9 @@
 		},
 		{
 			"src": "common/IO_Xml.js",
-			"client": true,
-			"server": true,
-			"browserify": true
+			"//client": true,
+			"//server": true,
+			"//browserify": true
 		},
 		{
 			"src": "common/Tools_Xml_Parsers_Sax.js",
