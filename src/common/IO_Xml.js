@@ -1,6 +1,6 @@
 //! BEGIN_MODULE()
 
-//! REPLACE_BY("// Copyright 2015-2017 Claude Petit, licensed under WTFPL\n", true)
+//! REPLACE_BY("// Copyright 2015-2017 Claude Petit, licensed under Apache License version 2.0\n", true)
 // doodad-js - Object-oriented programming framework
 // File: IO_Xml.js - JSON Parser
 // Project home: https://github.com/doodadjs/
@@ -112,47 +112,20 @@ module.exports = {
 							this.onError(new doodad.ErrorEvent(err));
 						}, true);
 						
-						// TODO: onopentext, onclosetext
 						parser.ontext = doodad.Callback(this, function ontext(text) {
 							let node;
-
-							//this.__xmlLevel++;
 
 							node = {
 								mode: type.$Modes.Text,
 								value: text,
-								//isOpenClose: true,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
 								NodeTypes: type.$Modes,
 							};
 							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
-							
-							//node = {
-							//	mode: type.$Modes.Text,
-							//	value: text,
-							//	fileLine: this.__xmlParser.line + 1,
-							//	fileColumn: this.__xmlParser.column + 1,
-							//	level: this.__xmlLevel,
-							//	Modes: type.$Modes,
-							//};
-							//this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
-							
-							//this.__xmlLevel--;
-							//
-							//node = {
-							//	mode: type.$Modes.Text,
-							//	isOpenClose: true,
-							//	level: this.__xmlLevel,
-							//	fileLine: this.__xmlParser.line + 1,
-							//	fileColumn: this.__xmlParser.column + 1,
-							//	NodeTypes: type.$Modes,
-							//};
-							//this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
 						}, true);
 
-						// TODO: onopenscript, onclosescript
 						parser.onscript = doodad.Callback(this, function onscript(script) {
 							let node;
 
