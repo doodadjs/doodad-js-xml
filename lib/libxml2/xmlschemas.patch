@@ -1,0 +1,25 @@
+633a634,635
+> 
+>     void * userData;  /* Passed to xmlParserCtxt */
+3558a3561,3565
+> static void
+> xmlSchemaBucketDeallocator(xmlSchemaBucketPtr bucket, xmlChar * name) {
+>     xmlSchemaBucketFree(bucket);
+> };
+> 
+4154c4161
+< 		    (xmlHashDeallocator) xmlSchemaBucketFree);
+---
+> 		    (xmlHashDeallocator) xmlSchemaBucketDeallocator);
+10220a10228
+>     newpctxt->userData = pctxt->userData;
+10559a10568
+>         parserCtxt->_private = pctxt->userData;
+12472a12482
+>     ret->userData = ret; // TODO: Add new argument
+21296a21307
+> 
+22032c22043
+< xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt) {
+---
+> xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt, xmlChar *name) {

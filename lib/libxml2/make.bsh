@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# Set Bash env
+set -e
+set -o pipefail
+
+# Install pre-required system packages
+sudo apt-get update
+sudo apt-get install python2.7 build-essential default-jre cmake autoconf automake libtool
+
+# Download Portable Emscripten SDK
+wget https:#s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz emsdk-portable.tar.gz
+tar -xzf emsdk-portable.tar.gz emsdk
+
+# Enter "emsdk"
+cd emsdk
+
+# Install and build latest stable SDK (will take some hours and about 30 gigs of free disk space)
+./emsdk update
+./emsdk install latest
+
+# Activate latest stable SDK
+./emsdk activate latest
+
+# Set SDK environment
+source ./emsdk_env.sh
+
+# Exit "emsdk"
+cd ..
+
+# Extract the source code of the 'libxml2' C-library.
+tar -xzf libxml2-2.9.4.tar.gz libxml2-2.9.4
+
+# Apply patches
+patch -b libxml2-2.9.4/xmlschemas.c xmlschemas.patch
+
+# Inject "xmljs.c" to source code
+cp xmljs.c libxml2-2.9.4/
+
+# Enter "libxml2-2.9.4"
+cd libxml2-2.9.4
+
+# Disable "stat" and "_stat" because we transpile with "NO_FILESYSTEM".
+sed -i.bak "/AC_CHECK_FUNCS.*stat _stat.*)/d" configure.ac
+
+# Disable some features
+emconfigure ./autogen.sh --with-http=no --with-ftp=no --with-python=no --with-threads=no --with-xptr=no --with-regexps=no --with-legacy=no --with-c14n=no --with-catalog=no --with-docbook=no --with-schematron=no --with-iso8859x=no --with-html=no --with-debug=no --without-iconv --without-zlib --without-lzma --without-readline --without-python
+
+# Build
+emmake make
+
+# Transpile to JS
+emcc -O3 --closure 2 --memory-init-file 0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['Runtime','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlFreeMyParserInput','_xmlGetUserDataFromParserCtxt']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2-slim.js
+emcc -O2 --closure 0 --memory-init-file 0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['Runtime','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlFreeMyParserInput','_xmlGetUserDataFromParserCtxt']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2.js
+
+# Exit "libxml2-2.9.4"
+cd ..
+
+# Cleanup
+rm -rf libxml2-2.9.4
