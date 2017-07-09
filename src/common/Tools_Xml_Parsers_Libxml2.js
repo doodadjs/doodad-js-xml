@@ -144,7 +144,7 @@ module.exports = {
 						};
 						const dir = __Internal__.getBaseDirectory(userDataPtr);
 						if (dir) {
-							path = dir.combine(url);
+							path = dir.combine(url, {includePathInRoot: false});
 						} else {
 							__Internal__.registerBaseDirectory(userDataPtr, url.set({file: null}));
 							path = url;
