@@ -1,3 +1,5 @@
+// Copyright (C) 2017 Claude Petit
+
 #include <stdlib.h>
 #include <string.h>
 

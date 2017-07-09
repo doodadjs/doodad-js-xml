@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Copyright (C) 2017 Claude Petit
+
 # Set Bash env
 set -e
 set -o pipefail
