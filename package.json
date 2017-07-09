@@ -7,7 +7,11 @@
   ],
   "keywords": [
     "doodad-js",
-    "xml"
+    "xml",
+	"xsd",
+	"dtd",
+	"sax",
+	"libxml2"
   ],
   "optionalDependencies": {
     "sax": "^1.2.2"
