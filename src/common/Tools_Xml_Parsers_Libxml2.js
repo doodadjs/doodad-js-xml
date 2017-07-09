@@ -558,6 +558,26 @@ module.exports = {
 							};
 
 							if (types.isString(stream)) {
+								let valuePtr = NULL;
+								try {
+									const len = clibxml2.lengthBytesUTF8(stream);
+									valuePtr = __Internal__.createStrPtr(stream, len);
+									if (!valuePtr) {
+										throw new types.Error("Failed to allocate string buffer.");
+									};
+									stream = null;
+									const res = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 1);
+									if (res) {
+										throw new types.Error("Failed to parse schema.");
+									};
+								} catch(ex) {
+									reject(ex);
+								} finally {
+									if (valuePtr) {
+										clibxml2._free(valuePtr);
+										valuePtr = NULL;
+									};
+								};
 							} else {
 								stream.onReady.attach(this, function(ev) {
 									ev.preventDefault();
