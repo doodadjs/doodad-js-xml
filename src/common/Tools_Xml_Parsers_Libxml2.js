@@ -539,6 +539,17 @@ module.exports = {
 					
 							const doc = (nodoc ? null : new xml.Document());
 
+							if (!nodoc && !discardEntities) {
+								tools.forEach(entities, function(value, name) {
+									const node = new xml.Entity(name, value);
+									if (nodoc) {
+										callback(node);
+									} else {
+										doc.getEntities().append(node);
+									};
+								});
+							};
+						
 							currentNode = doc;
 						
 							pushParserCtxt = clibxml2._xmlCreatePushParserCtxt(sax, userPtr, NULL, 0, NULL);
