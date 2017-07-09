@@ -224,6 +224,7 @@ module.exports = {
 					const Promise = types.getPromise();
 					return Promise.try(function() {
 						let clibxml2 = null,
+							clibxml2Cleaned = false,
 							allocatedFunctions = null,
 							allocatedEntities = null,
 							sax = NULL,
@@ -648,7 +649,11 @@ module.exports = {
 							};
 
 							if (schemaParserCtxt) {
-								__Internal__.unregisterBaseDirectory(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+								try {
+									__Internal__.unregisterBaseDirectory(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+								} catch(ex) {
+									// Ignore
+								};
 								clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
 								schemaParserCtxt = NULL;
 							};
@@ -704,11 +709,20 @@ module.exports = {
 
 							clibxml2 = null;
 
+							clibxml2Cleaned = true;
+
 							if (err) {
 								throw err;
 							} else {
 								return result;
 							};
+						})
+						.catch(function(err) {
+							if (!clibxml2Cleaned && !types.isString(err)) {
+								// Lixml2 is unstable because its cleanup has failed, force abort.
+								throw 'abort() at ' + err.stack;
+							};
+							throw err;
 						})
 						.catch(__Internal__.trapCAborted);
 
