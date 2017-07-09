@@ -54,26 +54,25 @@ module.exports = {
 				//===================================
 					
 				// <FUTURE> Thread context
-				const __Internal__ = {
-					xmlEntities: null,
-				};
+				//const __Internal__ = {
+				//};
 					
 				//===================================
 				// SAX Parser
 				//===================================
 
 				// NOTE: SAX is optional
-				saxLoader.ADD('getSAX', root.DD_DOC(
+				saxLoader.ADD('get', root.DD_DOC(
 					//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 							author: "Claude Petit",
-							revision: 0,
+							revision: 1,
 							params: null,
 							returns: 'object',
 							description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
 					}
 					//! END_REPLACE()
-					, function getSAX() {
+					, function get() {
 						try {
 							return require('sax');
 						} catch(ex) {

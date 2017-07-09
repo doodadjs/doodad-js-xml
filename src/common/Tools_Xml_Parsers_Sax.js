@@ -63,21 +63,21 @@ module.exports = {
 				//===================================
 
 				sax.ADD('parse', function(stream, /*optional*/options) {
-					// TODO: MemoryStream to replace strings
-					root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
-					
-					const sax = saxLoader.getSAX(),
-						nodoc = types.get(options, 'nodoc', false),
-						discardEntities = types.get(options, 'discardEntities', false);
-
-					let callback = types.get(options, 'callback');
-					if (callback) {
-						const cbObj = types.get(options, 'callbackObj');
-						callback = doodad.Callback(cbObj, callback);
-					};
-					
 					const Promise = types.getPromise();
 					return Promise.create(function saxParserPromise(resolve, reject) {
+						// TODO: MemoryStream to replace strings
+						root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
+					
+						const sax = saxLoader.get(),
+							nodoc = types.get(options, 'nodoc', false),
+							discardEntities = types.get(options, 'discardEntities', false);
+
+						let callback = types.get(options, 'callback');
+						if (callback) {
+							const cbObj = types.get(options, 'callbackObj');
+							callback = doodad.Callback(cbObj, callback);
+						};
+					
 						const doc = (nodoc ? null : new xml.Document()),
 							parser = sax.parser(true, types.extend({}, options, {xmlns: true, position: true}));
 
@@ -345,7 +345,11 @@ module.exports = {
 				});
 				
 				sax.ADD('isAvailable', function isAvailable() {
-					return !!saxLoader.getSAX();
+					return !!saxLoader.get();
+				});
+				
+				sax.ADD('hasSchemas', function hasSchemas() {
+					return false;
 				});
 				
 				//===================================

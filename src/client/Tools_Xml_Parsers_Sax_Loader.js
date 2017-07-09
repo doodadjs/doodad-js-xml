@@ -54,7 +54,7 @@ module.exports = {
 					
 				// <FUTURE> Thread context
 				const __Internal__ = {
-					xmlEntities: null,
+					sax: null,
 				};
 					
 				//===================================
@@ -62,18 +62,23 @@ module.exports = {
 				//===================================
 
 				// NOTE: SAX is optional
-				saxLoader.ADD('getSAX', root.DD_DOC(
+				saxLoader.ADD('get', root.DD_DOC(
 					//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 							author: "Claude Petit",
-							revision: 0,
+							revision: 1,
 							params: null,
 							returns: 'object',
 							description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
 					}
 					//! END_REPLACE()
-					, function getSAX() {
-						return global.sax;
+					, function get() {
+						if (__Internal__.sax) {
+							return __Internal__.sax;
+						};
+						__Internal__.sax = global.sax;
+						delete global.sax;
+						return __Internal__.sax;
 					}));
 				
 				
@@ -89,7 +94,7 @@ module.exports = {
 					//! END_REPLACE()
 					, function applyPatch() {
 						// <FIX> sax-js v1.1.4: "Stream.prototype.on" is undefined (client-side)
-						const sax = saxLoader.getSAX();
+						const sax = saxLoader.get();
 						if (sax) {
 							const SAXStream = sax.SAXStream,
 								StreamProto = types.getPrototypeOf(SAXStream.prototype);
