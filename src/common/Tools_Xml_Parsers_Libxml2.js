@@ -290,11 +290,14 @@ module.exports = {
 								//warning: function warning(ctxPtr, msgPtr, params) {
 								//	// TODO: Manage warnings
 								//},
-								resolveEntity: function resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
-									debugger;
-								},
+								//resolveEntity: function resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
+								//	debugger;
+								//},
 								getEntity: function getEntity(ctxPtr, namePtr) {
 									const name = clibxml2.Pointer_stringify(namePtr);
+									if (name === '__proto__') {
+										return NULL;
+									};
 									if (!allocatedEntities) {
 										allocatedEntities = types.nullObject();
 									};
@@ -477,7 +480,7 @@ module.exports = {
 							};
 							saxOrg = sax;
 
-							userPtr = clibxml2._malloc(4); // TODO: SCHEMA_PLUG_PTR_LEN
+							userPtr = clibxml2._malloc(4);
 							if (!userPtr) {
 								throw new types.Error("Failed to create user context.");
 							};
@@ -514,12 +517,12 @@ module.exports = {
 
 								//clibxml2._xmlSchemaSetValidErrors(validCtxt, allocFunction('error'), allocFunction('warning'), userPtr);
 
-								saxPtr = clibxml2._malloc(PTR_LEN);   // TODO: SAX_HANDLER_PTR_LEN
+								saxPtr = clibxml2._malloc(PTR_LEN);
 								if (!saxPtr) {
 									throw new types.Error("Failed to create SAX pointer.");
 								};
 								clibxml2.setValue(saxPtr, sax, '*');
-								userPtrPtr = clibxml2._malloc(PTR_LEN);  // TODO: VOID_PTR_LEN
+								userPtrPtr = clibxml2._malloc(PTR_LEN);
 								if (!userPtrPtr) {
 									throw new types.Error("Failed to create user context pointer.");
 								};
