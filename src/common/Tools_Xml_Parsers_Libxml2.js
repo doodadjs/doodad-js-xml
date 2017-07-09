@@ -72,13 +72,17 @@ module.exports = {
 					if (!__Internal__.baseDirectories) {
 						__Internal__.baseDirectories = types.nullObject();
 					};
+					if (types.has(__Internal__.baseDirectories, schemaParserCtxt)) {
+						throw new types.Error("Base directory already registered on schema parser '~0~'.", [schemaParserCtxt]);
+					};
 					__Internal__.baseDirectories[schemaParserCtxt] = directory;
 				};
 
 				__Internal__.unregisterBaseDirectory = function unregisterBaseDirectory(schemaParserCtxt) {
-					if (__Internal__.baseDirectories) {
-						delete __Internal__.baseDirectories[schemaParserCtxt];
+					if (!__Internal__.baseDirectories || !types.has(__Internal__.baseDirectories, schemaParserCtxt)) {
+						throw new types.Error("Base directory not registered on schema parser '~0~'.", [schemaParserCtxt]);
 					};
+					delete __Internal__.baseDirectories[schemaParserCtxt];
 				};
 
 				__Internal__.getBaseDirectory = function getBaseDirectory(schemaParserCtxt) {
@@ -134,6 +138,8 @@ module.exports = {
 					//});
 
 					const externalLoader = clibxml2.Runtime.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
+						// TODO: Read and store base directory from/to "userDataPtr" when "xmlSchemaNewParserCtxt" will accept a "userData" argument.
+
 						const url = files.parseApiLocation(clibxml2.Pointer_stringify(urlStrPtr));
 
 						let path = null;
