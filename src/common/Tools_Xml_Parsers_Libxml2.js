@@ -254,7 +254,7 @@ module.exports = {
 							const nodoc = types.get(options, 'nodoc', false),
 								discardEntities = types.get(options, 'discardEntities', false);
 
-							const entities = types.get(options, 'entities', null) || xml.getEntities();
+							const entities = types.get(options, 'entities', null);
 
 							const PTR_LEN = clibxml2._xmlPtrLen();
 							const XML_INTERNAL_GENERAL_ENTITY = 1;

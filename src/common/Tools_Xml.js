@@ -52,7 +52,6 @@ module.exports = {
 					
 				// <FUTURE> Thread context
 				const __Internal__ = {
-					xmlEntities: null,
 					parsers: [],
 				};
 					
@@ -724,16 +723,8 @@ module.exports = {
 				// XML Tools
 				//===================================
 
-				xml.ADD('addXmlEntities', function addXmlEntities(entities) {
-					__Internal__.xmlEntities = types.extend(__Internal__.xmlEntities || {}, entities);
-				});
-				
 				xml.ADD('registerParser', function registerParser(parser) {
 					__Internal__.parsers = types.unique(__Internal__.parsers, [parser]);
-				});
-				
-				xml.ADD('getEntities', function getEntities() {
-					return __Internal__.xmlEntities;
 				});
 				
 				xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
@@ -750,11 +741,6 @@ module.exports = {
 					};
 					if (!parser || !parser.isAvailable() || (needSchemas && !parser.hasFeatures({schemas: true}))) {
 						throw new types.ParseError('The XML parser is not available.');
-					};
-					if (__Internal__.xmlEntities && !types.has(options, 'entities')) {
-						options = types.extend({
-							entities: __Internal__.xmlEntities,
-						}, options);
 					};
 					return parser.parse(stream, options);
 				});

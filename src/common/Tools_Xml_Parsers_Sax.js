@@ -86,9 +86,6 @@ module.exports = {
 						const entities = types.get(options, 'entities', null);
 						if (entities) {
 							parser.ENTITIES = entities;
-						} else {
-							// NOTE: We reduce default entities only once when they are loaded (see 'init' below).
-							parser.ENTITIES = xml.getEntities();
 						};
 						
 						const attributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
