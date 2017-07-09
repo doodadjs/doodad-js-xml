@@ -69,6 +69,24 @@
 			"client": true,
 			"server": false,
 			"browserify": false
+		},
+		{
+			"src": "common/Tools_Xml_Parsers_Libxml2.js",
+			"client": true,
+			"server": true,
+			"browserify": true
+		},
+		{
+			"src": "server/Tools_Xml_Parsers_Libxml2_Loader.js",
+			"client": false,
+			"server": true,
+			"browserify": true
+		},
+		{
+			"src": "client/Tools_Xml_Parsers_Libxml2_Loader.js",
+			"client": true,
+			"server": false,
+			"browserify": false
 		}
 	],
 	"tasks": {
