@@ -157,17 +157,11 @@ module.exports = {
 						};
 
 //console.log(path.toApiString());
-						let content = files.readFileSync(path, {encoding: 'utf-8'});
+						let content = files.readFileSync(path);
 						let contentPtr = NULL;
 						try {
-							let contentLen = 0;
-							if (types.isString(content)) {
-								contentLen = clibxml2.lengthBytesUTF8(content);
-								contentPtr = __Internal__.createStrPtr(content, contentLen);
-							} else {
-								contentLen = content.length;
-								contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
-							};
+							const contentLen = content.length;
+							contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
 							content = null; // free memory
 							if (!contentPtr) {
 								throw new types.Error("Failed to allocate buffer.");
