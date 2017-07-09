@@ -1,25 +1,73 @@
-633a634,635
-> 
->     void * userData;  /* Passed to xmlParserCtxt */
-3558a3561,3565
-> static void
-> xmlSchemaBucketDeallocator(xmlSchemaBucketPtr bucket, xmlChar * name) {
->     xmlSchemaBucketFree(bucket);
-> };
-> 
-4154c4161
-< 		    (xmlHashDeallocator) xmlSchemaBucketFree);
----
-> 		    (xmlHashDeallocator) xmlSchemaBucketDeallocator);
-10220a10228
->     newpctxt->userData = pctxt->userData;
-10559a10568
->         parserCtxt->_private = pctxt->userData;
-12472a12482
->     ret->userData = ret; // TODO: Add new argument
-21296a21307
-> 
-22032c22043
-< xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt) {
----
-> xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt, xmlChar *name) {
+--- xmlschemas.c	2017-07-09 05:47:12.290510516 -0400
++++ ../libxml2-2.9.4.changed/xmlschemas.c	2017-07-09 05:14:56.166968202 -0400
+@@ -631,6 +631,8 @@
+     xmlSchemaRedefPtr redef; /* Used for redefinitions. */
+     int redefCounter; /* Used for redefinitions. */
+     xmlSchemaItemListPtr attrProhibs;
++
++    void * userData;  /* Passed to xmlParserCtxt */
+ };
+ 
+ /**
+@@ -3556,6 +3558,11 @@
+     xmlFree(bucket);
+ }
+ 
++static void
++xmlSchemaBucketDeallocator(xmlSchemaBucketPtr bucket, xmlChar * name) {
++    xmlSchemaBucketFree(bucket);
++};
++
+ static xmlSchemaBucketPtr
+ xmlSchemaBucketCreate(xmlSchemaParserCtxtPtr pctxt,
+ 			 int type, const xmlChar *targetNamespace)
+@@ -4151,7 +4158,7 @@
+ 
+     if (schema->schemasImports != NULL)
+ 	xmlHashFree(schema->schemasImports,
+-		    (xmlHashDeallocator) xmlSchemaBucketFree);
++		    (xmlHashDeallocator) xmlSchemaBucketDeallocator);
+     if (schema->includes != NULL) {
+ 	xmlSchemaItemListPtr list = (xmlSchemaItemListPtr) schema->includes;
+ 	int i;
+@@ -10218,6 +10225,7 @@
+ 	pctxt->errCtxt);
+     newpctxt->counter = pctxt->counter;
+ 
++    newpctxt->userData = pctxt->userData;
+ 
+     res = xmlSchemaParseNewDocWithContext(newpctxt, schema, bucket);
+ 
+@@ -10557,6 +10565,7 @@
+ 	    parserCtxt->dict = pctxt->dict;
+ 	    xmlDictReference(parserCtxt->dict);
+ 	}
++        parserCtxt->_private = pctxt->userData;
+ 	if (schemaLocation != NULL) {
+ 	    /* Parse from file. */
+ 	    doc = xmlCtxtReadFile(parserCtxt, (const char *) schemaLocation,
+@@ -12470,6 +12479,7 @@
+ 	return(NULL);
+     ret->dict = xmlDictCreate();
+     ret->URL = xmlDictLookup(ret->dict, (const xmlChar *) URL, -1);
++    ret->userData = ret; // TODO: Add new argument
+     return (ret);
+ }
+ 
+@@ -21294,6 +21304,7 @@
+     }
+     return(ret);
+ }
++
+ /**
+  * xmlSchemaParse:
+  * @ctxt:  a schema validation context
+@@ -22029,7 +22040,7 @@
+  * Creates an augmented IDC definition for the imported schema.
+  */
+ static void
+-xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt) {
++xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt, xmlChar *name) {
+     if (imported->schema->idcDef != NULL) {
+ 	    xmlHashScan(imported->schema->idcDef ,
+ 	    (xmlHashScanner) xmlSchemaAugmentIDC, vctxt);
