@@ -348,7 +348,7 @@ module.exports = {
 					return !!saxLoader.get();
 				});
 				
-				sax.ADD('hasSchemas', function hasSchemas() {
+				sax.ADD('hasFeatures', function hasFeatures(features) {
 					return false;
 				});
 				

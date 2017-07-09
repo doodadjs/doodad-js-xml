@@ -731,10 +731,16 @@ module.exports = {
 					return !!libxml2Loader.get();
 				});
 				
-				libxml2.ADD('hasSchemas', function hasSchemas() {
+				libxml2.ADD('hasFeatures', function hasFeatures(features) {
 					// <PRB> libxml2 schema files loader is not Asynchronous so we can't use schemas on the client.
 					// <PRB> libxml2's schema validation is not ready for procuction use with Node because of it's synchronous design.
-					return root.serverSide && root.getOptions().debug;
+					const hasSchemas = root.serverSide && root.getOptions().debug;
+
+					const schemasFeature = types.get(features, 'schemas', false);
+
+					return (!schemasFeature || hasSchemas);
+						// && (!otherFeature || hasOtherFeature)
+						// ...
 				});
 				
 

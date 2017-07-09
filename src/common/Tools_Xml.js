@@ -745,10 +745,10 @@ module.exports = {
 						};
 					} else {
 						parser = tools.filter(__Internal__.parsers, function(parser) {
-							return parser.isAvailable() && (!needSchemas || parser.hasSchemas());
+							return parser.isAvailable() && (!needSchemas || parser.hasFeatures({schemas: true}));
 						})[0];
 					};
-					if (!parser || !parser.isAvailable() || (needSchemas && !parser.hasSchemas())) {
+					if (!parser || !parser.isAvailable() || (needSchemas && !parser.hasFeatures({schemas: true}))) {
 						throw new types.ParseError('The XML parser is not available.');
 					};
 					if (__Internal__.xmlEntities && !types.has(options, 'entities')) {
@@ -759,9 +759,9 @@ module.exports = {
 					return parser.parse(stream, options);
 				});
 				
-				xml.ADD('isAvailable', function isAvailable() {
+				xml.ADD('isAvailable', function isAvailable(/*optional*/features) {
 					return tools.some(__Internal__.parsers, function(parser) {
-						return parser.isAvailable();
+						return parser.isAvailable() && parser.hasFeatures(features);
 					});
 				});
 				
