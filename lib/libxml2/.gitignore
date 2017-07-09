@@ -1,0 +1,3 @@
+# Ignore folders created by "make.bsh"
+libxml2
+emsdk
