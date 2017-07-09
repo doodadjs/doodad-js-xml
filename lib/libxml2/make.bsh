@@ -55,6 +55,3 @@ emcc -O2 --closure 0 --memory-init-file 0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STR
 
 # Exit "libxml2-2.9.4"
 cd ..
-
-# Cleanup
-rm -rf libxml2-2.9.4
