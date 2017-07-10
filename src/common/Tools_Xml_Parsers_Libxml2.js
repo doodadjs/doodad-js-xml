@@ -150,10 +150,18 @@ module.exports = {
 						};
 						const dir = __Internal__.getBaseDirectory(userDataPtr);
 						if (dir) {
-							path = dir.combine(url, {includePathInRoot: false});
+							if (url.isRelative) {
+								path = dir.combine(url, {includePathInRoot: false});
+							} else {
+								path = url;
+							};
 						} else {
-							__Internal__.registerBaseDirectory(userDataPtr, url.set({file: null}));
-							path = url;
+							if (url.isRelative) {
+								return NULL;
+							} else {
+								__Internal__.registerBaseDirectory(userDataPtr, url.set({file: null}));
+								path = url;
+							};
 						};
 
 //console.log(path.toApiString());
