@@ -60,6 +60,7 @@ module.exports = {
 				const NULL = 0;
 
 				const __Internal__ = {
+					initialized: false,
 					createStrPtr: null,
 					baseDirectories: null,
 				};
@@ -91,123 +92,6 @@ module.exports = {
 					};
 				};
 
-				__Internal__.initLibxml2 = function initLibxml2() {
-					const clibxml2 = libxml2Loader.get();
-
-					clibxml2._xmlInitParser();
-
-					const matchFunc = clibxml2.Runtime.addFunction(function matchFunc(filenameStrPtr) {
-						// Force selection of our handlers.
-						return 1;
-					});
-
-					const openFunc = clibxml2.Runtime.addFunction(function openFunc(filenameStrPtr) {
-						// Disable file system access
-						return NULL;
-					});
-
-					const readFunc = clibxml2.Runtime.addFunction(function readFunc(inputContextPtr, bufferPtr, bufferLen) {
-						// Disable file system access
-						return 0;
-					});
-
-					const writeFunc = clibxml2.Runtime.addFunction(function writeFunc(inputContextPtr, bufferPtr, bufferLen) {
-						// Disable file system access
-						return bufferLen;
-					});
-
-					const closeFunc = clibxml2.Runtime.addFunction(function closeFunc(inputContextPtr) {
-						// Disable file system access
-						return 0;
-					});
-
-					//const readExternalFunc = clibxml2.Runtime.addFunction(function readExternalFunc(readContextPtr, bufferPtr, bufferLen) {
-					//	debugger;
-					//});
-
-					//const closeExternalFunc = clibxml2.Runtime.addFunction(function closeExternalFunc(readContextPtr) {
-					//	clibxml2._free(readContextPtr);
-					//	readContextPtr = NULL;
-					//});
-
-					//const externalLoader = clibxml2.Runtime.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
-					//	const path = xsd.set({file: null}).combine(clibxml2.Pointer_stringify(urlStrPtr));
-					//	const readContextPtr = clibxml2._malloc(....);
-					//	const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, readContextPtr, readExternalFunc, closeExternalFunc);
-					//	return inputPtr;
-					//});
-
-					const externalLoader = clibxml2.Runtime.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
-						// TODO: Read and store base directory from/to "userDataPtr" when "xmlSchemaNewParserCtxt" will accept a "userData" argument.
-
-						const url = files.parseApiLocation(clibxml2.Pointer_stringify(urlStrPtr));
-
-						let path = null;
-
-						const userDataPtr = clibxml2._xmlGetUserDataFromParserCtxt(parserCtxtPtr);
-						if (!userDataPtr) {
-							throw new types.Error("The 'libxml2' C library needs some modifications before its compilation.");
-						};
-						const dir = __Internal__.getBaseDirectory(userDataPtr);
-						if (dir) {
-							if (url.isRelative) {
-								path = dir.combine(url, {includePathInRoot: false});
-							} else {
-								path = url;
-							};
-						} else {
-							if (url.isRelative) {
-								return NULL;
-							} else {
-								__Internal__.registerBaseDirectory(userDataPtr, url.set({file: null}));
-								path = url;
-							};
-						};
-
-//console.log(path.toApiString());
-						let content = files.readFileSync(path);
-						let contentPtr = NULL;
-						try {
-							const contentLen = content.length;
-							contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
-							content = null; // free memory
-							if (!contentPtr) {
-								throw new types.Error("Failed to allocate buffer.");
-							};
-							const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen);
-							return inputPtr;
-						} catch (ex) {
-							throw ex;
-						} finally {
-							if (contentPtr) {
-								clibxml2._free(contentPtr);
-								contentPtr = NULL;
-							};
-						};
-					});
-
-					// Disable file system access
-					clibxml2._xmlCleanupInputCallbacks();
-					clibxml2._xmlCleanupOutputCallbacks();
-					clibxml2._xmlRegisterInputCallbacks(matchFunc, openFunc, readFunc, closeFunc);
-					clibxml2._xmlRegisterOutputCallbacks(matchFunc, openFunc, writeFunc, closeFunc);
-
-					// Set our external loader.
-					clibxml2._xmlSetExternalEntityLoader(externalLoader);
-
-					__Internal__.createStrPtr = function _createStrPtr(str, /*optional*/len) {
-						if (types.isNothing(len)) {
-							len = clibxml2.lengthBytesUTF8(str);
-						};
-						const ptr = clibxml2._malloc(len + 1);
-						if (ptr) {
-							clibxml2.stringToUTF8(str, ptr, len + 1);
-						};
-						return ptr;
-					};
-				};
-
-
 				__Internal__.trapCAborted = function trapCAborted(err) {
 					if (err) {
 						// <PRB> On 'abort', Emscripten throws a string instead of an object !
@@ -220,6 +104,137 @@ module.exports = {
 						};
 					};
 				};
+
+
+				libxml2.ADD('init', function init() {
+					if (__Internal__.initialized) {
+						return;
+					};
+
+					try {
+						const clibxml2 = libxml2Loader.get();
+
+						clibxml2._xmlInitParser();
+
+						const matchFunc = clibxml2.Runtime.addFunction(function matchFunc(filenameStrPtr) {
+							// Force selection of our handlers.
+							return 1;
+						});
+
+						const openFunc = clibxml2.Runtime.addFunction(function openFunc(filenameStrPtr) {
+							// Disable file system access
+							return NULL;
+						});
+
+						const readFunc = clibxml2.Runtime.addFunction(function readFunc(inputContextPtr, bufferPtr, bufferLen) {
+							// Disable file system access
+							return 0;
+						});
+
+						const writeFunc = clibxml2.Runtime.addFunction(function writeFunc(inputContextPtr, bufferPtr, bufferLen) {
+							// Disable file system access
+							return bufferLen;
+						});
+
+						const closeFunc = clibxml2.Runtime.addFunction(function closeFunc(inputContextPtr) {
+							// Disable file system access
+							return 0;
+						});
+
+						//const readExternalFunc = clibxml2.Runtime.addFunction(function readExternalFunc(readContextPtr, bufferPtr, bufferLen) {
+						//	debugger;
+						//});
+
+						//const closeExternalFunc = clibxml2.Runtime.addFunction(function closeExternalFunc(readContextPtr) {
+						//	clibxml2._free(readContextPtr);
+						//	readContextPtr = NULL;
+						//});
+
+						//const externalLoader = clibxml2.Runtime.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
+						//	const path = xsd.set({file: null}).combine(clibxml2.Pointer_stringify(urlStrPtr));
+						//	const readContextPtr = clibxml2._malloc(....);
+						//	const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, readContextPtr, readExternalFunc, closeExternalFunc);
+						//	return inputPtr;
+						//});
+
+						const externalLoader = clibxml2.Runtime.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
+							// TODO: Read and store base directory from/to "userDataPtr" when "xmlSchemaNewParserCtxt" will accept a "userData" argument.
+
+							const url = files.parseApiLocation(clibxml2.Pointer_stringify(urlStrPtr));
+
+							let path = null;
+
+							const userDataPtr = clibxml2._xmlGetUserDataFromParserCtxt(parserCtxtPtr);
+							if (!userDataPtr) {
+								throw new types.Error("The 'libxml2' C library needs some modifications before its compilation.");
+							};
+							const dir = __Internal__.getBaseDirectory(userDataPtr);
+							if (dir) {
+								if (url.isRelative) {
+									path = dir.combine(url, {includePathInRoot: false});
+								} else {
+									path = url;
+								};
+							} else {
+								if (url.isRelative) {
+									return NULL;
+								} else {
+									__Internal__.registerBaseDirectory(userDataPtr, url.set({file: null}));
+									path = url;
+								};
+							};
+
+	//console.log(path.toApiString());
+							let content = files.readFileSync(path);
+							let contentPtr = NULL;
+							try {
+								const contentLen = content.length;
+								contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
+								content = null; // free memory
+								if (!contentPtr) {
+									throw new types.Error("Failed to allocate buffer.");
+								};
+								const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen);
+								return inputPtr;
+							} catch (ex) {
+								throw ex;
+							} finally {
+								if (contentPtr) {
+									clibxml2._free(contentPtr);
+									contentPtr = NULL;
+								};
+							};
+						});
+
+						// Disable file system access
+						clibxml2._xmlCleanupInputCallbacks();
+						clibxml2._xmlCleanupOutputCallbacks();
+						clibxml2._xmlRegisterInputCallbacks(matchFunc, openFunc, readFunc, closeFunc);
+						clibxml2._xmlRegisterOutputCallbacks(matchFunc, openFunc, writeFunc, closeFunc);
+
+						// Set our external loader.
+						clibxml2._xmlSetExternalEntityLoader(externalLoader);
+
+						__Internal__.createStrPtr = function _createStrPtr(str, /*optional*/len) {
+							if (types.isNothing(len)) {
+								len = clibxml2.lengthBytesUTF8(str);
+							};
+							const ptr = clibxml2._malloc(len + 1);
+							if (ptr) {
+								clibxml2.stringToUTF8(str, ptr, len + 1);
+							};
+							return ptr;
+						};
+
+						__Internal__.initialized = true;
+
+						xml.registerParser(libxml2);
+
+					} catch(ex) {
+						__Internal__.trapCAborted(ex);
+
+					};
+				});
 
 
 				libxml2.ADD('parse', function(stream, /*optional*/options) {
@@ -736,10 +751,14 @@ module.exports = {
 				});
 				
 				libxml2.ADD('isAvailable', function isAvailable() {
-					return !!libxml2Loader.get();
+					return __Internal__.initialized;
 				});
 				
 				libxml2.ADD('hasFeatures', function hasFeatures(features) {
+					if (!__Internal__.initialized) {
+						return false;
+					};
+
 					// <PRB> libxml2 schema files loader is not Asynchronous so we can't use schemas on the client.
 					// <PRB> libxml2's schema validation is not ready for procuction use with Node because of it's synchronous design.
 					const current = {
@@ -756,13 +775,10 @@ module.exports = {
 				// Init
 				//===================================
 				return function init(/*optional*/options) {
-					try {
-						__Internal__.initLibxml2();
-					} catch(ex) {
-						__Internal__.trapCAborted(ex);
+					const clibxml2 = libxml2Loader.get();
+					if (clibxml2) {
+						libxml2.init();
 					};
-
-					xml.registerParser(libxml2);
 				};
 			},
 		};

@@ -80,40 +80,13 @@ module.exports = {
 						delete global.sax;
 						return __Internal__.sax;
 					}));
-				
-				
-				saxLoader.ADD('applyPatch', root.DD_DOC(
-					//! REPLACE_IF(IS_UNSET('debug'), "null")
-					{
-							author: "Claude Petit",
-							revision: 0,
-							params: null,
-							returns: 'undefined',
-							description: "Applies a patch for client-side SAX-JS.",
-					}
-					//! END_REPLACE()
-					, function applyPatch() {
-						// <FIX> sax-js v1.1.4: "Stream.prototype.on" is undefined (client-side)
-						const sax = saxLoader.get();
-						if (sax) {
-							const SAXStream = sax.SAXStream,
-								StreamProto = types.getPrototypeOf(SAXStream.prototype);
-							if (StreamProto && !StreamProto.on) {
-								StreamProto.on = function(ev, handler) {
-									// ...
-								};
-							};
-						};
-					}));
-				
-				
+
+
 				//===================================
 				// Init
 				//===================================
-				return function init(/*optional*/options) {
-					// NOTE: You will need to call it manually if SAX-JS is not loaded at this time
-					saxLoader.applyPatch();
-				};
+				//return function init(/*optional*/options) {
+				//};
 			},
 		};
 		return DD_MODULES;

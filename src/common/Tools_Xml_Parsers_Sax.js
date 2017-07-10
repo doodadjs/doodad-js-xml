@@ -56,19 +56,55 @@ module.exports = {
 				// Internal
 				//===================================
 				
-				//const __Internal__ = {};
+				const __Internal__ = {
+					initialized: false,
+				};
 				
 				//===================================
 				// SAX Parser
 				//===================================
 
+				sax.ADD('init', root.DD_DOC(
+					//! REPLACE_IF(IS_UNSET('debug'), "null")
+					{
+							author: "Claude Petit",
+							revision: 1,
+							params: null,
+							returns: 'undefined',
+							description: "Applies a patch for client-side SAX-JS.",
+					}
+					//! END_REPLACE()
+					, function init() {
+						if (__Internal__.initialized) {
+							return;
+						};
+
+						// <FIX> sax-js v1.1.4: "Stream.prototype.on" is undefined (client-side)
+						if (!root.serverSide) {
+							const saxlib = saxLoader.get();
+
+							const SAXStream = saxlib.SAXStream,
+								StreamProto = types.getPrototypeOf(SAXStream.prototype);
+							if (StreamProto && !StreamProto.on) {
+								StreamProto.on = function(ev, handler) {
+									// ...
+								};
+							};
+						};
+
+						__Internal__.initialized = true;
+
+						xml.registerParser(sax);
+					}));
+				
+				
 				sax.ADD('parse', function(stream, /*optional*/options) {
 					const Promise = types.getPromise();
 					return Promise.create(function saxParserPromise(resolve, reject) {
 						// TODO: MemoryStream to replace strings
 						root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
 					
-						const sax = saxLoader.get(),
+						const saxlib = saxLoader.get(),
 							nodoc = types.get(options, 'nodoc', false),
 							discardEntities = types.get(options, 'discardEntities', false);
 
@@ -79,7 +115,7 @@ module.exports = {
 						};
 					
 						const doc = (nodoc ? null : new xml.Document()),
-							parser = sax.parser(true, types.extend({}, options, {xmlns: true, position: true}));
+							parser = saxlib.parser(true, types.extend({}, options, {xmlns: true, position: true}));
 
 						let currentNode = doc;
 						
@@ -342,18 +378,22 @@ module.exports = {
 				});
 				
 				sax.ADD('isAvailable', function isAvailable() {
-					return !!saxLoader.get();
+					return __Internal__.initialized;
 				});
 				
 				sax.ADD('hasFeatures', function hasFeatures(features) {
 					return false;
 				});
 				
+
 				//===================================
 				// Init
 				//===================================
 				return function init(/*optional*/options) {
-					xml.registerParser(sax);
+					const saxlib = saxLoader.get();
+					if (saxlib) {
+						sax.init();
+					};
 				};
 			},
 		};
