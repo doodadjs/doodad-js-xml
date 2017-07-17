@@ -160,13 +160,13 @@ module.exports = {
 						const externalLoader = clibxml2.Runtime.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
 							// TODO: Read and store base directory from/to "userDataPtr" when "xmlSchemaNewParserCtxt" will accept a "userData" argument.
 
-							const url = files.parseApiLocation(clibxml2.Pointer_stringify(urlStrPtr));
+							const url = files.parseLocation(clibxml2.Pointer_stringify(urlStrPtr));
 
 							let path = null;
 
 							const userDataPtr = clibxml2._xmlGetUserDataFromParserCtxt(parserCtxtPtr);
 							if (!userDataPtr) {
-								throw new types.Error("The 'libxml2' C library needs some modifications before its compilation.");
+								throw new types.Error("The 'libxml2' C library needs some modifications before its build.");
 							};
 							const dir = __Internal__.getBaseDirectory(userDataPtr);
 							if (dir) {
