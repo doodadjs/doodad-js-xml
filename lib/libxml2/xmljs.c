@@ -1,5 +1,3 @@
-// Copyright (C) 2017 Claude Petit
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -54,7 +52,7 @@ xmlSAXHandlerPtr xmlCreateMySAXHandler(
 		    endElementNsSAX2Func endElementNs,
 		    xmlStructuredErrorFunc serror
 		) {
-	xmlSAXHandlerPtr sax = (xmlSAXHandlerPtr) xmlMalloc(sizeof(xmlSAXHandler));
+	xmlSAXHandlerPtr sax = (xmlSAXHandlerPtr) malloc(sizeof(xmlSAXHandler));
 	if (NULL != sax) {
 		memset(sax, 0, sizeof(xmlSAXHandler));
 		sax->initialized = XML_SAX2_MAGIC;
@@ -93,15 +91,24 @@ xmlSAXHandlerPtr xmlCreateMySAXHandler(
 
 void xmlFreeMySAXHandler(xmlSAXHandlerPtr sax) {
 	if (NULL != sax) {
-		xmlFree(sax);
+		free(sax);
 		sax = NULL;
 	};
 };
+
+//static int readFunc(void * context, char * buffer, int len) {
+//	return 0;
+//};
+
+//static int closeFunc(void * context) {
+//	return 0;
+//};
 
 xmlParserInputPtr xmlCreateMyParserInput(
 	xmlParserCtxtPtr parserCtxt,
 	const char * content,
 	int contentLen
+	//const char * filename
 			//void * readContext,
 			//xmlInputReadCallback readFunc, // The function used to read
 			//xmlInputCloseCallback closeFunc // The function used to end reading and free resources
@@ -112,20 +119,21 @@ xmlParserInputPtr xmlCreateMyParserInput(
 	if (NULL != inputBuffer) {
 		parserInput = (xmlParserInputPtr) xmlMalloc(sizeof(xmlParserInput));
 		if (NULL != parserInput) {
-				//inputBuffer->readcallback = readFunc;
-				//inputBuffer->closecallback = closeFunc;
-				//inputBuffer->context = readContext;
+			//inputBuffer->readcallback = readFunc;
+			//inputBuffer->closecallback = closeFunc;
+			//inputBuffer->context = NULL;
 			memset(parserInput, 0, sizeof(xmlParserInput));
 			parserInput->line = 1;
 			parserInput->col = 1;
 			parserInput->standalone = -1;
 			parserInput->buf = inputBuffer;
+			//parserInput->filename = (char *) xmlStrdup((const xmlChar *) filename);
 			if (parserCtxt != NULL) {
 				parserInput->id = parserCtxt->input_id++;
 			};
 			xmlBufResetInput(parserInput->buf->buffer, parserInput);
-			//inputPush(parserCtxt, parserInput);
-				// TODO: Check "parserCtxt->inputMax"
+			//xmlPushInput(parserCtxt, parserInput);
+				//// TODO: Check "parserCtxt->inputMax"
 				//parserCtxt->inputTab[parserCtxt->inputNr] = parserInput;
 				//parserCtxt->input = parserInput;
 				//parserCtxt->inputNr++;
@@ -137,17 +145,19 @@ xmlParserInputPtr xmlCreateMyParserInput(
 	return parserInput;
 };
 
-void xmlFreeMyParserInput(xmlParserInputPtr parserInput) {
-	if (NULL != parserInput) {
-		if (NULL != parserInput->buf) {
-			xmlFreeParserInputBuffer(parserInput->buf);
-			parserInput->buf = NULL;
-		};
-		xmlFree(parserInput);
-		parserInput = NULL;
-	};
-};
-
 void * xmlGetUserDataFromParserCtxt(xmlParserCtxtPtr parserCtxt) {
 	return parserCtxt->_private;
 };
+
+//const char * xmlGetFilenameFromParserContext(xmlParserCtxtPtr parserCtxt) {
+//	if (NULL != parserCtxt->input->filename) {
+//		return parserCtxt->input->filename;
+//	} else {
+//		for (int i = 0; i < parserCtxt->inputNr; i++) {
+//			if (NULL != parserCtxt->inputTab[i]->filename) {
+//				return parserCtxt->inputTab[i]->filename;
+//			};
+//		};
+//		return NULL;
+//	};
+//};

@@ -69,24 +69,39 @@ module.exports = {
 				// Libxml2 Parser
 				//===================================
 
-				__Internal__.registerBaseDirectory = function registerBaseDirectory(schemaParserCtxt, directory) {
+				__Internal__.registerBaseDirectory = function registerBaseDirectory(schemaParserCtxt, url) {
 					if (!__Internal__.baseDirectories) {
 						__Internal__.baseDirectories = types.nullObject();
 					};
+					const directory = url.set({file: ''});
+					const directoryStr = directory.toApiString();
 					if (types.has(__Internal__.baseDirectories, schemaParserCtxt)) {
-						throw new types.Error("Base directory already registered on schema parser '~0~'.", [schemaParserCtxt]);
+						const dirs = __Internal__.baseDirectories[schemaParserCtxt];
+						const len = dirs.length;
+						let found = false;
+						for (let i = 0; i < len; i++) {
+							const dir = dirs[i];
+							if (dir[0] === directoryStr) {
+								found = true;
+								break;
+							};
+						};
+						if (!found) {
+							__Internal__.baseDirectories[schemaParserCtxt].push( [directoryStr, directory] );
+						};
+					} else {
+						__Internal__.baseDirectories[schemaParserCtxt] = [ [directoryStr, directory] ];
 					};
-					__Internal__.baseDirectories[schemaParserCtxt] = directory;
 				};
 
-				__Internal__.unregisterBaseDirectory = function unregisterBaseDirectory(schemaParserCtxt) {
+				__Internal__.unregisterBaseDirectories = function unregisterBaseDirectories(schemaParserCtxt) {
 					if (!__Internal__.baseDirectories || !types.has(__Internal__.baseDirectories, schemaParserCtxt)) {
 						throw new types.Error("Base directory not registered on schema parser '~0~'.", [schemaParserCtxt]);
 					};
 					delete __Internal__.baseDirectories[schemaParserCtxt];
 				};
 
-				__Internal__.getBaseDirectory = function getBaseDirectory(schemaParserCtxt) {
+				__Internal__.getBaseDirectories = function getBaseDirectories(schemaParserCtxt) {
 					if (__Internal__.baseDirectories) {
 						return types.get(__Internal__.baseDirectories, schemaParserCtxt);
 					};
@@ -162,43 +177,61 @@ module.exports = {
 
 							const url = files.parseLocation(clibxml2.Pointer_stringify(urlStrPtr));
 
-							let path = null;
-
 							const userDataPtr = clibxml2._xmlGetUserDataFromParserCtxt(parserCtxtPtr);
 							if (!userDataPtr) {
 								throw new types.Error("The 'libxml2' C library needs some modifications before its build.");
 							};
-							const dir = __Internal__.getBaseDirectory(userDataPtr);
-							if (dir) {
-								if (url.isRelative) {
-									path = dir.combine(url, {includePathInRoot: false});
-								} else {
-									path = url;
+
+							let content = null;
+
+							if (url.isRelative) {
+								const dirs = __Internal__.getBaseDirectories(userDataPtr),
+									len = dirs.length;
+								for (let i = 0; i < len; i++) {
+									const path = dirs[i][1].combine(url/*, {includePathInRoot: false}*/);
+									try {
+										content = files.readFileSync(path);
+										__Internal__.registerBaseDirectory(userDataPtr, path);
+										break;
+									} catch(ex) {
+										if (ex.code !== 'ENOENT') {
+											throw ex;
+										};
+									};
 								};
 							} else {
-								if (url.isRelative) {
-									return NULL;
-								} else {
-									__Internal__.registerBaseDirectory(userDataPtr, url.set({file: null}));
-									path = url;
-								};
+								content = files.readFileSync(url);
+								__Internal__.registerBaseDirectory(userDataPtr, url);
 							};
 
 	//console.log(path.toApiString());
-							let content = files.readFileSync(path);
+
+							if (!content) {
+								return NULL;
+							};
+
 							let contentPtr = NULL;
+							//let filenamePtr = NULL;
 							try {
 								const contentLen = content.length;
 								contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
 								content = null; // free memory
 								if (!contentPtr) {
-									throw new types.Error("Failed to allocate buffer.");
+									throw new types.Error("Failed to allocate buffer file content.");
 								};
-								const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen);
+								//filenamePtr = clibxml2.allocate(path.toApiString(), 'i8', clibxml2.ALLOC_NORMAL);
+								//if (!filenamePtr) {
+								//	throw new types.Error("Failed to allocate buffer for file name.");
+								//};
+								const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen/*, filenamePtr*/);
 								return inputPtr;
 							} catch (ex) {
 								throw ex;
 							} finally {
+								//if (filenamePtr) {
+								//	clibxml2._free(filenamePtr);
+								//	filenamePtr = NULL;
+								//};
 								if (contentPtr) {
 									clibxml2._free(contentPtr);
 									contentPtr = NULL;
@@ -523,7 +556,7 @@ module.exports = {
 
 								clibxml2._free(urlPtr); // free memory
 								urlPtr = NULL;
-								__Internal__.unregisterBaseDirectory(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+								__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 								clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
 								schemaParserCtxt = NULL;
 
@@ -670,7 +703,7 @@ module.exports = {
 
 							if (schemaParserCtxt) {
 								try {
-									__Internal__.unregisterBaseDirectory(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+									__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 								} catch(ex) {
 									// Ignore
 								};
