@@ -148,14 +148,23 @@ module.exports = {
 							this.dispatchEvent(new types.CustomEvent('add', {detail: {node: node}}));
 							return this;
 						},
-						remove: function remove(node) {
-							for (let i = 0; i < this.__nodes.length; i++) {
-								if (this.__nodes[i] === node) {
-									this.__nodes.splice(i, 1);
+						remove: function remove(nodeOrName) {
+							const nodes = this.__nodes;
+							let len = nodes.length;
+							const isName = types.isString(nodeOrName);
+							for (let i = 0; i < len;) {
+								const node = nodes[i];
+								if (isName ? (node.__name === nodeOrName) : (node === nodeOrName)) {
+									nodes.splice(i, 1);
+									len--;
 									node.__parentNode = null;
 									this.__changed = true;
 									this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
-									break;
+									if (!isName) {
+										break;
+									};
+								} else {
+									i++;
 								};
 							};
 							return this;
@@ -170,8 +179,10 @@ module.exports = {
 							return this;
 						},
 						clear: function clear() {
-							for (let i = 0; i < this.__nodes.length; i++) {
-								const node = this.__nodes[i];
+							const nodes = this.__nodes;
+							const len = nodes.length;
+							for (let i = 0; i < len; i++) {
+								const node = nodes[i];
 								node.__parentNode = null;
 								this.__changed = true;
 								this.dispatchEvent(new types.CustomEvent('remove', {detail: {node: node}}));
@@ -181,18 +192,35 @@ module.exports = {
 						},
 						find: function find(name) {
 							const result = [];
-							for (let i = 0; i < this.__nodes.length; i++) {
-								const node = this.__nodes[i];
+							const nodes = this.__nodes;
+							const len = nodes.length;
+							for (let i = 0; i < len; i++) {
+								const node = nodes[i];
 								if (node.__name === name) {
 									result.push(node);
 								};
 							};
 							return result;
 						},
+						findFirst: function findFirst(name) {
+							let result = null;
+							const nodes = this.__nodes;
+							const len = nodes.length;
+							for (let i = 0; i < len; i++) {
+								const node = nodes[i];
+								if (node.__name === name) {
+									result = node;
+									break;
+								};
+							};
+							return result;
+						},
 						forEach: function forEach(fn, /*optional*/thisObj) {
 							this.__changed = false;
-							for (let i = 0; i < this.__nodes.length; i++) {
-								fn.call(thisObj, this.__nodes[i], i, this.__nodes);
+							const nodes = this.__nodes;
+							const len = nodes.length;
+							for (let i = 0; i < len; i++) {
+								fn.call(thisObj, nodes[i], i, nodes);
 								if (this.__changed) {
 									throw new types.Error('The list has been modified.');
 								};
@@ -278,6 +306,9 @@ module.exports = {
 							if (result.length) {
 								return result[0].getValue();
 							};
+						},
+						removeAttr: function removeAttr(name) {
+							return this.__attributes.remove(name);
 						},
 						getAttrs: function getAttrs() {
 							return this.__attributes;
