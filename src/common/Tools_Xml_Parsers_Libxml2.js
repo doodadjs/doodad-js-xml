@@ -330,15 +330,13 @@ module.exports = {
 
 							const SAX_HANDLERS = {
 								//error: function error(ctxPtr, msgPtr, params) {
-								//	if (stream) {
-								//		stream.stopListening();
-								//		stream = null;
-								//	};
-								//	//// TODO: Use "*printf"
-								//	//throw new types.Error("Parse error.");
+								//	console.error(clibxml2.Pointer_stringify(msgPtr));
 								//},
 								//warning: function warning(ctxPtr, msgPtr, params) {
-								//	// TODO: Manage warnings
+								//	console.warn(clibxml2.Pointer_stringify(msgPtr));
+								//},
+								//serror: function serror(userDataPtr, errorPtr) {
+								//	debugger;
 								//},
 								//resolveEntity: function resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
 								//	debugger;
@@ -622,7 +620,11 @@ module.exports = {
 									stream = null;
 									const res = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 1);
 									if (res) {
-										throw new types.Error("Failed to parse schema.");
+										throw new types.Error("Failed to parse the XML document.");
+									};
+									const isValid = clibxml2._xmlSchemaIsValid(validCtxt);
+									if (isValid <= 0) {
+										throw new types.Error("The XML document is invalid.");
 									};
 								} catch(ex) {
 									reject(ex);
@@ -633,6 +635,10 @@ module.exports = {
 									};
 								};
 							} else {
+								stream.onError.attachOnce(this, function(ev) {
+									ev.preventDefault();
+									reject(ev.error);
+								});
 								stream.onReady.attach(this, function(ev) {
 									ev.preventDefault();
 									let valuePtr = NULL;
@@ -666,8 +672,12 @@ module.exports = {
 												};
 											};
 										};
+										const isValid = clibxml2._xmlSchemaIsValid(validCtxt);
+										if (isValid <= 0) {
+											throw new types.Error("The XML document is invalid.");
+										};
 									} catch(ex) {
-										reject(ex);
+										throw ex;
 									} finally {
 										if (valuePtr) {
 											clibxml2._free(valuePtr);
