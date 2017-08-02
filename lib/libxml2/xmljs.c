@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -161,3 +163,11 @@ void * xmlGetUserDataFromParserCtxt(xmlParserCtxtPtr parserCtxt) {
 //		return NULL;
 //	};
 //};
+
+char * xmlFormatGenericError(void * ctx ATTRIBUTE_UNUSED, char * template, ...) {
+	va_list ap;
+	va_start(ap, template); 
+	char * msg = va_arg(ap, char *);
+  	va_end(ap);
+	return msg;
+};

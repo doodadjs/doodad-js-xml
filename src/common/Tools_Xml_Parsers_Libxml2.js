@@ -329,12 +329,20 @@ module.exports = {
 							};
 
 							const SAX_HANDLERS = {
-								//error: function error(ctxPtr, msgPtr, params) {
-								//	console.error(clibxml2.Pointer_stringify(msgPtr));
-								//},
-								//warning: function warning(ctxPtr, msgPtr, params) {
-								//	console.warn(clibxml2.Pointer_stringify(msgPtr));
-								//},
+								error: function error(ctxPtr, msgPtr, paramsPtr) {
+									const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+									const str = clibxml2.Pointer_stringify(strPtr);
+									if (str) {
+										console.error(tools.trim(str, '\n'));
+									};
+								},
+								warning: function warning(ctxPtr, msgPtr, paramsPtr) {
+									const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+									const str = clibxml2.Pointer_stringify(strPtr);
+									if (str && (str.indexOf("Skipping import of schema") < 0)) {
+										console.warn(tools.trim(str, '\n'));
+									};
+								},
 								//serror: function serror(userDataPtr, errorPtr) {
 								//	debugger;
 								//},
@@ -477,6 +485,12 @@ module.exports = {
 							};
 
 							const allocFunction = function _allocFunction(name) {
+								if (!allocatedFunctions) {
+									allocatedFunctions = types.nullObject();
+								};
+								if (name in allocatedFunctions) {
+									return allocatedFunctions[name];
+								};
 								const fn = types.get(SAX_HANDLERS, name, null);
 								let ptr = NULL;
 								if (fn) {
@@ -484,10 +498,7 @@ module.exports = {
 									if (!ptr) {
 										throw new types.Error("Failed to allocate function '~0~' for the SAXHandler.", [name]);
 									};
-									if (!allocatedFunctions) {
-										allocatedFunctions = [];
-									};
- 									allocatedFunctions.push(ptr);
+ 									allocatedFunctions[name] = ptr;
 								};
 								return ptr;
 							};
@@ -545,7 +556,7 @@ module.exports = {
 									throw new types.Error("Failed to create schema parser.");
 								};
 
-								//clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error'), allocFunction('warning'));
+								clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error'), allocFunction('warning'), NULL);
 
 								schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
 								if (!schema) {
@@ -727,7 +738,7 @@ module.exports = {
 							};
 
 							if (allocatedFunctions) {
-								tools.forEach(allocatedFunctions, function(ptr) {
+								tools.forEach(allocatedFunctions, function(ptr, name) {
 									clibxml2.Runtime.removeFunction(ptr);
 								});
 								allocatedFunctions = null;
