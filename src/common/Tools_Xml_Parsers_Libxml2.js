@@ -157,7 +157,7 @@ module.exports = {
 						});
 
 						//const readExternalFunc = clibxml2.Runtime.addFunction(function readExternalFunc(readContextPtr, bufferPtr, bufferLen) {
-						//	debugger;
+						//	types.DEBUGGER();
 						//});
 
 						//const closeExternalFunc = clibxml2.Runtime.addFunction(function closeExternalFunc(readContextPtr) {
@@ -344,10 +344,10 @@ module.exports = {
 									};
 								},
 								//serror: function serror(userDataPtr, errorPtr) {
-								//	debugger;
+								//	types.DEBUGGER();
 								//},
 								//resolveEntity: function resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
-								//	debugger;
+								//	types.DEBUGGER();
 								//},
 								getEntity: function getEntity(ctxPtr, namePtr) {
 									const name = clibxml2.Pointer_stringify(namePtr);
