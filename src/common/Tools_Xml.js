@@ -56,7 +56,6 @@ module.exports = {
 				};
 					
 				types.complete(_shared.Natives, {
-					windowArray: global.Array,
 					symbolIterator: (types.isSymbol(global.Symbol.iterator) ? global.Symbol.iterator : undefined),
 				});
 					
