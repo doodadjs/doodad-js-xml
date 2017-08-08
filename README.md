@@ -71,7 +71,7 @@ $ npm install doodad-js-xml
 
   [Apache-2.0][license-url]
 
-  This package also uses "libxml2", which is licensed under MIT.
+  This package also includes "libxml2", which is licensed under MIT.
 
 [npm-image]: https://img.shields.io/npm/v/doodad-js-xml.svg
 [npm-url]: https://npmjs.org/package/doodad-js-xml
