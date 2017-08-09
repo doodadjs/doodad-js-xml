@@ -76,7 +76,7 @@ module.exports = {
 					__xmlParser: doodad.PROTECTED(null),
 					__xmlAttributes: doodad.PROTECTED(null), // <PRB> 'onattribute' is called before 'onopentag' !
 					__xmlLevel: doodad.PROTECTED(0),
-					__dataObject: doodad.PROTECTED(null),
+					__xmlBuffer: doodad.PROTECTED(null),
 
 					$Modes: doodad.PUBLIC(doodad.TYPE({
 						Text: 0,
@@ -117,13 +117,18 @@ module.exports = {
 
 							node = {
 								mode: type.$Modes.Text,
+								isOpenClose: false,
 								value: text,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 
 						parser.onscript = doodad.Callback(this, function onscript(script) {
@@ -131,13 +136,18 @@ module.exports = {
 
 							node = {
 								mode: type.$Modes.CData,
+								isOpenClose: false,
 								value: script,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						parser.onopentag = doodad.Callback(this, function onopentag(tag) {
@@ -150,16 +160,20 @@ module.exports = {
 								name: tag.prefix || null,
 								prefix: prefix,
 								uri: tag.uri || null,
-								attrs: this.__xmlAttributes,
 								isOpenClose: true,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 							
-							this.__xmlAttributes = [];
+							types.append(buffer, this.__xmlAttributes);
+							this.__xmlAttributes = null;
 						}, true);
 						
 						parser.onclosetag = doodad.Callback(this, function onclosetag(tagName) {
@@ -173,9 +187,13 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						parser.onattribute = doodad.Callback(this, function onattribute(attr) {
@@ -184,6 +202,7 @@ module.exports = {
 							// <PRB> 'onattribute' is called before 'onopentag' !
 							node = {
 								mode: type.$Modes.Attribute,
+								isOpenClose: false,
 								name: attr.local,
 								value: attr.value,
 								prefix: attr.prefix || null,
@@ -191,9 +210,13 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.__xmlAttributes.push(node);
+
+							let buffer = this.__xmlAttributes;
+							if (!buffer) {
+								this.__xmlAttributes = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						parser.ondoctype = doodad.Callback(this, function ondoctype(doctype) {
@@ -201,13 +224,18 @@ module.exports = {
 
 							node = {
 								mode: type.$Modes.DocumentType,
+								isOpenClose: false,
 								value: doctype,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						parser.onprocessinginstruction = doodad.Callback(this, function onprocessinginstruction(instr) {
@@ -215,14 +243,19 @@ module.exports = {
 
 							node = {
 								mode: type.$Modes.ProcessingInstruction,
+								isOpenClose: false,
 								name: instr.name,
 								value: instr.body,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						// TODO: onopencomment, onclosecomment
@@ -231,13 +264,18 @@ module.exports = {
 
 							node = {
 								mode: type.$Modes.Comment,
+								isOpenClose: false,
 								value: comment,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						parser.onopencdata = doodad.Callback(this, function onopencdata() {
@@ -251,9 +289,13 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 
 						parser.oncdata = doodad.Callback(this, function oncdata(cdata) {
@@ -261,13 +303,18 @@ module.exports = {
 
 							node = {
 								mode: type.$Modes.CData,
+								isOpenClose: false,
 								value: cdata,
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
 						parser.onclosecdata = doodad.Callback(this, function onclosecdata() {
@@ -281,19 +328,22 @@ module.exports = {
 								level: this.__xmlLevel,
 								fileLine: this.__xmlParser.line + 1,
 								fileColumn: this.__xmlParser.column + 1,
-								NodeTypes: type.$Modes,
 							};
-							this.submit(new io.Data(node), {callback: this.__dataObject.defer()});
+
+							let buffer = this.__xmlBuffer;
+							if (!buffer) {
+								this.__xmlBuffer = buffer = [];
+							};
+							buffer.push(node);
 						}, true);
 						
-						parser.onend = doodad.Callback(this, function onend() {
-							this.submit(new io.Data(io.EOF), {callback: this.__dataObject.defer()});
-						}, true);
+						//parser.onend = doodad.Callback(this, function onend() {
+						//}, true);
 
 						this.__xmlParser = parser;
-						this.__xmlAttributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
+						this.__xmlAttributes = null; // <PRB> 'onattribute' is called before 'onopentag' !
 						this.__xmlLevel = 0;
-						this.__dataObject = null;
+						this.__xmlBuffer = null;
 						
 						this._super();
 					}),
@@ -305,9 +355,10 @@ module.exports = {
 
 						ev.preventDefault();
 
-						this.__dataObject = data;
+						this.__xmlBuffer = null;
 
 						if (data.raw === io.EOF) {
+							// NOTE: 'close' will finish parsing synchronously
 							this.__xmlParser.close();
 						} else {
 							// NOTE: 'write' will parse synchronously
@@ -315,7 +366,18 @@ module.exports = {
 							this.__xmlParser.write(xml);
 						};
 							
-						this.__dataObject = null;
+						const buffer = this.__xmlBuffer;
+						if (buffer) {
+							this.__xmlBuffer = null;
+							this.submit(new io.Data({
+								Modes: types.getType(this).$Modes,
+								buffer: buffer,
+							}), {callback: data.defer()});
+						};
+
+						if (data.raw === io.EOF) {
+							this.submit(new io.Data(io.EOF), {callback: data.defer()});
+						};
 
 						return retval;
 					}),
