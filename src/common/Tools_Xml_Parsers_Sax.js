@@ -115,7 +115,7 @@ module.exports = {
 						};
 					
 						const doc = (nodoc ? null : new xml.Document()),
-							parser = saxlib.parser(true, types.extend({}, options, {xmlns: true, position: true}));
+							parser = saxlib.parser(true, tools.extend({}, options, {xmlns: true, position: true}));
 
 						let currentNode = doc;
 						

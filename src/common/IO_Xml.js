@@ -60,7 +60,7 @@ module.exports = {
 				//const __Internal__ = {
 				//};
 					
-				//types.complete(_shared.Natives, {
+				//tools.complete(_shared.Natives, {
 				//});
 
 				
@@ -90,7 +90,7 @@ module.exports = {
 					
 					reset: doodad.OVERRIDE(function reset() {
 						const sax = saxLoader.getSAX();
-						const parser = sax.parser(true, types.extend({}, this.options, {xmlns: true, position: true}));
+						const parser = sax.parser(true, tools.extend({}, this.options, {xmlns: true, position: true}));
 						const type = types.getType(this);
 						
 						const entities = types.get(this.options, 'entities', null);
@@ -172,7 +172,7 @@ module.exports = {
 							};
 							buffer.push(node);
 							
-							types.append(buffer, this.__xmlAttributes);
+							tools.append(buffer, this.__xmlAttributes);
 							this.__xmlAttributes = null;
 						}, true);
 						

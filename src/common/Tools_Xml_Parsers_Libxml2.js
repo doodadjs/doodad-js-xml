@@ -71,7 +71,7 @@ module.exports = {
 
 				__Internal__.registerBaseDirectory = function registerBaseDirectory(schemaParserCtxt, url) {
 					if (!__Internal__.baseDirectories) {
-						__Internal__.baseDirectories = types.nullObject();
+						__Internal__.baseDirectories = tools.nullObject();
 					};
 					const directory = url.set({file: ''});
 					const directoryStr = directory.toApiString();
@@ -355,7 +355,7 @@ module.exports = {
 										return NULL;
 									};
 									if (!allocatedEntities) {
-										allocatedEntities = types.nullObject();
+										allocatedEntities = tools.nullObject();
 									};
 									const resolved = types.get(allocatedEntities, name);
 									if (resolved) {
@@ -486,7 +486,7 @@ module.exports = {
 
 							const allocFunction = function _allocFunction(name) {
 								if (!allocatedFunctions) {
-									allocatedFunctions = types.nullObject();
+									allocatedFunctions = tools.nullObject();
 								};
 								if (name in allocatedFunctions) {
 									return allocatedFunctions[name];

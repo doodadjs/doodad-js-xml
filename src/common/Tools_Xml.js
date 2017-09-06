@@ -55,7 +55,7 @@ module.exports = {
 					parsers: [],
 				};
 					
-				types.complete(_shared.Natives, {
+				tools.complete(_shared.Natives, {
 					symbolIterator: (types.isSymbol(global.Symbol.iterator) ? global.Symbol.iterator : undefined),
 				});
 					
@@ -754,7 +754,7 @@ module.exports = {
 				//===================================
 
 				xml.ADD('registerParser', function registerParser(parser) {
-					__Internal__.parsers = types.unique(__Internal__.parsers, [parser]);
+					__Internal__.parsers = tools.unique(__Internal__.parsers, [parser]);
 				});
 				
 				xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
