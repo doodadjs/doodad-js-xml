@@ -24,72 +24,71 @@
 //	limitations under the License.
 //! END_REPLACE()
 
-module.exports = {
-	add: function add(DD_MODULES) {
-		DD_MODULES = (DD_MODULES || {});
-		DD_MODULES['Doodad.Tools.Xml.Parsers.Libxml2.Loader'] = {
-			version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
-			dependencies: [
-				'Doodad.Tools.Xml',
-			],
+exports.add = function add(DD_MODULES) {
+	DD_MODULES = (DD_MODULES || {});
+	DD_MODULES['Doodad.Tools.Xml.Parsers.Libxml2.Loader'] = {
+		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
+		dependencies: [
+			'Doodad.Tools.Xml',
+		],
 			
-			create: function create(root, /*optional*/_options) {
-				"use strict";
+		create: function create(root, /*optional*/_options) {
+			"use strict";
 
-				//===================================
-				// Get namespaces
-				//===================================
+			//===================================
+			// Get namespaces
+			//===================================
 					
-				const doodad = root.Doodad,
-					types = doodad.Types,
-					tools = doodad.Tools,
-					xml = tools.Xml,
-					xmlParsers = xml.Parsers,
-					libxml2 = xmlParsers.Libxml2,
-					libxml2Loader = libxml2.Loader;
+			const doodad = root.Doodad,
+				types = doodad.Types,
+				tools = doodad.Tools,
+				xml = tools.Xml,
+				xmlParsers = xml.Parsers,
+				libxml2 = xmlParsers.Libxml2,
+				libxml2Loader = libxml2.Loader;
 					
-				//===================================
-				// Internal
-				//===================================
+			//===================================
+			// Internal
+			//===================================
 					
-				// <FUTURE> Thread context
-				const __Internal__ = {
-					libxml2: null,
-				};
+			// <FUTURE> Thread context
+			const __Internal__ = {
+				libxml2: null,
+			};
 
-				//===================================
-				// libxml2 Parser
-				//===================================
+			//===================================
+			// libxml2 Parser
+			//===================================
 
-				// NOTE: libxml2 is optional
-				libxml2Loader.ADD('get', root.DD_DOC(
-					//! REPLACE_IF(IS_UNSET('debug'), "null")
-					{
-							author: "Claude Petit",
-							revision: 0,
-							params: null,
-							returns: 'object',
-							description: "Returns parser from the libxml2 library when available. Otherwise, returns 'undefined'.",
-					}
-					//! END_REPLACE()
-					, function get() {
-						if (__Internal__.libxml2) {
-							return __Internal__.libxml2;
-						};
-						__Internal__.libxml2 = global.libxml2;
-						delete global.libxml2;
+			// NOTE: libxml2 is optional
+			libxml2Loader.ADD('get', root.DD_DOC(
+				//! REPLACE_IF(IS_UNSET('debug'), "null")
+				{
+						author: "Claude Petit",
+						revision: 0,
+						params: null,
+						returns: 'object',
+						description: "Returns parser from the libxml2 library when available. Otherwise, returns 'undefined'.",
+				}
+				//! END_REPLACE()
+				, function get() {
+					if (__Internal__.libxml2) {
 						return __Internal__.libxml2;
-					}));
+					};
+					__Internal__.libxml2 = global.libxml2;
+					delete global.libxml2;
+					return __Internal__.libxml2;
+				}));
 				
 				
-				//===================================
-				// Init
-				//===================================
-				//return function init(/*optional*/options) {
-				//};
-			},
-		};
-		return DD_MODULES;
-	},
+			//===================================
+			// Init
+			//===================================
+			//return function init(/*optional*/options) {
+			//};
+		},
+	};
+	return DD_MODULES;
 };
+
 //! END_MODULE()

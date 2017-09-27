@@ -24,71 +24,70 @@
 //	limitations under the License.
 //! END_REPLACE()
 
-module.exports = {
-	add: function add(DD_MODULES) {
-		DD_MODULES = (DD_MODULES || {});
-		DD_MODULES['Doodad.Tools.Xml.Parsers.Sax.Loader'] = {
-			version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
-			dependencies: [
-				'Doodad.Tools.Xml',
-			],
+exports.add = function add(DD_MODULES) {
+	DD_MODULES = (DD_MODULES || {});
+	DD_MODULES['Doodad.Tools.Xml.Parsers.Sax.Loader'] = {
+		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
+		dependencies: [
+			'Doodad.Tools.Xml',
+		],
 			
-			create: function create(root, /*optional*/_options) {
-				"use strict";
+		create: function create(root, /*optional*/_options) {
+			"use strict";
 
-				//===================================
-				// Get namespaces
-				//===================================
+			//===================================
+			// Get namespaces
+			//===================================
 					
-				const doodad = root.Doodad,
-					types = doodad.Types,
-					tools = doodad.Tools,
-					nodejs = doodad.NodeJs,
-					xml = tools.Xml,
-					xmlParsers = xml.Parsers,
-					sax = xmlParsers.Sax,
-					saxLoader = sax.Loader;
+			const doodad = root.Doodad,
+				types = doodad.Types,
+				tools = doodad.Tools,
+				nodejs = doodad.NodeJs,
+				xml = tools.Xml,
+				xmlParsers = xml.Parsers,
+				sax = xmlParsers.Sax,
+				saxLoader = sax.Loader;
 					
-				//===================================
-				// Internal
-				//===================================
+			//===================================
+			// Internal
+			//===================================
 					
-				// <FUTURE> Thread context
-				//const __Internal__ = {
-				//};
+			// <FUTURE> Thread context
+			//const __Internal__ = {
+			//};
 					
-				//===================================
-				// SAX Parser
-				//===================================
+			//===================================
+			// SAX Parser
+			//===================================
 
-				// NOTE: SAX is optional
-				saxLoader.ADD('get', root.DD_DOC(
-					//! REPLACE_IF(IS_UNSET('debug'), "null")
-					{
-							author: "Claude Petit",
-							revision: 1,
-							params: null,
-							returns: 'object',
-							description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
-					}
-					//! END_REPLACE()
-					, function get() {
-						try {
-							return require('sax');
-						} catch(ex) {
-							return undefined;
-						};
-					}));
+			// NOTE: SAX is optional
+			saxLoader.ADD('get', root.DD_DOC(
+				//! REPLACE_IF(IS_UNSET('debug'), "null")
+				{
+						author: "Claude Petit",
+						revision: 1,
+						params: null,
+						returns: 'object',
+						description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
+				}
+				//! END_REPLACE()
+				, function get() {
+					try {
+						return require('sax');
+					} catch(ex) {
+						return undefined;
+					};
+				}));
 				
 				
-				//===================================
-				// Init
-				//===================================
-				//return function init(/*optional*/options) {
-				//};
-			},
-		};
-		return DD_MODULES;
-	},
+			//===================================
+			// Init
+			//===================================
+			//return function init(/*optional*/options) {
+			//};
+		},
+	};
+	return DD_MODULES;
 };
+
 //! END_MODULE()
