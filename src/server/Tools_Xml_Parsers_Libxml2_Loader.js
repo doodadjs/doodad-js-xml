@@ -42,7 +42,7 @@ exports.add = function add(DD_MODULES) {
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
-				nodejs = doodad.NodeJs,
+				modules = doodad.Modules,
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
@@ -53,8 +53,9 @@ exports.add = function add(DD_MODULES) {
 			//===================================
 					
 			// <FUTURE> Thread context
-			//const __Internal__ = {
-			//};
+			const __Internal__ = {
+				libxml2: null,
+			};
 
 			//===================================
 			// libxml2 Parser
@@ -68,23 +69,26 @@ exports.add = function add(DD_MODULES) {
 						revision: 0,
 						params: null,
 						returns: 'object',
-						description: "Returns parser from the libxml2 library when available. Otherwise, returns 'undefined'.",
+						description: "Returns parser from the libxml2 library when available. Otherwise, returns 'null'.",
 				}
 				//! END_REPLACE()
 				, function get() {
-					try {
-						return require('doodad-js-xml/lib/libxml2/libxml2.js');
-					} catch(ex) {
-						return undefined;
-					};
+					return __Internal__.libxml2;
 				}));
 				
 				
 			//===================================
 			// Init
 			//===================================
-			//return function init(/*optional*/options) {
-			//};
+			return function init(/*optional*/options) {
+				return modules.import('doodad-js-xml/lib/libxml2/libxml2.js')
+					.then(function(exports) {
+						__Internal__.libxml2 = exports.default;
+					})
+					.catch(function(err) {
+						// Do nothing
+					});
+			};
 		},
 	};
 	return DD_MODULES;

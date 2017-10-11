@@ -42,7 +42,7 @@ exports.add = function add(DD_MODULES) {
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
-				nodejs = doodad.NodeJs,
+				modules = doodad.Modules,
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				sax = xmlParsers.Sax,
@@ -53,8 +53,9 @@ exports.add = function add(DD_MODULES) {
 			//===================================
 					
 			// <FUTURE> Thread context
-			//const __Internal__ = {
-			//};
+			const __Internal__ = {
+				saxlib: null,
+			};
 					
 			//===================================
 			// SAX Parser
@@ -68,23 +69,36 @@ exports.add = function add(DD_MODULES) {
 						revision: 1,
 						params: null,
 						returns: 'object',
-						description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'undefined'.",
+						description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'null'.",
 				}
 				//! END_REPLACE()
 				, function get() {
-					try {
-						return require('sax');
-					} catch(ex) {
-						return undefined;
-					};
+					return __Internal__.saxlib;
 				}));
 				
 				
 			//===================================
 			// Init
 			//===================================
-			//return function init(/*optional*/options) {
-			//};
+			return function init(/*optional*/options) {
+				//return modules.import('sax')
+				//	.catch(function(err) {
+				//		// Do nothing.
+				//	});
+				return modules.import('doodad-js-xml/node_modules/sax')
+					.then(function(exports) {
+						__Internal__.saxlib = exports.default;
+					})
+					.catch(function(err) {
+						return modules.import('sax')
+							.then(function(exports) {
+								__Internal__.saxlib = exports.default;
+							})
+							.catch(function(err) {
+								// Do nothing.
+							});
+					});
+			};
 		},
 	};
 	return DD_MODULES;
