@@ -108,9 +108,6 @@ exports.add = function add(DD_MODULES) {
 							
 					_new: types.SUPER(function _new(parentNode, nodeTypes) {
 						this._super();
-						if (!types.isArray(nodeTypes)) {
-							nodeTypes = [nodeTypes];
-						};
 						this.__parentNode = parentNode;
 						this.__nodeTypes = nodeTypes;
 						this.__nodes = [];
@@ -285,7 +282,7 @@ exports.add = function add(DD_MODULES) {
 						this.__prefix = prefix;
 						this.__baseURI = baseURI;
 						this.__name = name;
-						this.__attributes = new xml.NodesList(this, xml.Attribute);
+						this.__attributes = new xml.NodesList(this, [xml.Attribute]);
 						this.__childNodes = new xml.NodesList(this, [xml.Element, xml.Text, xml.CDataSection, xml.Comment]);
 					}),
 					
@@ -671,7 +668,7 @@ exports.add = function add(DD_MODULES) {
 						this.__childNodes = new xml.NodesList(this, [xml.Element, xml.Text, xml.CDataSection, xml.Comment]);
 						this.__childNodes.addEventListener('add', types.bind(this, this.__onChildNodesAdd));
 						this.__childNodes.addEventListener('remove', types.bind(this, this.__onChildNodesRemove));
-						this.__instructions = new xml.NodesList(this, xml.ProcessingInstruction);
+						this.__instructions = new xml.NodesList(this, [xml.ProcessingInstruction]);
 						this.__entities = new xml.NodesList(this, [xml.EntityReference, xml.Entity]);
 					}),
 						
