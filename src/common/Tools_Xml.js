@@ -115,7 +115,7 @@ exports.add = function add(DD_MODULES) {
 							
 					append: function append(node) {
 						if (!types._instanceof(node, this.__nodeTypes)) {
-							throw new types.TypeError("Invalid node type.");
+							throw new types.ValueError("Invalid node type.");
 						};
 						this.__nodes.push(node);
 						node.__parentNode = this.__parentNode;
@@ -125,7 +125,7 @@ exports.add = function add(DD_MODULES) {
 					},
 					prepend: function prepend(node) {
 						if (!types._instanceof(node, this.__nodeTypes)) {
-							throw new types.TypeError("Invalid node type.");
+							throw new types.ValueError("Invalid node type.");
 						};
 						this.__nodes.unshift(node);
 						node.__parentNode = this.__parentNode;
@@ -135,7 +135,7 @@ exports.add = function add(DD_MODULES) {
 					},
 					insertAt: function insertAt(pos, node) {
 						if (!types._instanceof(node, this.__nodeTypes)) {
-							throw new types.TypeError("Invalid node type.");
+							throw new types.ValueError("Invalid node type.");
 						};
 						this.__nodes.splice(pos, 0, node);
 						node.__parentNode = this.__parentNode;
@@ -699,7 +699,7 @@ exports.add = function add(DD_MODULES) {
 					},
 					setDocumentType: function setDocumentType(node) {
 						if (!types.isNothing(node) && !types._instanceof(node, xml.DocumentType)) {
-							throw new types.TypeError("Invalid document type node.");
+							throw new types.ValueError("Invalid document type node.");
 						};
 						if (this.__doctype) {
 							this.__doctype.__parentNode = null;
@@ -713,7 +713,7 @@ exports.add = function add(DD_MODULES) {
 					},
 					setRoot: function setRoot(node) {
 						if (!(node instanceof xml.Element)) {
-							throw new types.TypeError("Invalid root element.");
+							throw new types.ValueError("Invalid root element.");
 						};
 						let ok = false;
 						if (this.__root) {
