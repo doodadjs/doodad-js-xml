@@ -81,7 +81,7 @@ exports.add = function add(DD_MODULES) {
 			// Init
 			//===================================
 			return function init(/*optional*/options) {
-				return modules.import('doodad-js-xml/lib/libxml2/libxml2.js')
+				return modules.import('@doodad-js/xml/lib/libxml2/libxml2.js')
 					.then(function(exports) {
 						__Internal__.libxml2 = exports.default;
 					})

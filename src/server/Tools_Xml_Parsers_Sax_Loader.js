@@ -85,7 +85,7 @@ exports.add = function add(DD_MODULES) {
 				//	.catch(function(err) {
 				//		// Do nothing.
 				//	});
-				return modules.import('doodad-js-xml/node_modules/sax')
+				return modules.import('@doodad-js/xml/node_modules/sax')
 					.then(function(exports) {
 						__Internal__.saxlib = exports.default;
 					})

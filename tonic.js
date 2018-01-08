@@ -1,8 +1,8 @@
-require('doodad-js').createRoot()
+require('@doodad-js/core').createRoot()
 	.then(root => {
 		return root.Doodad.Modules.load([
 			{
-				module: 'doodad-js-xml'
+				module: '@doodad-js/xml'
 			}
 		]);
 	})
