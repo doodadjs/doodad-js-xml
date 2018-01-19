@@ -43,7 +43,7 @@ exports.add = function add(DD_MODULES) {
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
-				namespaces = doodad.Namespaces,
+				//namespaces = doodad.Namespaces,
 				io = doodad.IO,
 				ioMixIns = io.MixIns,
 				xml = tools.Xml,
@@ -149,6 +149,7 @@ exports.add = function add(DD_MODULES) {
 								};
 								parser.close();
 							} catch(o) {
+								// Do nothing
 							};
 						};
 					};

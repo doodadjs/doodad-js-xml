@@ -36,6 +36,7 @@ exports.add = function add(DD_MODULES) {
 		create: function create(root, /*optional*/_options, _shared) {
 			"use strict";
 
+/* TODO: Test and debug
 			//===================================
 			// Get namespaces
 			//===================================
@@ -63,7 +64,6 @@ exports.add = function add(DD_MODULES) {
 			//});
 
 				
-/* TODO: Test and debug
 			ioXml.REGISTER(io.Stream.$extend(
 								io.BufferedTextOutputStream,
 								ioMixIns.TextTransformableIn,

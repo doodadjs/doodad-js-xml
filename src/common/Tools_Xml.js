@@ -40,9 +40,9 @@ exports.add = function add(DD_MODULES) {
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
-				namespaces = doodad.Namespaces,
-				xml = tools.Xml,
-				xmlParsers = xml.Parsers;
+				//namespaces = doodad.Namespaces,
+				xml = tools.Xml;
+				//xmlParsers = xml.Parsers;
 					
 					
 			//===================================
@@ -301,6 +301,7 @@ exports.add = function add(DD_MODULES) {
 						if (result.length) {
 							return result[0].getValue();
 						};
+						return undefined;
 					},
 					removeAttr: function removeAttr(name) {
 						return this.__attributes.remove(name);

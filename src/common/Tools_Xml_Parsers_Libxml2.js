@@ -36,6 +36,8 @@ exports.add = function add(DD_MODULES) {
 		create: function create(root, /*optional*/_options) {
 			"use strict";
 
+			/* eslint camelcase: "off" */  // Mixing C and JS
+
 			//===================================
 			// Get namespaces
 			//===================================
@@ -43,7 +45,7 @@ exports.add = function add(DD_MODULES) {
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
-				namespaces = doodad.Namespaces,
+				//namespaces = doodad.Namespaces,
 				io = doodad.IO,
 				ioMixIns = io.MixIns,
 				files = tools.Files,
@@ -89,7 +91,7 @@ exports.add = function add(DD_MODULES) {
 						__Internal__.baseDirectories[schemaParserCtxt].push( [directoryStr, directory] );
 					};
 				} else {
-					__Internal__.baseDirectories[schemaParserCtxt] = [ [directoryStr, directory] ];
+					__Internal__.baseDirectories[schemaParserCtxt] = [[directoryStr, directory]];
 				};
 			};
 
@@ -104,6 +106,7 @@ exports.add = function add(DD_MODULES) {
 				if (__Internal__.baseDirectories) {
 					return types.get(__Internal__.baseDirectories, schemaParserCtxt);
 				};
+				return undefined;
 			};
 
 			__Internal__.trapCAborted = function trapCAborted(err) {
@@ -316,6 +319,14 @@ exports.add = function add(DD_MODULES) {
 						const XML_INTERNAL_PREDEFINED_ENTITY = 6;
 
 						let currentNode = null;
+
+						let callback = types.get(options, 'callback');
+						if (callback) {
+							const cbObj = types.get(options, 'callbackObj');
+							callback = doodad.Callback(cbObj, callback);
+						};
+					
+						const doc = (nodoc ? null : new xml.Document());
 						
 						const getStrFromXmlCharAr = function _getStrFromXmlCharAr(ptr, index, /*optional*/end) {
 							if (types.isNothing(end)) {
@@ -433,7 +444,7 @@ exports.add = function add(DD_MODULES) {
 									currentNode = node;
 								};
 								const attrs = (nodoc ? null : currentNode.getAttrs());
-								for (var i = 0; i < nb_attributes; i++) {
+								for (let i = 0; i < nb_attributes; i++) {
 									// localname/prefix/URI/value/end
 									const ptr = attributesPtrStrPtr + (PTR_LEN * 5 * i);
 									const node = new xml.Attribute(/*name*/getStrFromXmlCharAr(ptr, 0), /*value*/getStrFromXmlCharAr(ptr, 3, 4), /*prefix*/getStrFromXmlCharAr(ptr, 1), /*uri*/getStrFromXmlCharAr(ptr, 2)); 
@@ -497,7 +508,7 @@ exports.add = function add(DD_MODULES) {
 								if (!ptr) {
 									throw new types.Error("Failed to allocate function '~0~' for the SAXHandler.", [name]);
 								};
- 								allocatedFunctions[name] = ptr;
+								allocatedFunctions[name] = ptr;
 							};
 							return ptr;
 						};
@@ -592,14 +603,6 @@ exports.add = function add(DD_MODULES) {
 							sax = clibxml2.getValue(saxPtr, '*');
 							userPtr = clibxml2.getValue(userPtrPtr, '*');
 						};
-
-						let callback = types.get(options, 'callback');
-						if (callback) {
-							const cbObj = types.get(options, 'callbackObj');
-							callback = doodad.Callback(cbObj, callback);
-						};
-					
-						const doc = (nodoc ? null : new xml.Document());
 
 						if (!nodoc && !discardEntities) {
 							tools.forEach(entities, function(value, name) {
@@ -793,6 +796,7 @@ exports.add = function add(DD_MODULES) {
 					.catch(function(err) {
 						if (!clibxml2Cleaned && !types.isString(err)) {
 							// Lixml2 is unstable because its cleanup has failed, force abort.
+							/* eslint no-throw-literal: "off" */  // That's Emscripten's fault !
 							throw 'abort() at ' + err.stack;
 						};
 						throw err;
