@@ -36,7 +36,7 @@ exports.add = function add(DD_MODULES) {
 		create: function create(root, /*optional*/_options) {
 			"use strict";
 
-			/* eslint camelcase: "off" */  // Mixing C and JS
+			/* eslint camelcase: "off", id-match: "off" */  // Mixing C and JS
 
 			//===================================
 			// Get namespaces
@@ -114,6 +114,7 @@ exports.add = function add(DD_MODULES) {
 					// <PRB> On 'abort', Emscripten throws a string instead of an object !
 					if (types.isString(err)) {
 						// We must abort because now libxml2 is unstable.
+						/* eslint no-console: "off" */
 						console.error(err);
 						tools.abortScript(1);
 					} else {
