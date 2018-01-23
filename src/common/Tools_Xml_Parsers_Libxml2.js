@@ -24,6 +24,13 @@
 //	limitations under the License.
 //! END_REPLACE()
 
+/* eslint camelcase: "off", id-match: "off" */  // Mixing C and JS
+
+//! IF_SET("mjs")
+//! ELSE()
+	"use strict";
+//! END_IF()
+
 exports.add = function add(DD_MODULES) {
 	DD_MODULES = (DD_MODULES || {});
 	DD_MODULES['Doodad.Tools.Xml.Parsers.Libxml2'] = {
@@ -34,10 +41,6 @@ exports.add = function add(DD_MODULES) {
 		],
 			
 		create: function create(root, /*optional*/_options) {
-			"use strict";
-
-			/* eslint camelcase: "off", id-match: "off" */  // Mixing C and JS
-
 			//===================================
 			// Get namespaces
 			//===================================
