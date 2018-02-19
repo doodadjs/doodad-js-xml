@@ -78,7 +78,7 @@ exports.add = function add(DD_MODULES) {
 						
 					_new: types.SUPER(function _new(nodesList) {
 						this._super();
-						_shared.setAttribute(this, '__nodes', types.clone(nodesList.__nodes));
+						types.setAttribute(this, '__nodes', types.clone(nodesList.__nodes));
 					}),
 
 					next: function next() {
@@ -241,7 +241,7 @@ exports.add = function add(DD_MODULES) {
 			));
 					
 			if (_shared.Natives.symbolIterator) {
-				_shared.setAttribute(xml.NodesList.prototype, _shared.Natives.symbolIterator, function() {
+				types.setAttribute(xml.NodesList.prototype, _shared.Natives.symbolIterator, function() {
 					return this.items();
 				}, {});
 			};
