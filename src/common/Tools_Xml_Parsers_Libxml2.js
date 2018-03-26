@@ -31,9 +31,9 @@
 	"use strict";
 //! END_IF()
 
-exports.add = function add(DD_MODULES) {
-	DD_MODULES = (DD_MODULES || {});
-	DD_MODULES['Doodad.Tools.Xml.Parsers.Libxml2'] = {
+exports.add = function add(modules) {
+	modules = (modules || {});
+	modules['Doodad.Tools.Xml.Parsers.Libxml2'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		dependencies: [
 			'Doodad.Tools.Xml', 
@@ -843,7 +843,7 @@ exports.add = function add(DD_MODULES) {
 			};
 		},
 	};
-	return DD_MODULES;
+	return modules;
 };
 
 //! END_MODULE()
