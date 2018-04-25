@@ -26,7 +26,7 @@
 
 //! IF_SET("mjs")
 //! ELSE()
-	"use strict";
+"use strict";
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -69,11 +69,11 @@ exports.add = function add(modules) {
 			sax.ADD('init', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 				{
-						author: "Claude Petit",
-						revision: 1,
-						params: null,
-						returns: 'undefined',
-						description: "Applies a patch for client-side SAX-JS.",
+					author: "Claude Petit",
+					revision: 1,
+					params: null,
+					returns: 'undefined',
+					description: "Applies a patch for client-side SAX-JS.",
 				}
 				//! END_REPLACE()
 				, function init() {

@@ -26,7 +26,7 @@
 
 //! IF_SET("mjs")
 //! ELSE()
-	"use strict";
+"use strict";
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -68,11 +68,11 @@ exports.add = function add(modules) {
 			saxLoader.ADD('get', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 				{
-						author: "Claude Petit",
-						revision: 1,
-						params: null,
-						returns: 'object',
-						description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'null'.",
+					author: "Claude Petit",
+					revision: 1,
+					params: null,
+					returns: 'object',
+					description: "Returns parser from the SAX-JS library when available. Otherwise, returns 'null'.",
 				}
 				//! END_REPLACE()
 				, function get() {

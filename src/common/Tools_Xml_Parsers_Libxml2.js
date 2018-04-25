@@ -28,7 +28,7 @@
 
 //! IF_SET("mjs")
 //! ELSE()
-	"use strict";
+"use strict";
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -210,7 +210,7 @@ exports.add = function add(modules) {
 							__Internal__.registerBaseDirectory(userDataPtr, url);
 						};
 
-//console.log(path.toApiString());
+						//console.log(path.toApiString());
 
 						if (!content) {
 							return NULL;
@@ -518,35 +518,35 @@ exports.add = function add(modules) {
 						};
 
 						sax = clibxml2._xmlCreateMySAXHandler(
-								allocFunction('internalSubset'),
-								allocFunction('isStandalone'),
-								allocFunction('hasInternalSubset'),
-								allocFunction('hasExternalSubset'),
-								allocFunction('resolveEntity'),
-								allocFunction('getEntity'),
-								allocFunction('entityDecl'),
-								allocFunction('notationDecl'),
-								allocFunction('attributeDecl'),
-								allocFunction('elementDecl'),
-								allocFunction('unparsedEntityDecl'),
-								allocFunction('setDocumentLocator'),
-								allocFunction('startDocument'),
-								allocFunction('endDocument'),
-								allocFunction('startElement'),
-								allocFunction('endElement'),
-								allocFunction('reference'),
-								allocFunction('characters'),
-								allocFunction('ignorableWhitespace'),
-								allocFunction('processingInstruction'),
-								allocFunction('comment'),
-								allocFunction('warning'),
-								allocFunction('error'),
-								allocFunction('getParameterEntity'),
-								allocFunction('cdataBlock'),
-								allocFunction('externalSubset'),
-								allocFunction('startElementNs'),
-								allocFunction('endElementNs'),
-								allocFunction('serror')
+							allocFunction('internalSubset'),
+							allocFunction('isStandalone'),
+							allocFunction('hasInternalSubset'),
+							allocFunction('hasExternalSubset'),
+							allocFunction('resolveEntity'),
+							allocFunction('getEntity'),
+							allocFunction('entityDecl'),
+							allocFunction('notationDecl'),
+							allocFunction('attributeDecl'),
+							allocFunction('elementDecl'),
+							allocFunction('unparsedEntityDecl'),
+							allocFunction('setDocumentLocator'),
+							allocFunction('startDocument'),
+							allocFunction('endDocument'),
+							allocFunction('startElement'),
+							allocFunction('endElement'),
+							allocFunction('reference'),
+							allocFunction('characters'),
+							allocFunction('ignorableWhitespace'),
+							allocFunction('processingInstruction'),
+							allocFunction('comment'),
+							allocFunction('warning'),
+							allocFunction('error'),
+							allocFunction('getParameterEntity'),
+							allocFunction('cdataBlock'),
+							allocFunction('externalSubset'),
+							allocFunction('startElementNs'),
+							allocFunction('endElementNs'),
+							allocFunction('serror')
 						);
 						if (!sax) {
 							throw new types.Error("Failed to create SAXHandler.");
@@ -705,107 +705,107 @@ exports.add = function add(modules) {
 							stream.listen();
 						};
 					})
-					.nodeify(function(err, result) {
-						if (pushParserCtxt) {
-							clibxml2._xmlFreeParserCtxt(pushParserCtxt);
-							pushParserCtxt = NULL;
-						};
-
-						if (saxPlug) {
-							clibxml2._xmlSchemaSAXUnplug(saxPlug);
-							saxPlug = NULL;
-							//sax = NULL;  <PRB> Code commented because "sax" returned from "xmlSchemaSAXPlug" is not freed
-							userPtr = NULL; // OK
-						};
-
-						if (validCtxt) {
-							clibxml2._xmlSchemaFreeValidCtxt(validCtxt);
-							validCtxt = NULL;
-						};
-
-						if (schema) {
-							clibxml2._xmlSchemaFree(schema);
-							schema = NULL;
-						};
-
-						if (schemaParserCtxt) {
-							try {
-								__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
-							} catch(ex) {
-								// Ignore
+						.nodeify(function(err, result) {
+							if (pushParserCtxt) {
+								clibxml2._xmlFreeParserCtxt(pushParserCtxt);
+								pushParserCtxt = NULL;
 							};
-							clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
-							schemaParserCtxt = NULL;
-						};
 
-						if (urlPtr) {
-							clibxml2._free(urlPtr);
-							urlPtr = NULL;
-						};
+							if (saxPlug) {
+								clibxml2._xmlSchemaSAXUnplug(saxPlug);
+								saxPlug = NULL;
+								//sax = NULL;  <PRB> Code commented because "sax" returned from "xmlSchemaSAXPlug" is not freed
+								userPtr = NULL; // OK
+							};
 
-						if (allocatedFunctions) {
-							tools.forEach(allocatedFunctions, function(ptr, name) {
-								clibxml2.Runtime.removeFunction(ptr);
-							});
-							allocatedFunctions = null;
-						};
+							if (validCtxt) {
+								clibxml2._xmlSchemaFreeValidCtxt(validCtxt);
+								validCtxt = NULL;
+							};
 
-						if (allocatedEntities) {
-							tools.forEach(allocatedEntities, function(ptr) {
-								clibxml2._xmlFreeEntity(ptr);
-							});
-							allocatedEntities = null;
-						};
+							if (schema) {
+								clibxml2._xmlSchemaFree(schema);
+								schema = NULL;
+							};
 
-						if (saxPtr) {
-							clibxml2._free(saxPtr);
-							saxPtr = NULL;
-						};
+							if (schemaParserCtxt) {
+								try {
+									__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+								} catch(ex) {
+								// Ignore
+								};
+								clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
+								schemaParserCtxt = NULL;
+							};
 
-						if (sax && (sax !== saxOrg)) {
-							clibxml2._xmlFreeEx(sax);
-							sax = NULL;
-						};
+							if (urlPtr) {
+								clibxml2._free(urlPtr);
+								urlPtr = NULL;
+							};
 
-						if (saxOrg) {
-							clibxml2._xmlFreeMySAXHandler(saxOrg);
-							saxOrg = NULL;
-						};
+							if (allocatedFunctions) {
+								tools.forEach(allocatedFunctions, function(ptr, name) {
+									clibxml2.Runtime.removeFunction(ptr);
+								});
+								allocatedFunctions = null;
+							};
 
-						if (userPtrPtr) {
-							clibxml2._free(userPtrPtr);
-							userPtrPtr = NULL;
-						};
+							if (allocatedEntities) {
+								tools.forEach(allocatedEntities, function(ptr) {
+									clibxml2._xmlFreeEntity(ptr);
+								});
+								allocatedEntities = null;
+							};
 
-						if (userPtr && (userPtr !== userPtrOrg)) {
-							clibxml2._xmlFreeEx(userPtr);
-							userPtr = NULL;
-						};
+							if (saxPtr) {
+								clibxml2._free(saxPtr);
+								saxPtr = NULL;
+							};
 
-						if (userPtrOrg) {
-							clibxml2._free(userPtrOrg);
-							userPtrOrg = NULL;
-						};
+							if (sax && (sax !== saxOrg)) {
+								clibxml2._xmlFreeEx(sax);
+								sax = NULL;
+							};
 
-						clibxml2 = null;
+							if (saxOrg) {
+								clibxml2._xmlFreeMySAXHandler(saxOrg);
+								saxOrg = NULL;
+							};
 
-						clibxml2Cleaned = true;
+							if (userPtrPtr) {
+								clibxml2._free(userPtrPtr);
+								userPtrPtr = NULL;
+							};
 
-						if (err) {
-							throw err;
-						} else {
-							return result;
-						};
-					})
-					.catch(function(err) {
-						if (!clibxml2Cleaned && !types.isString(err)) {
+							if (userPtr && (userPtr !== userPtrOrg)) {
+								clibxml2._xmlFreeEx(userPtr);
+								userPtr = NULL;
+							};
+
+							if (userPtrOrg) {
+								clibxml2._free(userPtrOrg);
+								userPtrOrg = NULL;
+							};
+
+							clibxml2 = null;
+
+							clibxml2Cleaned = true;
+
+							if (err) {
+								throw err;
+							} else {
+								return result;
+							};
+						})
+						.catch(function(err) {
+							if (!clibxml2Cleaned && !types.isString(err)) {
 							// Lixml2 is unstable because its cleanup has failed, force abort.
 							/* eslint no-throw-literal: "off" */  // That's Emscripten's fault !
-							throw 'abort() at ' + err.stack;
-						};
-						throw err;
-					})
-					.catch(__Internal__.trapCAborted);
+								throw 'abort() at ' + err.stack;
+							};
+							throw err;
+						})
+						.catch(__Internal__.trapCAborted);
 
 					return promise;
 				});

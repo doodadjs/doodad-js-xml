@@ -26,7 +26,7 @@
 
 //! IF_SET("mjs")
 //! ELSE()
-	"use strict";
+"use strict";
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -39,7 +39,7 @@ exports.add = function add(modules) {
 		],
 
 		create: function create(root, /*optional*/_options, _shared) {
-/* TODO: Test and debug
+			/* TODO: Test and debug
 			//===================================
 			// Get namespaces
 			//===================================
