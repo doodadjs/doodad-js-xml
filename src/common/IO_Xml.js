@@ -34,16 +34,16 @@ exports.add = function add(modules) {
 	modules['Doodad.IO.Xml'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		dependencies: [
-			'Doodad.Tools.Xml', 
+			'Doodad.Tools.Xml',
 			'Doodad.Tools.Xml.Parsers.Sax.Loader',
 		],
-			
+
 		create: function create(root, /*optional*/_options, _shared) {
 /* TODO: Test and debug
 			//===================================
 			// Get namespaces
 			//===================================
-					
+
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
@@ -53,20 +53,20 @@ exports.add = function add(modules) {
 				io = doodad.IO,
 				ioMixIns = io.MixIns,
 				ioXml = io.Xml;
-					
-					
+
+
 			//===================================
 			// Internal
 			//===================================
-					
+
 			//// <FUTURE> Thread context
 			//const __Internal__ = {
 			//};
-					
+
 			//tools.complete(_shared.Natives, {
 			//});
 
-				
+
 			ioXml.REGISTER(io.Stream.$extend(
 								io.BufferedTextOutputStream,
 								ioMixIns.TextTransformableIn,
@@ -89,12 +89,12 @@ exports.add = function add(modules) {
 					ProcessingInstruction: 5,
 					Comment: 6,
 				})),
-					
+
 				reset: doodad.OVERRIDE(function reset() {
 					const sax = saxLoader.getSAX();
 					const parser = sax.parser(true, tools.extend({}, this.options, {xmlns: true, position: true}));
 					const type = types.getType(this);
-						
+
 					const entities = types.get(this.options, 'entities', null);
 					if (entities) {
 						parser.ENTITIES = entities;
@@ -102,18 +102,18 @@ exports.add = function add(modules) {
 						// NOTE: We reduce default entities only once when they are loaded.
 						parser.ENTITIES = xml.getEntities();
 					};
-						
+
 					//	tools.forEach(parser.ENTITIES, function(value, name) {
 					//		const node = new xml.Entity(name, value);
 					//		this.submit(new io.Data(node));
 					//	});
-						
+
 					// TODO: Combine extracted datas from a chunk of 15K (Node.js's default) to a single "push" call in an Array so that we don't need a buffer size of 100000 !
 
 					parser.onerror = doodad.Callback(this, function onerror(err) {
 						this.onError(new doodad.ErrorEvent(err));
 					}, true);
-						
+
 					parser.ontext = doodad.Callback(this, function ontext(text) {
 						let node;
 
@@ -151,10 +151,10 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					parser.onopentag = doodad.Callback(this, function onopentag(tag) {
 						this.__xmlLevel++;
-							
+
 						let node;
 
 						node = {
@@ -173,11 +173,11 @@ exports.add = function add(modules) {
 							this.__xmlBuffer = buffer = [];
 						};
 						buffer.push(node);
-							
+
 						tools.append(buffer, this.__xmlAttributes);
 						this.__xmlAttributes = null;
 					}, true);
-						
+
 					parser.onclosetag = doodad.Callback(this, function onclosetag(tagName) {
 						this.__xmlLevel--;
 
@@ -197,10 +197,10 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					parser.onattribute = doodad.Callback(this, function onattribute(attr) {
 						let node;
-							
+
 						// <PRB> 'onattribute' is called before 'onopentag' !
 						node = {
 							mode: type.$Modes.Attribute,
@@ -220,7 +220,7 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					parser.ondoctype = doodad.Callback(this, function ondoctype(doctype) {
 						let node;
 
@@ -239,7 +239,7 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					parser.onprocessinginstruction = doodad.Callback(this, function onprocessinginstruction(instr) {
 						let node;
 
@@ -259,7 +259,7 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					// TODO: onopencomment, onclosecomment
 					parser.oncomment = doodad.Callback(this, function oncomment(comment) {
 						let node;
@@ -279,7 +279,7 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					parser.onopencdata = doodad.Callback(this, function onopencdata() {
 						let node;
 
@@ -318,7 +318,7 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					parser.onclosecdata = doodad.Callback(this, function onclosecdata() {
 						let node;
 
@@ -338,7 +338,7 @@ exports.add = function add(modules) {
 						};
 						buffer.push(node);
 					}, true);
-						
+
 					//parser.onend = doodad.Callback(this, function onend() {
 					//}, true);
 
@@ -346,7 +346,7 @@ exports.add = function add(modules) {
 					this.__xmlAttributes = null; // <PRB> 'onattribute' is called before 'onopentag' !
 					this.__xmlLevel = 0;
 					this.__xmlBuffer = null;
-						
+
 					this._super();
 				}),
 
@@ -367,7 +367,7 @@ exports.add = function add(modules) {
 						const xml = data.toString();
 						this.__xmlParser.write(xml);
 					};
-							
+
 					const buffer = this.__xmlBuffer;
 					if (buffer) {
 						this.__xmlBuffer = null;
@@ -385,7 +385,7 @@ exports.add = function add(modules) {
 				}),
 			}));
 */
-				
+
 			//===================================
 			// Init
 			//===================================

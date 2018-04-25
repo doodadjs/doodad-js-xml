@@ -36,12 +36,12 @@ exports.add = function add(modules) {
 		dependencies: [
 			'Doodad.Tools.Xml',
 		],
-			
+
 		create: function create(root, /*optional*/_options) {
 			//===================================
 			// Get namespaces
 			//===================================
-					
+
 			const doodad = root.Doodad,
 				//types = doodad.Types,
 				tools = doodad.Tools,
@@ -49,16 +49,16 @@ exports.add = function add(modules) {
 				xmlParsers = xml.Parsers,
 				sax = xmlParsers.Sax,
 				saxLoader = sax.Loader;
-					
+
 			//===================================
 			// Internal
 			//===================================
-					
+
 			// <FUTURE> Thread context
 			const __Internal__ = {
 				sax: null,
 			};
-					
+
 			//===================================
 			// SAX Parser
 			//===================================

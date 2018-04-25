@@ -36,15 +36,15 @@ exports.add = function add(modules) {
 	modules['Doodad.Tools.Xml.Parsers.Libxml2'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		dependencies: [
-			'Doodad.Tools.Xml', 
+			'Doodad.Tools.Xml',
 			'Doodad.Tools.Xml.Parsers.Libxml2.Loader',
 		],
-			
+
 		create: function create(root, /*optional*/_options) {
 			//===================================
 			// Get namespaces
 			//===================================
-					
+
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
@@ -56,11 +56,11 @@ exports.add = function add(modules) {
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
 				libxml2Loader = libxml2.Loader;
-					
+
 			//===================================
 			// Internal
 			//===================================
-				
+
 			const NULL = 0;
 
 			const __Internal__ = {
@@ -68,7 +68,7 @@ exports.add = function add(modules) {
 				createStrPtr: null,
 				baseDirectories: null,
 			};
-				
+
 			//===================================
 			// Libxml2 Parser
 			//===================================
@@ -310,7 +310,7 @@ exports.add = function add(modules) {
 					promise = promise.thenCreate(function libxml2ParserPromise(xsdContent, resolve, reject) {
 						// TODO: MemoryStream to replace strings
 						root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
-					
+
 						clibxml2 = libxml2Loader.get();
 
 						const nodoc = types.get(options, 'nodoc', false),
@@ -329,9 +329,9 @@ exports.add = function add(modules) {
 							const cbObj = types.get(options, 'callbackObj');
 							callback = doodad.Callback(cbObj, callback);
 						};
-					
+
 						const doc = (nodoc ? null : new xml.Document());
-						
+
 						const getStrFromXmlCharAr = function _getStrFromXmlCharAr(ptr, index, /*optional*/end) {
 							if (types.isNothing(end)) {
 								return clibxml2.Pointer_stringify(clibxml2.getValue(ptr + (PTR_LEN * index), '*'));
@@ -408,7 +408,7 @@ exports.add = function add(modules) {
 								};
 							},
 							externalSubset: function externalSubset(ctxPtr, namePtr, externalIDPtr, systemIDPtr) {
-								const node = new xml.DocumentType(clibxml2.Pointer_stringify(namePtr)); 
+								const node = new xml.DocumentType(clibxml2.Pointer_stringify(namePtr));
 								//node.fileLine = parser.line + 1;
 								//node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -418,7 +418,7 @@ exports.add = function add(modules) {
 								};
 							},
 							processingInstruction: function processingInstruction(ctxPtr, targetPtr, dataPtr) {
-								const node = new xml.ProcessingInstruction(clibxml2.Pointer_stringify(targetPtr), clibxml2.Pointer_stringify(dataPtr)); 
+								const node = new xml.ProcessingInstruction(clibxml2.Pointer_stringify(targetPtr), clibxml2.Pointer_stringify(dataPtr));
 								//node.fileLine = parser.line + 1;
 								//node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -428,7 +428,7 @@ exports.add = function add(modules) {
 								};
 							},
 							comment: function comment(ctxPtr, valuePtr) {
-								const node = new xml.Comment(clibxml2.Pointer_stringify(valuePtr)); 
+								const node = new xml.Comment(clibxml2.Pointer_stringify(valuePtr));
 								//node.fileLine = parser.line + 1;
 								//node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -451,7 +451,7 @@ exports.add = function add(modules) {
 								for (let i = 0; i < nb_attributes; i++) {
 									// localname/prefix/URI/value/end
 									const ptr = attributesPtrStrPtr + (PTR_LEN * 5 * i);
-									const node = new xml.Attribute(/*name*/getStrFromXmlCharAr(ptr, 0), /*value*/getStrFromXmlCharAr(ptr, 3, 4), /*prefix*/getStrFromXmlCharAr(ptr, 1), /*uri*/getStrFromXmlCharAr(ptr, 2)); 
+									const node = new xml.Attribute(/*name*/getStrFromXmlCharAr(ptr, 0), /*value*/getStrFromXmlCharAr(ptr, 3, 4), /*prefix*/getStrFromXmlCharAr(ptr, 1), /*uri*/getStrFromXmlCharAr(ptr, 2));
 									//node.fileLine = line + 1;
 									//node.fileColumn = column + 1;
 									if (nodoc) {
@@ -462,7 +462,7 @@ exports.add = function add(modules) {
 								};
 							},
 							characters: function characters(ctxPtr, chPtr, len) {
-								const node = new xml.Text(clibxml2.Pointer_stringify(chPtr, len)); 
+								const node = new xml.Text(clibxml2.Pointer_stringify(chPtr, len));
 								//node.fileLine = parser.line + 1;
 								//node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -472,7 +472,7 @@ exports.add = function add(modules) {
 								};
 							},
 							cdataBlock: function cdataBlock(ctxPtr, valuePtr, len) {
-								const node = new xml.CDATASection(clibxml2.Pointer_stringify(valuePtr, len)); 
+								const node = new xml.CDATASection(clibxml2.Pointer_stringify(valuePtr, len));
 								//node.fileLine = parser.line + 1;
 								//node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -618,9 +618,9 @@ exports.add = function add(modules) {
 								};
 							});
 						};
-						
+
 						currentNode = doc;
-						
+
 						pushParserCtxt = clibxml2._xmlCreatePushParserCtxt(sax, userPtr, NULL, 0, NULL);
 						if (!pushParserCtxt) {
 							throw new types.Error("Failed to create push parser.");
@@ -810,11 +810,11 @@ exports.add = function add(modules) {
 					return promise;
 				});
 			});
-				
+
 			libxml2.ADD('isAvailable', function isAvailable() {
 				return __Internal__.initialized;
 			});
-				
+
 			libxml2.ADD('hasFeatures', function hasFeatures(features) {
 				if (!__Internal__.initialized) {
 					return false;
@@ -830,7 +830,7 @@ exports.add = function add(modules) {
 					return !wanted || types.get(current, name, false);
 				});
 			});
-				
+
 
 			//===================================
 			// Init

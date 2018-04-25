@@ -34,15 +34,15 @@ exports.add = function add(modules) {
 	modules['Doodad.Tools.Xml.Parsers.Sax'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		dependencies: [
-			'Doodad.Tools.Xml', 
+			'Doodad.Tools.Xml',
 			'Doodad.Tools.Xml.Parsers.Sax.Loader',
 		],
-			
+
 		create: function create(root, /*optional*/_options) {
 			//===================================
 			// Get namespaces
 			//===================================
-					
+
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
@@ -53,15 +53,15 @@ exports.add = function add(modules) {
 				xmlParsers = xml.Parsers,
 				sax = xmlParsers.Sax,
 				saxLoader = sax.Loader;
-					
+
 			//===================================
 			// Internal
 			//===================================
-				
+
 			const __Internal__ = {
 				initialized: false,
 			};
-				
+
 			//===================================
 			// SAX Parser
 			//===================================
@@ -98,14 +98,14 @@ exports.add = function add(modules) {
 
 					xml.registerParser(sax);
 				}));
-				
-				
+
+
 			sax.ADD('parse', function(stream, /*optional*/options) {
 				const Promise = types.getPromise();
 				return Promise.create(function saxParserPromise(resolve, reject) {
 					// TODO: MemoryStream to replace strings
 					root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
-					
+
 					const saxlib = saxLoader.get(),
 						nodoc = types.get(options, 'nodoc', false),
 						discardEntities = types.get(options, 'discardEntities', false);
@@ -115,19 +115,19 @@ exports.add = function add(modules) {
 						const cbObj = types.get(options, 'callbackObj');
 						callback = doodad.Callback(cbObj, callback);
 					};
-					
+
 					const doc = (nodoc ? null : new xml.Document()),
 						parser = saxlib.parser(true, tools.extend({}, options, {xmlns: true, position: true}));
 
 					let currentNode = doc;
-						
+
 					const entities = types.get(options, 'entities', null);
 					if (entities) {
 						parser.ENTITIES = entities;
 					};
-						
+
 					const attributes = []; // <PRB> 'onattribute' is called before 'onopentag' !
-						
+
 					let aborted = false;
 
 					if (!nodoc && !discardEntities) {
@@ -140,7 +140,7 @@ exports.add = function add(modules) {
 							};
 						});
 					};
-						
+
 					parser.onerror = function(err) {
 						if (!aborted) {
 							aborted = true;
@@ -156,7 +156,7 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.ontext = function(text) {
 						if (!aborted) {
 							try {
@@ -173,11 +173,11 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onscript = function(script) {
 						if (!aborted) {
 							try {
-								const node = new xml.CDATASection(script); 
+								const node = new xml.CDATASection(script);
 								node.fileLine = parser.line + 1;
 								node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -190,15 +190,15 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onopentag = function(tag) {
 						if (!aborted) {
 							try {
 								const name = tag.local,
 									prefix = tag.prefix || null,
 									uri = tag.uri || null;
-									
-								const node = new xml.Element(name, prefix, uri); 
+
+								const node = new xml.Element(name, prefix, uri);
 								node.fileLine = parser.line + 1;
 								node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -216,7 +216,7 @@ exports.add = function add(modules) {
 									const name = attr.local,
 										prefix = attr.prefix || null,
 										uri = attr.uri || null;
-									const node = new xml.Attribute(name, attr.value, prefix, uri); 
+									const node = new xml.Attribute(name, attr.value, prefix, uri);
 									node.fileLine = line + 1;
 									node.fileColumn = column + 1;
 									if (nodoc) {
@@ -231,7 +231,7 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onclosetag = function(tagName) {
 						if (!aborted) {
 							if (!nodoc) {
@@ -239,18 +239,18 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onattribute = function(attr) {
 						if (!aborted) {
 							// <PRB> 'onattribute' is called before 'onopentag' !
 							attributes.push([attr, parser.line, parser.column]);
 						};
 					};
-						
+
 					parser.ondoctype = function(doctype) {
 						if (!aborted) {
 							try {
-								const node = new xml.DocumentType(doctype); 
+								const node = new xml.DocumentType(doctype);
 								node.fileLine = parser.line + 1;
 								node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -263,11 +263,11 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onprocessinginstruction = function(instr) {
 						if (!aborted) {
 							try {
-								const node = new xml.ProcessingInstruction(instr.name, instr.body); 
+								const node = new xml.ProcessingInstruction(instr.name, instr.body);
 								node.fileLine = parser.line + 1;
 								node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -280,11 +280,11 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.oncomment = function(comment) {
 						if (!aborted) {
 							try {
-								const node = new xml.Comment(comment); 
+								const node = new xml.Comment(comment);
 								node.fileLine = parser.line + 1;
 								node.fileColumn = parser.column + 1;
 								if (nodoc) {
@@ -297,12 +297,12 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onopencdata = function() {
 						if (!aborted) {
 							try {
 								if (!nodoc) {
-									const node = new xml.CDATASection(""); 
+									const node = new xml.CDATASection("");
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									currentNode.getChildren().append(node);
@@ -318,7 +318,7 @@ exports.add = function add(modules) {
 						if (!aborted) {
 							try {
 								if (nodoc) {
-									const node = new xml.CDATASection(cdata); 
+									const node = new xml.CDATASection(cdata);
 									node.fileLine = parser.line + 1;
 									node.fileColumn = parser.column + 1;
 									callback(node);
@@ -330,7 +330,7 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onclosecdata = function() {
 						if (!aborted) {
 							if (!nodoc) {
@@ -338,7 +338,7 @@ exports.add = function add(modules) {
 							};
 						};
 					};
-						
+
 					parser.onend = function() {
 						if (!aborted) {
 							try {
@@ -379,15 +379,15 @@ exports.add = function add(modules) {
 					};
 				});
 			});
-				
+
 			sax.ADD('isAvailable', function isAvailable() {
 				return __Internal__.initialized;
 			});
-				
+
 			sax.ADD('hasFeatures', function hasFeatures(features) {
 				return false;
 			});
-				
+
 
 			//===================================
 			// Init

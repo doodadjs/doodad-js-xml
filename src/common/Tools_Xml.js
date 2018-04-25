@@ -34,37 +34,37 @@ exports.add = function add(modules) {
 	modules['Doodad.Tools.Xml'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		namespaces: ['Parsers'],
-			
+
 		create: function create(root, /*optional*/_options, _shared) {
 			//===================================
 			// Get namespaces
 			//===================================
-					
+
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
 				//namespaces = doodad.Namespaces,
 				xml = tools.Xml;
 				//xmlParsers = xml.Parsers;
-					
-					
+
+
 			//===================================
 			// Internal
 			//===================================
-					
+
 			// <FUTURE> Thread context
 			const __Internal__ = {
 				parsers: [],
 			};
-					
+
 			tools.complete(_shared.Natives, {
 				symbolIterator: (types.isSymbol(global.Symbol.iterator) ? global.Symbol.iterator : undefined),
 			});
-					
+
 			//===================================
 			// XML Types
 			//===================================
-				
+
 			__Internal__.NodesListIterator = types.INIT(types.Iterator.$inherit(
 				/*typeProto*/
 				{
@@ -75,7 +75,7 @@ exports.add = function add(modules) {
 				{
 					__index: types.NOT_ENUMERABLE(0),
 					__nodes: types.NOT_ENUMERABLE(types.READ_ONLY(null)),
-						
+
 					_new: types.SUPER(function _new(nodesList) {
 						this._super();
 						types.setAttribute(this, '__nodes', types.clone(nodesList.__nodes));
@@ -94,7 +94,7 @@ exports.add = function add(modules) {
 						};
 					},
 				}));
-					
+
 
 			xml.ADD('NodesList', types.CustomEventTarget.$inherit(
 				/*typeProto*/
@@ -108,14 +108,14 @@ exports.add = function add(modules) {
 					__nodeTypes: null,
 					__nodes: null,
 					__changed: false,
-							
+
 					_new: types.SUPER(function _new(parentNode, nodeTypes) {
 						this._super();
 						this.__parentNode = parentNode;
 						this.__nodeTypes = nodeTypes;
 						this.__nodes = [];
 					}),
-							
+
 					append: function append(node) {
 						if (!types._instanceof(node, this.__nodeTypes)) {
 							throw new types.ValueError("Invalid node type.");
@@ -239,13 +239,13 @@ exports.add = function add(modules) {
 					},
 				}
 			));
-					
+
 			if (_shared.Natives.symbolIterator) {
 				types.setAttribute(xml.NodesList.prototype, _shared.Natives.symbolIterator, function() {
 					return this.items();
 				}, {});
 			};
-				
+
 
 			xml.ADD('Node', types.Type.$inherit(
 				/*typeProto*/
@@ -259,13 +259,13 @@ exports.add = function add(modules) {
 
 					line: 0,
 					column: 0,
-						
+
 					getParent: function getParent() {
 						return this.__parentNode;
 					},
 				}
 			));
-					
+
 			xml.ADD('Element', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -279,7 +279,7 @@ exports.add = function add(modules) {
 					__name: null,
 					__attributes: null,
 					__childNodes: null,
-						
+
 					_new: types.SUPER(function _new(name, /*optional*/prefix, /*optional*/baseURI) {
 						this._super();
 						this.__prefix = prefix;
@@ -288,7 +288,7 @@ exports.add = function add(modules) {
 						this.__attributes = new xml.NodesList(this, [xml.Attribute]);
 						this.__childNodes = new xml.NodesList(this, [xml.Element, xml.Text, xml.CDataSection, xml.Comment]);
 					}),
-					
+
 					getName: function getName() {
 						return this.__name;
 					},
@@ -331,7 +331,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('Attribute', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -344,7 +344,7 @@ exports.add = function add(modules) {
 					__baseURI: null,
 					__name: null,
 					__value: null,
-						
+
 					_new: types.SUPER(function _new(name, value, /*optional*/prefix, /*optional*/baseURI) {
 						this._super();
 						this.__prefix = prefix;
@@ -382,7 +382,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('Text', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -397,7 +397,7 @@ exports.add = function add(modules) {
 						this._super();
 						this.__value = text;
 					}),
-						
+
 					getValue: function getValue() {
 						return this.__value;
 					},
@@ -408,7 +408,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('CDATASection', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -423,7 +423,7 @@ exports.add = function add(modules) {
 						this._super();
 						this.__value = data;
 					}),
-						
+
 					getValue: function getValue() {
 						return this.__value;
 					},
@@ -434,7 +434,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			/*
 			xml.ADD('EntityReference', xml.Node.$inherit(
 				/ *typeProto* /
@@ -446,13 +446,13 @@ exports.add = function add(modules) {
 				{
 					__name: null,
 					__value: null,
-						
+
 					_new: types.SUPER(function _new(name, value) {
 						this._super();
 						this.__name = name;
 						this.__value = value;
 					}),
-						
+
 					getName: function getName() {
 						return this.__name;
 					},
@@ -470,7 +470,7 @@ exports.add = function add(modules) {
 				}
 			));
 			*/
-					
+
 			xml.ADD('Entity', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -487,7 +487,7 @@ exports.add = function add(modules) {
 						this.__name = name;
 						this.__value = value;
 					}),
-						
+
 					getName: function getName() {
 						return this.__name;
 					},
@@ -504,7 +504,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('ProcessingInstruction', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -521,7 +521,7 @@ exports.add = function add(modules) {
 						this.__name = name;
 						this.__value = value;
 					}),
-						
+
 					getName: function getName() {
 						return this.__name;
 					},
@@ -538,7 +538,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('Comment', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -553,7 +553,7 @@ exports.add = function add(modules) {
 						this._super();
 						this.__value = text;
 					}),
-						
+
 					getValue: function getValue() {
 						return this.__value;
 					},
@@ -564,7 +564,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('DocumentType', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -579,7 +579,7 @@ exports.add = function add(modules) {
 						this._super();
 						this.__value = type;
 					}),
-						
+
 					getValue: function getValue() {
 						return this.__value;
 					},
@@ -590,7 +590,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			xml.ADD('DocumentFragment', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -605,7 +605,7 @@ exports.add = function add(modules) {
 						this._super();
 						this.__value = value;
 					}),
-						
+
 					getValue: function getValue() {
 						return this.__value;
 					},
@@ -616,8 +616,8 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-				
-			/*				
+
+			/*
 			xml.ADD('Notation', xml.Node.$inherit(
 				/ *typeProto* /
 				{
@@ -628,13 +628,13 @@ exports.add = function add(modules) {
 				{
 					__name: null,
 					__value: null,
-						
+
 					_new: types.SUPER(function _new(name, value) {
 						this._super();
 						this.__name = name;
 						this.__value = value;
 					}),
-						
+
 					getName: function getName() {
 						return this.__name;
 					},
@@ -652,7 +652,7 @@ exports.add = function add(modules) {
 				}
 			));
 			*/
-					
+
 			xml.ADD('Document', xml.Node.$inherit(
 				/*typeProto*/
 				{
@@ -666,7 +666,7 @@ exports.add = function add(modules) {
 					__instructions: null,
 					__doctype: null,
 					__root: null,
-						
+
 					_new: types.SUPER(function _new() {
 						this._super();
 						this.__childNodes = new xml.NodesList(this, [xml.Element, xml.Text, xml.CDataSection, xml.Comment]);
@@ -675,13 +675,13 @@ exports.add = function add(modules) {
 						this.__instructions = new xml.NodesList(this, [xml.ProcessingInstruction]);
 						this.__entities = new xml.NodesList(this, [xml.EntityReference, xml.Entity]);
 					}),
-						
+
 					__onChildNodesAdd: function __onChildNodesAdd(ev) {
 						if (!this.__root && (ev.detail.node instanceof xml.Element)) {
 							this.__root = ev.detail.node;
 						};
 					},
-						
+
 					__onChildNodesRemove: function __onChildNodesRemove(ev) {
 						if (ev.detail.node === this.__root) {
 							this.__root = null;
@@ -694,7 +694,7 @@ exports.add = function add(modules) {
 							};
 						};
 					},
-						
+
 					getChildren: function getChildren() {
 						return this.__childNodes;
 					},
@@ -748,7 +748,7 @@ exports.add = function add(modules) {
 					//},
 				}
 			));
-					
+
 			//===================================
 			// XML Tools
 			//===================================
@@ -756,7 +756,7 @@ exports.add = function add(modules) {
 			xml.ADD('registerParser', function registerParser(parser) {
 				__Internal__.parsers = tools.unique(__Internal__.parsers, [parser]);
 			});
-				
+
 			xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
 				// TODO: MemoryStream for Strings
 				const needSchemas = !!types.get(options, 'xsd', null);
@@ -774,14 +774,14 @@ exports.add = function add(modules) {
 				};
 				return parser.parse(stream, options);
 			});
-				
+
 			xml.ADD('isAvailable', function isAvailable(/*optional*/features) {
 				return tools.some(__Internal__.parsers, function(parser) {
 					return parser.isAvailable() && parser.hasFeatures(features);
 				});
 			});
-				
-				
+
+
 			//===================================
 			// Init
 			//===================================
