@@ -732,7 +732,7 @@ exports.add = function add(modules) {
 								try {
 									__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 								} catch(ex) {
-								// Ignore
+									// Ignore
 								};
 								clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
 								schemaParserCtxt = NULL;
@@ -799,8 +799,8 @@ exports.add = function add(modules) {
 						})
 						.catch(function(err) {
 							if (!clibxml2Cleaned && !types.isString(err)) {
-							// Lixml2 is unstable because its cleanup has failed, force abort.
-							/* eslint no-throw-literal: "off" */  // That's Emscripten's fault !
+								// Lixml2 is unstable because its cleanup has failed, force abort.
+								/* eslint no-throw-literal: "off" */  // That's Emscripten's fault !
 								throw 'abort() at ' + err.stack;
 							};
 							throw err;

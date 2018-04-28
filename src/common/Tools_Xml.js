@@ -45,7 +45,7 @@ exports.add = function add(modules) {
 				tools = doodad.Tools,
 				//namespaces = doodad.Namespaces,
 				xml = tools.Xml;
-				//xmlParsers = xml.Parsers;
+			//xmlParsers = xml.Parsers;
 
 
 			//===================================
