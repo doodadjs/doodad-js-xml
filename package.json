@@ -13,7 +13,7 @@
 	"sax",
 	"libxml2"
   ],
-  "devDependencies": {
+  "dependencies": {
     "sax": "^1.2.2"
   },
   "repository": {
