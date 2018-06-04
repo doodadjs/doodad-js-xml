@@ -24,7 +24,7 @@
 //    limitations under the License.
 //
 {
-	version: "5.1.1",
+	version: "5.1.2",
 	stage: "b",
 	dependencies: [
 		{
@@ -114,6 +114,32 @@
 			operations: [
 				{
 					class: "Make.Generate.Package"
+				},
+
+				{
+					class: "Make.Folder.Create",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib"
+				},
+
+				{
+					class: "Make.Folder.Create",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "%PACKAGEDIR%/lib/libxml2/libxml2.js",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/libxml2.js",
+					fromOutside: true
+				},
+				{
+					class: "Make.File.Copy",
+					source: "%PACKAGEDIR%/lib/libxml2/Copyright",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/Copyright"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "%PACKAGEDIR%/lib/libxml2/AUTHORS",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/AUTHORS"
 				}
 			]
 		},
