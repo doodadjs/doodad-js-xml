@@ -71,7 +71,7 @@ $ npm install @doodad-js/xml
 
   [Apache-2.0][license-url]
 
-  This package also includes "libxml2", which is licensed under MIT.
+  This package includes a copy and port of the "libxml2" C-library, and also contains copies (raw and minified) of some files of the "sax" package. "libxml2" is licensed under MIT. "sax" is licensed under "The ISC License" and MIT.
 
 [npm-image]: https://img.shields.io/npm/v/@doodad-js/xml.svg
 [npm-url]: https://npmjs.org/package/@doodad-js/xml
