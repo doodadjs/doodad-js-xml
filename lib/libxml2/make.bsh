@@ -39,9 +39,11 @@ cd emsdk
 # Install and build latest stable SDK (will take some hours and about 30 gigs of free disk space)
 ./emsdk update
 ./emsdk install latest
+./emsdk install sdk-1.38.4-64bit
 
 # Activate latest stable SDK
 ./emsdk activate latest
+./emsdk activate sdk-1.38.4-64bit
 
 # Set SDK environment
 source ./emsdk_env.sh
@@ -50,19 +52,19 @@ source ./emsdk_env.sh
 cd ..
 
 # Extract the source code of the 'libxml2' C-library.
-tar -xzf libxml2-2.9.4.tar.gz libxmlsrc
+tar -xzf libxml2-2.9.8.tar.gz libxml2
 
 # Apply patches
-patch -b libxmlsrc/xmlschemas.c xmlschemas.patch
+patch -b libxml2/xmlschemas.c xmlschemas.patch
 
 # Inject "xmljs.c" to source code
-cp xmljs.c libxmlsrc/
+cp xmljs.c libxml2/
 
-# Enter "libxmlsrc"
-cd libxmlsrc
+# Enter "libxml2"
+cd libxml2
 
-# Disable "stat" and "_stat" because we transpile with "NO_FILESYSTEM".
-sed -i.bak "/AC_CHECK_FUNCS.*stat _stat.*)/d" configure.ac
+# Disable "stat" because we transpile with "NO_FILESYSTEM".
+sed -i.bak "/AC_CHECK_FUNCS.*stat .*)/d" configure.ac
 
 # Disable some features
 emconfigure ./autogen.sh --with-http=no --with-ftp=no --with-python=no --with-threads=no --with-xptr=no --with-regexps=no --with-legacy=no --with-c14n=no --with-catalog=no --with-docbook=no --with-schematron=no --with-iso8859x=no --with-html=no --with-debug=no --without-iconv --without-zlib --without-lzma --without-readline --without-python
@@ -71,9 +73,9 @@ emconfigure ./autogen.sh --with-http=no --with-ftp=no --with-python=no --with-th
 emmake make
 
 # Transpile to JS
-emcc -O3 --closure 2 --memory-init-file 0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['Runtime','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlGetUserDataFromParserCtxt','_xmlFormatGenericError']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2-slim.js
-emcc -O2 --closure 0 --memory-init-file 0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['Runtime','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlGetUserDataFromParserCtxt','_xmlFormatGenericError']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2.js
-# emcc -O1 --closure 0 --memory-init-file 0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s ASSERTIONS=2 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['Runtime','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlGetUserDataFromParserCtxt','_xmlFormatGenericError']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2-debug.js
+#emcc -O3 --closure 2 --memory-init-file 0 -s WASM=0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['addFunction','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlGetUserDataFromParserCtxt','_xmlFormatGenericError']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2-slim.js
+emcc -O2 --closure 0 --memory-init-file 0 -s WASM=0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['addFunction','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlGetUserDataFromParserCtxt','_xmlFormatGenericError']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2.js
+#emcc -O1 --closure 0 --memory-init-file 0 -s WASM=0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s ASSERTIONS=2 -s STRICT=1 -s NODEJS_CATCH_EXIT=0 -s NO_FILESYSTEM=1 -s LINKABLE=1 -s EXPORT_NAME="'libxml2'" -s EXPORTED_RUNTIME_METHODS="['addFunction','ALLOC_NORMAL','allocate','intArrayFromString','intArrayToString','Pointer_stringify','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8','getValue','setValue']" -s EXPORTED_FUNCTIONS="['_xmlInitParser','_xmlCleanupInputCallbacks','_xmlCleanupOutputCallbacks','_xmlRegisterInputCallbacks','_xmlRegisterOutputCallbacks','_xmlSchemaNewParserCtxt','_xmlSchemaNewParserCtxt','_xmlSchemaSetParserErrors','_xmlSchemaParse','_xmlSchemaIsValid','_xmlSchemaNewValidCtxt','_xmlSchemaSetValidErrors','_xmlSchemaValidateDoc','_xmlSchemaFreeValidCtxt','_xmlSchemaFree','_xmlSchemaFreeParserCtxt','_xmlFreeDoc','_xmlCreatePushParserCtxt','_xmlParseChunk','_xmlFreeParserCtxt','_xmlCleanupParser','_xmlSchemaSAXPlug','_xmlSchemaSAXUnplug','_xmlSetExternalEntityLoader','_xmlNewEntity','_xmlFreeEntity','_xmlFreeEx','_xmlPtrLen','_xmlCreateMySAXHandler','_xmlFreeMySAXHandler','_xmlCreateMyParserInput','_xmlGetUserDataFromParserCtxt','_xmlFormatGenericError']" -s RESERVED_FUNCTION_POINTERS=100 -I include .libs/libxml2.so xmljs.c -o ../libxml2-debug.js
 
-# Exit "libxmlsrc"
+# Exit "libxml2"
 cd ..

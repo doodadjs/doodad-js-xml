@@ -84,8 +84,23 @@ exports.add = function add(modules) {
 			// Init
 			//===================================
 			return function init(/*optional*/options) {
+				// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
+				const unhandledListeners = process.listeners('unhandledRejection');
+				const handledListeners = process.listeners('rejectionHandled');
+
 				return modules.import('@doodad-js/xml/lib/libxml2/libxml2.js')
 					.then(function(exports) {
+						process.listeners('unhandledRejection').forEach(function(listener) {
+							if (tools.indexOf(unhandledListeners, listener) < 0) {
+								process.removeListener('unhandledRejection', listener);
+							};
+						});
+						process.listeners('rejectionHandled').forEach(function(listener) {
+							if (tools.indexOf(handledListeners, listener) < 0) {
+								process.removeListener('rejectionHandled', listener);
+							};
+						});
+
 						__Internal__.libxml2 = exports.default;
 					})
 					.catch(function(err) {
