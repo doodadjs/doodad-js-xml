@@ -148,43 +148,43 @@ exports.add = function add(modules) {
 				const matchFunc = clibxml2.addFunction(function matchFunc(filenameStrPtr) {
 					// Force selection of our handlers.
 					return 1;
-				});
+				}, 'ii');
 
 				const openFunc = clibxml2.addFunction(function openFunc(filenameStrPtr) {
 					// Disable file system access
 					return NULL;
-				});
+				}, 'ii');
 
 				const readFunc = clibxml2.addFunction(function readFunc(inputContextPtr, bufferPtr, bufferLen) {
 					// Disable file system access
 					return 0;
-				});
+				}, 'iiii');
 
 				const writeFunc = clibxml2.addFunction(function writeFunc(inputContextPtr, bufferPtr, bufferLen) {
 					// Disable file system access
 					return bufferLen;
-				});
+				}, 'iiii');
 
 				const closeFunc = clibxml2.addFunction(function closeFunc(inputContextPtr) {
 					// Disable file system access
 					return 0;
-				});
+				}, 'ii');
 
 				//const readExternalFunc = clibxml2.addFunction(function readExternalFunc(readContextPtr, bufferPtr, bufferLen) {
 				//	types.DEBUGGER();
-				//});
+				//}, 'viii');
 
 				//const closeExternalFunc = clibxml2.addFunction(function closeExternalFunc(readContextPtr) {
 				//	clibxml2._free(readContextPtr);
 				//	readContextPtr = NULL;
-				//});
+				//}, 'vi');
 
 				//const externalLoader = clibxml2.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
 				//	const path = xsd.set({file: null}).combine(clibxml2.Pointer_stringify(urlStrPtr));
 				//	const readContextPtr = clibxml2._malloc(....);
 				//	const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, readContextPtr, readExternalFunc, closeExternalFunc);
 				//	return inputPtr;
-				//});
+				//}, 'iiii');
 
 				const externalLoader = clibxml2.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
 					// TODO: Read and store base directory from/to "userDataPtr" when "xmlSchemaNewParserCtxt" will accept a "userData" argument.
@@ -251,7 +251,7 @@ exports.add = function add(modules) {
 							contentPtr = NULL;
 						};
 					};
-				});
+				}, 'iiii');
 
 				// Disable file system access
 				clibxml2._xmlCleanupInputCallbacks();
@@ -282,6 +282,10 @@ exports.add = function add(modules) {
 			libxml2.ADD('parse', function(stream, /*optional*/options) {
 				const Promise = types.getPromise();
 				return Promise.try(function() {
+					if (!__Internal__.initialized) {
+						throw new types.ParseError("'libxml2' parser must be initialized first.");
+					};
+
 					let clibxml2 = null,
 						clibxml2Cleaned = false,
 						allocatedFunctions = null,
@@ -501,7 +505,7 @@ exports.add = function add(modules) {
 							},
 						};
 
-						const allocFunction = function _allocFunction(name) {
+						const allocFunction = function _allocFunction(name, sig) {
 							if (!allocatedFunctions) {
 								allocatedFunctions = tools.nullObject();
 							};
@@ -511,7 +515,7 @@ exports.add = function add(modules) {
 							const fn = types.get(SAX_HANDLERS, name, null);
 							let ptr = NULL;
 							if (fn) {
-								ptr = clibxml2.addFunction(fn);
+								ptr = clibxml2.addFunction(fn, sig);
 								if (!ptr) {
 									throw new types.Error("Failed to allocate function '~0~' for the SAXHandler.", [name]);
 								};
@@ -521,35 +525,35 @@ exports.add = function add(modules) {
 						};
 
 						sax = clibxml2._xmlCreateMySAXHandler(
-							allocFunction('internalSubset'),
-							allocFunction('isStandalone'),
-							allocFunction('hasInternalSubset'),
-							allocFunction('hasExternalSubset'),
-							allocFunction('resolveEntity'),
-							allocFunction('getEntity'),
-							allocFunction('entityDecl'),
-							allocFunction('notationDecl'),
-							allocFunction('attributeDecl'),
-							allocFunction('elementDecl'),
-							allocFunction('unparsedEntityDecl'),
-							allocFunction('setDocumentLocator'),
-							allocFunction('startDocument'),
-							allocFunction('endDocument'),
-							allocFunction('startElement'),
-							allocFunction('endElement'),
-							allocFunction('reference'),
-							allocFunction('characters'),
-							allocFunction('ignorableWhitespace'),
-							allocFunction('processingInstruction'),
-							allocFunction('comment'),
-							allocFunction('warning'),
-							allocFunction('error'),
-							allocFunction('getParameterEntity'),
-							allocFunction('cdataBlock'),
-							allocFunction('externalSubset'),
-							allocFunction('startElementNs'),
-							allocFunction('endElementNs'),
-							allocFunction('serror')
+							allocFunction('internalSubset', 'viiii'),
+							allocFunction('isStandalone', 'ii'),
+							allocFunction('hasInternalSubset', 'ii'),
+							allocFunction('hasExternalSubset', 'ii'),
+							allocFunction('resolveEntity', 'iiii'),
+							allocFunction('getEntity', 'iii'),
+							allocFunction('entityDecl', 'viiiiii'),
+							allocFunction('notationDecl', 'viiii'),
+							allocFunction('attributeDecl', 'viiiiiii'),
+							allocFunction('elementDecl', 'viiii'),
+							allocFunction('unparsedEntityDecl', 'viiiii'),
+							allocFunction('setDocumentLocator', 'vii'),
+							allocFunction('startDocument', 'vi'),
+							allocFunction('endDocument', 'vi'),
+							allocFunction('startElement', 'viii'),
+							allocFunction('endElement', 'vii'),
+							allocFunction('reference', 'vii'),
+							allocFunction('characters', 'viii'),
+							allocFunction('ignorableWhitespace', 'viii'),
+							allocFunction('processingInstruction', 'viii'),
+							allocFunction('comment', 'vii'),
+							allocFunction('warning', 'viii'),
+							allocFunction('error', 'viii'),
+							allocFunction('getParameterEntity', 'iii'),
+							allocFunction('cdataBlock', 'viii'),
+							allocFunction('externalSubset', 'viiii'),
+							allocFunction('startElementNs', 'viiiiiiiii'),
+							allocFunction('endElementNs', 'viiii'),
+							allocFunction('serror', 'vii')
 						);
 						if (!sax) {
 							throw new types.Error("Failed to create SAXHandler.");
@@ -573,7 +577,7 @@ exports.add = function add(modules) {
 								throw new types.Error("Failed to create schema parser.");
 							};
 
-							clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error'), allocFunction('warning'), NULL);
+							clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), NULL);
 
 							schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
 							if (!schema) {
@@ -591,7 +595,7 @@ exports.add = function add(modules) {
 								throw new types.Error("Failed to create schema validator.");
 							};
 
-							//clibxml2._xmlSchemaSetValidErrors(validCtxt, allocFunction('error'), allocFunction('warning'), userPtr);
+							//clibxml2._xmlSchemaSetValidErrors(validCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), userPtr);
 
 							saxPtr = clibxml2._malloc(PTR_LEN);
 							if (!saxPtr) {
@@ -801,10 +805,9 @@ exports.add = function add(modules) {
 							};
 						})
 						.catch(function(err) {
-							if (!clibxml2Cleaned && !types.isString(err)) {
+							if (!clibxml2Cleaned && !types._instanceof(err, libxml2.AbortError)) {
 								// Lixml2 is unstable because its cleanup has failed, force abort.
-								/* eslint no-throw-literal: "off" */  // That's Emscripten's fault !
-								throw 'abort() at ' + err.stack;
+								throw new libxml2.AbortError(err);
 							};
 							throw err;
 						});
