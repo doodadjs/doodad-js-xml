@@ -128,18 +128,47 @@
 				{
 					class: "Make.File.Copy",
 					source: "%PACKAGEDIR%/lib/libxml2/libxml2.js",
-					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/libxml2.js",
-					fromOutside: true
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/libxml2.js"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "%PACKAGEDIR%/lib/libxml2/libxml2.min.js",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/libxml2.min.js"
 				},
 				{
 					class: "Make.File.Copy",
 					source: "%PACKAGEDIR%/lib/libxml2/Copyright",
-					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/Copyright"
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/LICENSE"
 				},
 				{
 					class: "Make.File.Copy",
 					source: "%PACKAGEDIR%/lib/libxml2/AUTHORS",
 					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/AUTHORS"
+				},
+
+				{
+					class: "Make.Folder.Create",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/sax"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "~sax/lib/sax.js",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/sax/sax.js"
+				},
+				{
+					class: "Make.File.Javascript",
+					source: "~sax/lib/sax.js",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/sax/sax.min.js"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "~sax/LICENSE",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/sax/LICENSE"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "~sax/README.md",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/sax/README.md"
 				}
 			]
 		},
