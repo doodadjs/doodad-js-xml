@@ -239,8 +239,6 @@ exports.add = function add(modules) {
 						//};
 						const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen/*, filenamePtr*/);
 						return inputPtr;
-					} catch (ex) {
-						throw ex;
 					} finally {
 						//if (filenamePtr) {
 						//	clibxml2._free(filenamePtr);
@@ -304,12 +302,13 @@ exports.add = function add(modules) {
 						pushParserCtxt = NULL;
 
 					let xsd = types.get(options, 'xsd', null);
+					const encoding = types.get(options, 'encoding', 'utf-8');
 
 					let promise = null;
 
 					if (xsd) {
 						xsd = files.parseLocation(xsd);
-						promise = files.readFileAsync(xsd);
+						promise = files.readFileAsync(xsd, {encoding});
 					} else {
 						promise = Promise.resolve(null);
 					};
@@ -403,8 +402,6 @@ exports.add = function add(modules) {
 									};
 									allocatedEntities[name] = entityPtr;
 									return entityPtr;
-								} catch (ex) {
-									throw ex;
 								} finally {
 									if (newNamePtr) {
 										clibxml2._free(newNamePtr);
@@ -700,8 +697,6 @@ exports.add = function add(modules) {
 									if (isValid <= 0) {
 										throw new types.Error("The XML document is invalid.");
 									};
-								} catch(ex) {
-									throw ex;
 								} finally {
 									if (valuePtr) {
 										clibxml2._free(valuePtr);
