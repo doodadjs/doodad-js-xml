@@ -45,7 +45,7 @@ const doodadjs = require('@doodad-js/core'),
 // Workflow: [out]Ready ==> [in]Parse(options) ==> [out]Ack ==> [in]Chunk(data) ==> [out]Ack ==> [in]Chunk(data) ==> [out]Nodes ==> [in]Ack ==> [out]Ack ==> [in]Chunk(dat: null) ==> ... ==> [out]Ready
 
 doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug ? 'dev' : null)})
-	//.thenCreate(function(root, resolve, reject) {
+//.thenCreate(function(root, resolve, reject) {
 	.then(function(root) {
 		//===================================
 		// Namespaces
@@ -401,6 +401,8 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					});
 				};
 
+				let endParse; // no-use-before-define
+
 				const waitNodesAck = function _waitNodesAck(isValid) {
 					wait(['Ack'], function(msg) {
 						if (isValid) {
@@ -499,7 +501,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					clibxml2Cleaned = true;
 				};
 
-				const endParse = function _endParse() {
+				endParse = function _endParse() {
 					parseChunkCleanup();
 
 					listen(dataPort);
@@ -508,6 +510,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				parseChunk = function _parseChunk(chunk) {
 					let chunkPtr = NULL;
 					try {
+						let parseRes = 0;
 						if (chunk) {
 							root.DD_ASSERT && root.DD_ASSERT(types.isString(chunk) || types.isTypedArray(chunk));
 							if (types.isString(chunk)) {
@@ -517,33 +520,24 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 									throw new types.Error("Failed to allocate string buffer.");
 								};
 								chunk = null;
-								const res = clibxml2._xmlParseChunk(pushParserCtxt, chunkPtr, len, 1);
-								if (res) {
-									throw new types.Error("Failed to parse the XML document. 'xmlParseChunk' has returned '~0~'.", [res]);
-								};
+								parseRes = clibxml2._xmlParseChunk(pushParserCtxt, chunkPtr, len, 1);
 							} else {
 								// TODO: Non UTF-8
 								chunkPtr = clibxml2.allocate(chunk, 'i8', clibxml2.ALLOC_NORMAL);
 								if (!chunkPtr) {
 									throw new types.Error("Failed to allocate chunk buffer.");
 								};
-								const res = clibxml2._xmlParseChunk(pushParserCtxt, chunkPtr, chunk.length, 0);
-								if (res) {
-									throw new types.Error("Failed to parse chunk. 'xmlParseChunk' has returned '~0~'.", [res]);
-								};
+								parseRes = clibxml2._xmlParseChunk(pushParserCtxt, chunkPtr, chunk.length, 0);
 							};
 						} else {
-							const res = clibxml2._xmlParseChunk(pushParserCtxt, NULL, 0, 1);
-							if (res) {
-								throw new types.Error("Failed to close document. 'xmlParseChunk' has returned '~0~'.", [res]);
-							};
+							parseRes = clibxml2._xmlParseChunk(pushParserCtxt, NULL, 0, 1);
 						};
-						let isValid = true;
-						if (validCtxt) {
+						let isValid = (parseRes === 0);
+						if (isValid && validCtxt) {
 							isValid = (clibxml2._xmlSchemaIsValid(validCtxt) > 0);
 						};
 						waitNodesAck(isValid);
-						dataPort.postMessage({name: 'Nodes', nodes: pendingNodes, logs: pendingLogs, isValid});
+						dataPort.postMessage({name: 'Nodes', nodes: pendingNodes, logs: pendingLogs, isValid, retVal: parseRes});
 						pendingNodes = [];
 						pendingLogs = [];
 					} catch(err) {

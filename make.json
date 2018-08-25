@@ -78,6 +78,12 @@
 			browserify: true
 		},
 		{
+			src: "common/Tools_Xml_Parsers_Libxml2_Errors.js",
+			client: true,
+			server: true,
+			browserify: true
+		},
+		{
 			src: "server/Tools_Xml_Parsers_Libxml2_Loader.js",
 			client: false,
 			server: true,

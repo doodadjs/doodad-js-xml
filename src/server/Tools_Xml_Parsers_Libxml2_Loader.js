@@ -38,6 +38,7 @@ exports.add = function add(modules) {
 		dependencies: [
 			'Doodad.Tools.Xml',
 			'Doodad.IO',
+			'Doodad.Tools.Xml.Parsers.Libxml2.Errors',
 		],
 
 		create: function create(root, /*optional*/_options, _shared) {
@@ -55,6 +56,7 @@ exports.add = function add(modules) {
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
+				libxml2Errors = libxml2.Errors,
 				libxml2Loader = libxml2.Loader;
 
 			//===================================
@@ -363,7 +365,11 @@ exports.add = function add(modules) {
 										}, this);
 										this.channel.port2.postMessage({name: 'Ack'});
 										if (!msg.isValid) {
-											throw new types.ParseError("Invalid XML document.");
+											if (msg.retVal === libxml2Errors.ParserErrors.XML_ERR_OK) {
+												throw new types.ParseError("Invalid XML document (see previous message(s)).");
+											} else {
+												throw new types.ParseError("Invalid XML document : '~0~'.", [libxml2Errors.getParserMessage(msg.retVal)]);
+											};
 										};
 									}));
 								};
