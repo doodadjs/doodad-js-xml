@@ -758,21 +758,25 @@ exports.add = function add(modules) {
 			});
 
 			xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
-				// TODO: MemoryStream for Strings
-				const needSchemas = !!types.get(options, 'xsd', null);
-				if (parser) {
-					if ((tools.indexOf(__Internal__.parsers, parser) < 0)) {
-						throw new types.ParseError('Invalid XML parser.');
+				// NOTE: 'parse' is "async".
+				const Promise = types.getPromise();
+				return Promise.try(function tryParsePromise() {
+					// TODO: MemoryStream for Strings
+					const needSchemas = !!types.get(options, 'xsd', '');
+					if (parser) {
+						if ((tools.indexOf(__Internal__.parsers, parser) < 0)) {
+							throw new types.ParseError('Invalid XML parser.');
+						};
+					} else {
+						parser = tools.filter(__Internal__.parsers, function(parser) {
+							return parser.isAvailable() && (!needSchemas || parser.hasFeatures({schemas: true}));
+						})[0];
 					};
-				} else {
-					parser = tools.filter(__Internal__.parsers, function(parser) {
-						return parser.isAvailable() && (!needSchemas || parser.hasFeatures({schemas: true}));
-					})[0];
-				};
-				if (!parser || !parser.isAvailable() || (needSchemas && !parser.hasFeatures({schemas: true}))) {
-					throw new types.ParseError('The XML parser is not available.');
-				};
-				return parser.parse(stream, options);
+					if (!parser || !parser.isAvailable() || (needSchemas && !parser.hasFeatures({schemas: true}))) {
+						throw new types.ParseError('The XML parser is not available.');
+					};
+					return parser.parse(stream, options);
+				});
 			});
 
 			xml.ADD('isAvailable', function isAvailable(/*optional*/features) {
