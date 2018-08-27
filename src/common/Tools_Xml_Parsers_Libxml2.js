@@ -256,7 +256,7 @@ exports.add = function add(modules) {
 						try {
 							if (types.isString(content)) {
 								contentLen = clibxml2.lengthBytesUTF8(content);
-								contentPtr = createStrPtr(content, contentLen);
+								contentPtr = __Internal__.createStrPtr(content, contentLen);
 							} else {
 								contentLen = content.length;
 								contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
