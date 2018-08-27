@@ -66,20 +66,37 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 		const NULL = 0;
 
-		let baseDirectories = null;
+		let parserData = null;
 
 		//===================================
 		// Libxml2 Parser
 		//===================================
 
+		const registerOptions = function _registerOptions(schemaParserCtxt, options) {
+			if (!parserData) {
+				parserData = new types.Map();
+			};
+			if (parserData.has(schemaParserCtxt)) {
+				const data = parserData.get(schemaParserCtxt);
+				data.options = options;
+			} else {
+				parserData.set(schemaParserCtxt, {options});
+			};
+		};
+
 		const registerBaseDirectory = function _registerBaseDirectory(schemaParserCtxt, url) {
-			if (!baseDirectories) {
-				baseDirectories = new types.Map();
+			if (!parserData) {
+				parserData = new types.Map();
 			};
 			const directory = url.set({file: ''});
 			const directoryStr = directory.toApiString();
-			if (baseDirectories.has(schemaParserCtxt)) {
-				const dirs = baseDirectories.get(schemaParserCtxt);
+			if (parserData.has(schemaParserCtxt)) {
+				const data = parserData.get(schemaParserCtxt);
+				let dirs = data.dirs;
+				if (!dirs) {
+					dirs = [];
+					data.dirs = dirs;
+				};
 				const len = dirs.length;
 				let found = false;
 				for (let i = 0; i < len; i++) {
@@ -93,20 +110,20 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					dirs.push([directoryStr, directory]);
 				};
 			} else {
-				baseDirectories.set(schemaParserCtxt, [[directoryStr, directory]]);
+				parserData.set(schemaParserCtxt, {dirs: [[directoryStr, directory]]});
 			};
 		};
 
-		const unregisterBaseDirectories = function _unregisterBaseDirectories(schemaParserCtxt) {
-			if (!baseDirectories || !baseDirectories.has(schemaParserCtxt)) {
+		const unregisterParserData = function _unregisterParserData(schemaParserCtxt) {
+			if (!parserData || !parserData.has(schemaParserCtxt)) {
 				throw new types.Error("Base directory not registered on schema parser '~0~'.", [schemaParserCtxt]);
 			};
-			baseDirectories.delete(schemaParserCtxt);
+			parserData.delete(schemaParserCtxt);
 		};
 
-		const getBaseDirectories = function _getBaseDirectories(schemaParserCtxt) {
-			if (baseDirectories) {
-				return baseDirectories.get(schemaParserCtxt);
+		const getParserData = function _getParserData(schemaParserCtxt) {
+			if (parserData) {
+				return parserData.get(schemaParserCtxt);
 			};
 			return undefined;
 		};
@@ -176,8 +193,8 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				const nodoc = types.get(options, 'nodoc', false),
 					discardEntities = types.get(options, 'discardEntities', false),
 					entities = types.get(options, 'entities', null),
-					xsd = types.get(options, 'xsd', '');
-				//encoding = types.get(options, 'encoding', 'utf-8');
+					xsd = types.get(options, 'xsd', ''),
+					encoding = types.get(options, 'encoding', 'utf-8');
 
 				const PTR_LEN = clibxml2._xmlPtrLen();
 				const XML_INTERNAL_GENERAL_ENTITY = 1;
@@ -441,7 +458,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 					if (schemaParserCtxt) {
 						try {
-							unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+							unregisterParserData(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 						} catch(ex) {
 							// Ignore
 						};
@@ -534,7 +551,8 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 						};
 						let isValid = (parseRes === 0);
 						if (isValid && validCtxt) {
-							isValid = (clibxml2._xmlSchemaIsValid(validCtxt) > 0);
+							const res = clibxml2._xmlSchemaIsValid(validCtxt);
+							isValid = (res > 0);
 						};
 						waitNodesAck(isValid);
 						dataPort.postMessage({name: 'Nodes', nodes: pendingNodes, logs: pendingLogs, isValid, retVal: parseRes});
@@ -604,6 +622,8 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 						throw new types.Error("Failed to create schema parser.");
 					};
 
+					registerOptions(schemaParserCtxt, {encoding});
+
 					clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), NULL);
 
 					schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
@@ -613,7 +633,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 					clibxml2._free(urlPtr); // free memory
 					urlPtr = NULL;
-					unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+					unregisterParserData(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 					clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
 					schemaParserCtxt = NULL;
 
@@ -659,7 +679,8 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 			} catch(err) {
 				dataPort.postMessage({name: 'Error', type: err.name, message: err.message, stack: err.stack});
-				//dataPort.close();
+
+				endParse();
 
 				if (!clibxml2Cleaned && !types._instanceof(err, AbortError)) {
 					// Lixml2 is unstable because its cleanup has failed, force abort.
@@ -701,6 +722,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 			const url = files.parseLocation(clibxml2.Pointer_stringify(urlStrPtr));
 
 			let contentPtr = NULL;
+			let contentLen = 0;
 			//let filenamePtr = NULL;
 
 			try {
@@ -710,14 +732,16 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				};
 
 				let content = null;
+				const data = getParserData(userDataPtr);
+				const encoding = types.get(data.options, 'encoding', null);
 
 				if (url.isRelative) {
-					const dirs = getBaseDirectories(userDataPtr),
+					const dirs = data.dirs,
 						len = dirs.length;
 					for (let i = 0; i < len; i++) {
 						const path = dirs[i][1].combine(url/*, {includePathInRoot: false}*/);
 						try {
-							content = files.readFileSync(path);
+							content = files.readFileSync(path, {encoding});
 							registerBaseDirectory(userDataPtr, path);
 							break;
 						} catch(ex) {
@@ -727,26 +751,35 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 						};
 					};
 				} else {
-					content = files.readFileSync(url);
+					content = files.readFileSync(url, {encoding});
 					registerBaseDirectory(userDataPtr, url);
 				};
 
 				if (!content) {
-					// File not found.
+					// File not found / File empty.
 					return NULL;
 				};
 
-				const contentLen = content.length;
-				contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
+				if (types.isString(content)) {
+					contentLen = clibxml2.lengthBytesUTF8(content);
+					contentPtr = createStrPtr(content, contentLen);
+				} else {
+					contentLen = content.length;
+					contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
+				};
 				content = null; // free memory
 				if (!contentPtr) {
-					throw new types.Error("Failed to allocate buffer file content.");
+					throw new types.Error("Failed to allocate file buffer.");
 				};
-				//filenamePtr = clibxml2.allocate(path.toApiString(), 'i8', clibxml2.ALLOC_NORMAL);
+
+				//const filename = path.toApiString();
+				//filenamePtr = createStrPtr(filename, clibxml2.lengthBytesUTF8(filename));
 				//if (!filenamePtr) {
 				//	throw new types.Error("Failed to allocate buffer for file name.");
 				//};
+
 				const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen/*, filenamePtr*/);
+
 				return inputPtr;
 
 			} finally {

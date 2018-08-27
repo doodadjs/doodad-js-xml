@@ -143,53 +143,46 @@ exports.add = function add(modules) {
 						this.start();
 					}),
 
+					handleError: function handleError(err) {
+						this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
+						this.stopWaiting();
+						tools.callAsync(this.close, 0, this);
+					},
+
 					start: function start() {
-						try {
-							root.DD_ASSERT && root.DD_ASSERT(!this.started);
+						root.DD_ASSERT && root.DD_ASSERT(!this.started);
 
-							this.started = true;
+						this.started = true;
 
-							this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts: root.getOptions()}});
+						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts: root.getOptions()}});
 
-							this.worker.on('error', doodad.Callback(this, function(err) {
-								this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
-								this.close();
-							}));
+						this.worker.on('error', doodad.Callback(this, this.handleError));
 
-							this.worker.on('exit', doodad.Callback(this, function(exitCode) {
-								this.dispatchEvent(new types.CustomEvent('terminate', {detail: {exitCode, number: this.number}}));
-								this.close();
-							}));
-
-							this.worker.on('online', doodad.Callback(this, function() {
-								this.channel = new __Internal__.nodejsWorker.MessageChannel();
-
-								this.wait(['Error'], doodad.Callback(this, function(value) {
-									const err = new libxml2Loader.WorkerError(value.type, value.message, value.stack);
-									this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
-									this.close();
-								}));
-
-								//this.waitLog();
-
-								/* ???? "close" gets always raised
-								const onCloseCb = doodad.Callback(this, function() {
-									this.close();
-									this.worker.terminate();
-								});
-								this.channel.port1.on('close', onCloseCb);
-								this.channel.port2.on('close', onCloseCb);
-								*/
-
-								this.waitReady();
-
-								this.worker.postMessage({port: this.channel.port1}, [this.channel.port1]);
-							}));
-						} catch(err) {
-							this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
+						this.worker.on('exit', doodad.Callback(this, function(exitCode) {
+							this.dispatchEvent(new types.CustomEvent('terminate', {detail: {exitCode, number: this.number}}));
 							this.close();
-							throw err;
-						};
+						}));
+
+						this.worker.on('online', doodad.Callback(this, function() {
+							this.channel = new __Internal__.nodejsWorker.MessageChannel();
+
+							this.wait(['Error'], doodad.Callback(this, function(value) {
+								const err = new libxml2Loader.WorkerError(value.type, value.message, value.stack);
+								this.handleError(err);
+							}));
+
+							/* ???? "close" gets always raised
+							const onCloseCb = doodad.Callback(this, function() {
+								this.close();
+							});
+							this.channel.port1.on('close', onCloseCb);
+							this.channel.port2.on('close', onCloseCb);
+							*/
+
+							this.waitReady();
+
+							this.worker.postMessage({port: this.channel.port1}, [this.channel.port1]);
+						}, this.handleError));
 					},
 
 					close: function close() {
@@ -199,15 +192,22 @@ exports.add = function add(modules) {
 
 							this.stopWaiting();
 
-							if (this.channel) {
-								this.channel.port1.close();
-								this.channel.port2.close();
-								this.channel = null;
-							};
+							//const channel = this.channel;
+
+							//const terminateCb = doodad.Callback(this, function() {
+							//	if (channel) {
+							//		channel.port1.close();
+							//		channel.port2.close();
+							//	};
+							//});
 
 							if (this.worker) {
+								//this.worker.terminate(terminateCb);
 								this.worker.terminate();
 								this.worker = null;
+								this.channel = null;
+							//} else {
+							//	terminateCb();
 							};
 						};
 					},
@@ -235,7 +235,7 @@ exports.add = function add(modules) {
 									this.stopWaiting(null, cb);
 									cb(msg);
 								}, this);
-							});
+							}, this.handleError);
 							this.channel.port2.on('message', this.waitCb);
 						};
 					},
@@ -272,21 +272,13 @@ exports.add = function add(modules) {
 						};
 					},
 
-					//waitLog: function waitLog() {
-					//	this.stopWaiting('Log');
-					//	this.wait(['Log'], doodad.Callback(this, function(value) {
-					//		this.dispatchEvent(new types.CustomEvent('log', {detail: value}));
-					//		this.waitLog();
-					//	}));
-					//},
-
 					waitReady: function waitReady() {
 						this.stopWaiting('Ready');
 						this.wait(['Ready'], doodad.Callback(this, function() {
 							this.started = true;
 							this.available = true;
 							this.dispatchEvent(new types.CustomEvent('ready'));
-						}));
+						}, this.handleError));
 					},
 
 					sendChunk: function sendChunk(chunk) {
@@ -300,135 +292,123 @@ exports.add = function add(modules) {
 							xsd = types.get(options, 'xsd', null),
 							callback = types.get(options, 'callback', null);
 
-						try {
-							if (!this.available) {
-								throw types.NotAvailable("The worker thread is not available.");
+						if (!this.available) {
+							throw types.NotAvailable("The worker thread is not available.");
+						};
+
+						// TODO: MemoryStream to replace strings
+						root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
+
+						const xsdStr = (xsd ? xsd.toApiString() : '');
+
+						this.available = false;
+
+						this.wait(['Ack'], doodad.Callback(this, function() {
+							const doc = (nodoc ? null : new xml.Document());
+							let attrs = null;
+
+							if (!nodoc && !discardEntities) {
+								tools.forEach(entities, function(value, name) {
+									const node = new xml.Entity(name, value);
+									doc.getEntities().append(node);
+								});
 							};
 
-							// TODO: MemoryStream to replace strings
-							root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
+							this.currentNode = doc;
 
-							const xsdStr = (xsd ? xsd.toApiString() : '');
-
-							this.available = false;
-
-							this.wait(['Ack'], doodad.Callback(this, function() {
-								const doc = (nodoc ? null : new xml.Document());
-								let attrs = null;
-
-								if (!nodoc && !discardEntities) {
-									tools.forEach(entities, function(value, name) {
-										const node = new xml.Entity(name, value);
-										doc.getEntities().append(node);
-									});
-								};
-
-								this.currentNode = doc;
-
-								const waitNodes = function _waitNodes() {
-									this.wait(['Nodes'], doodad.Callback(this, function(msg) {
-										tools.forEach(msg.logs, function(msg) {
-											this.dispatchEvent(new types.CustomEvent('log', {detail: {type: msg.type, message: msg.message}}));
-										}, this);
-										tools.forEach(msg.nodes, function(msgNode) {
-											root.DD_ASSERT && root.DD_ASSERT(msgNode.name === 'Node');
-											if (msgNode.type === 'EndElement') {
-												this.currentNode = this.currentNode.getParent();
-											} else {
-												const type = xml[msgNode.type];
-												if (!types.baseof(xml.Node, type)) {
-													throw new types.ValueError("Invalid XML node type '~0~'.", [msgNode.type]);
-												};
-												const args = msgNode.args || [];
-												if (!types.isArray(args)) {
-													throw new types.ValueError("Invalid XML node type arguments.");
-												};
-												const node = new type(...args);
-												if (nodoc) {
-													callback && callback(node);
-												} else {
-													if (types._instanceof(node, xml.ProcessingInstruction)) {
-														doc.getInstructions().append(node);
-													} else if (types._instanceof(node, xml.DocumentType)) {
-														doc.setDocumentType(node);
-													} else if (types._instanceof(node, xml.Element)) {
-														this.currentNode.getChildren().append(node);
-														this.currentNode = node;
-														attrs = this.currentNode.getAttrs();
-													} else if (types._instanceof(node, xml.Attribute)) {
-														attrs.append(node);
-													} else {
-														this.currentNode.getChildren().append(node);
-													};
-												};
+							const waitNodes = function _waitNodes() {
+								this.wait(['Nodes'], doodad.Callback(this, function(msg) {
+									tools.forEach(msg.logs, function(msg) {
+										this.dispatchEvent(new types.CustomEvent('log', {detail: {type: msg.type, message: msg.message}}));
+									}, this);
+									tools.forEach(msg.nodes, function(msgNode) {
+										root.DD_ASSERT && root.DD_ASSERT(msgNode.name === 'Node');
+										if (msgNode.type === 'EndElement') {
+											this.currentNode = this.currentNode.getParent();
+										} else {
+											const type = xml[msgNode.type];
+											if (!types.baseof(xml.Node, type)) {
+												throw new types.ValueError("Invalid XML node type '~0~'.", [msgNode.type]);
 											};
-										}, this);
-										this.channel.port2.postMessage({name: 'Ack'});
-										if (!msg.isValid) {
-											if (msg.retVal === libxml2Errors.ParserErrors.XML_ERR_OK) {
-												throw new types.ParseError("Invalid XML document (see previous message(s)).");
+											const args = msgNode.args || [];
+											if (!types.isArray(args)) {
+												throw new types.ValueError("Invalid XML node type arguments.");
+											};
+											const node = new type(...args);
+											if (nodoc) {
+												callback && callback(node);
 											} else {
-												throw new types.ParseError("Invalid XML document : '~0~'.", [libxml2Errors.getParserMessage(msg.retVal)]);
+												if (types._instanceof(node, xml.ProcessingInstruction)) {
+													doc.getInstructions().append(node);
+												} else if (types._instanceof(node, xml.DocumentType)) {
+													doc.setDocumentType(node);
+												} else if (types._instanceof(node, xml.Element)) {
+													this.currentNode.getChildren().append(node);
+													this.currentNode = node;
+													attrs = this.currentNode.getAttrs();
+												} else if (types._instanceof(node, xml.Attribute)) {
+													attrs.append(node);
+												} else {
+													this.currentNode.getChildren().append(node);
+												};
 											};
 										};
-									}));
-								};
+									}, this);
+									this.channel.port2.postMessage({name: 'Ack'});
+									if (!msg.isValid) {
+										if (msg.retVal === libxml2Errors.ParserErrors.XML_ERR_OK) {
+											throw new types.ParseError("Invalid XML document (see above message(s)).");
+										} else {
+											throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(msg.retVal)]);
+										};
+									};
+								}, this.handleError));
+							};
 
-								waitNodes.call(this);
+							waitNodes.call(this);
 
-								if (types.isString(stream)) {
+							if (types.isString(stream)) {
+								this.wait(['Ack'], doodad.Callback(this, function() {
 									this.wait(['Ack'], doodad.Callback(this, function() {
+										this.stopWaiting();
+										this.waitReady();
+										this.dispatchEvent(new types.CustomEvent('finish', {detail: doc}));
+									}));
+									waitNodes.call(this);
+									this.sendChunk(null);
+								}, this.handleError));
+								this.sendChunk(stream);
+							} else {
+								stream.onError.attachOnce(this, function(ev) {
+									ev.preventDefault();
+									this.handleError(ev.error);
+								});
+								stream.onReady.attach(this, function(ev) {
+									ev.preventDefault();
+									const deferredCb = ev.data.defer();
+									if (ev.data.raw === io.EOF) {
 										this.wait(['Ack'], doodad.Callback(this, function() {
 											this.stopWaiting();
 											this.waitReady();
 											this.dispatchEvent(new types.CustomEvent('finish', {detail: doc}));
-										}));
-										waitNodes.call(this);
+											deferredCb();
+										}, this.handleError));
 										this.sendChunk(null);
-									}));
-									this.sendChunk(stream);
-								} else {
-									stream.onError.attachOnce(this, function(ev) {
-										ev.preventDefault();
-										this.dispatchEvent(new types.CustomEvent('error', {detail: ev.error}));
-										this.close();
-									});
-									stream.onReady.attach(this, function(ev) {
-										ev.preventDefault();
-										try {
-											const deferredCb = ev.data.defer();
-											if (ev.data.raw === io.EOF) {
-												this.wait(['Ack'], doodad.Callback(this, function() {
-													this.stopWaiting();
-													this.waitReady();
-													this.dispatchEvent(new types.CustomEvent('finish', {detail: doc}));
-													deferredCb();
-												}));
-												this.sendChunk(null);
-											} else {
-												const chunk = ev.data.valueOf();
-												// console.log(io.TextData.$decode(chunk, 'utf-8'))
-												this.wait(['Ack'], doodad.Callback(this, function() {
-													waitNodes.call(this);
-													deferredCb();
-												}));
-												this.sendChunk(chunk);
-											};
-										} catch(err) {
-											this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
-											this.close();
-										};
-									});
-									stream.listen();
-								};
-							}), true);
+									} else {
+										const chunk = ev.data.valueOf();
+										// console.log(io.TextData.$decode(chunk, 'utf-8'))
+										this.wait(['Ack'], doodad.Callback(this, function() {
+											waitNodes.call(this);
+											deferredCb();
+										}, this.handleError));
+										this.sendChunk(chunk);
+									};
+								});
+								stream.listen();
+							};
+						}, this.handleError), true);
 
-							this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd: xsdStr}});
-
-						} catch(err) {
-							this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
-							this.close();
-						};
+						this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd: xsdStr}});
 					},
 				}
 			));

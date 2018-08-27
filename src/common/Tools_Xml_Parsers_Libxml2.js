@@ -37,6 +37,7 @@ exports.add = function add(modules) {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		dependencies: [
 			'Doodad.Tools.Xml',
+			'Doodad.Tools.Xml.Parsers.Libxml2.Errors',
 			'Doodad.Tools.Xml.Parsers.Libxml2.Loader',
 		],
 
@@ -54,6 +55,7 @@ exports.add = function add(modules) {
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
+				libxml2Errors = libxml2.Errors,
 				libxml2Loader = libxml2.Loader;
 
 			//===================================
@@ -66,7 +68,7 @@ exports.add = function add(modules) {
 				initialized: false,
 				ready: false,
 				createStrPtr: null,
-				baseDirectories: null,
+				parserData: null,
 
 				DEFAULT_WORKERS_COUNT: 5,
 				workers: null,
@@ -76,14 +78,31 @@ exports.add = function add(modules) {
 			// Libxml2 Parser (single thread)
 			//===================================
 
-			__Internal__.registerBaseDirectory = function registerBaseDirectory(schemaParserCtxt, url) {
-				if (!__Internal__.baseDirectories) {
-					__Internal__.baseDirectories = tools.nullObject();
+			__Internal__.registerOptions = function _registerOptions(schemaParserCtxt, options) {
+				if (!__Internal__.parserData) {
+					__Internal__.parserData = new types.Map();
+				};
+				if (__Internal__.parserData.has(schemaParserCtxt)) {
+					const data = __Internal__.parserData.get(schemaParserCtxt);
+					data.options = options;
+				} else {
+					__Internal__.parserData.set(schemaParserCtxt, {options});
+				};
+			};
+
+			__Internal__.registerBaseDirectory = function _registerBaseDirectory(schemaParserCtxt, url) {
+				if (!__Internal__.parserData) {
+					__Internal__.parserData = new types.Map();
 				};
 				const directory = url.set({file: ''});
 				const directoryStr = directory.toApiString();
-				if (types.has(__Internal__.baseDirectories, schemaParserCtxt)) {
-					const dirs = __Internal__.baseDirectories[schemaParserCtxt];
+				if (__Internal__.parserData.has(schemaParserCtxt)) {
+					const data = __Internal__.parserData.get(schemaParserCtxt);
+					let dirs = data.dirs;
+					if (!dirs) {
+						dirs = [];
+						data.dirs = dirs;
+					};
 					const len = dirs.length;
 					let found = false;
 					for (let i = 0; i < len; i++) {
@@ -94,23 +113,23 @@ exports.add = function add(modules) {
 						};
 					};
 					if (!found) {
-						__Internal__.baseDirectories[schemaParserCtxt].push( [directoryStr, directory] );
+						dirs.push([directoryStr, directory]);
 					};
 				} else {
-					__Internal__.baseDirectories[schemaParserCtxt] = [[directoryStr, directory]];
+					__Internal__.parserData.set(schemaParserCtxt, {dirs: [[directoryStr, directory]]});
 				};
 			};
 
-			__Internal__.unregisterBaseDirectories = function unregisterBaseDirectories(schemaParserCtxt) {
-				if (!__Internal__.baseDirectories || !types.has(__Internal__.baseDirectories, schemaParserCtxt)) {
-					throw new types.Error("Base directory not registered on schema parser '~0~'.", [schemaParserCtxt]);
+			__Internal__.unregisterParserData = function unregisterParserData(schemaParserCtxt) {
+				if (!__Internal__.parserData || !__Internal__.parserData.has(schemaParserCtxt)) {
+					throw new types.Error("Data not registered on schema parser '~0~'.", [schemaParserCtxt]);
 				};
-				delete __Internal__.baseDirectories[schemaParserCtxt];
+				__Internal__.parserData.delete(schemaParserCtxt);
 			};
 
-			__Internal__.getBaseDirectories = function getBaseDirectories(schemaParserCtxt) {
-				if (__Internal__.baseDirectories) {
-					return types.get(__Internal__.baseDirectories, schemaParserCtxt);
+			__Internal__.getParserData = function getParserData(schemaParserCtxt) {
+				if (__Internal__.parserData) {
+					return __Internal__.parserData.get(schemaParserCtxt);
 				};
 				return undefined;
 			};
@@ -202,14 +221,16 @@ exports.add = function add(modules) {
 						};
 
 						let content = null;
+						const data = __Internal__.getParserData(userDataPtr);
+						const encoding = types.get(data.options, 'encoding', null);
 
 						if (url.isRelative) {
-							const dirs = __Internal__.getBaseDirectories(userDataPtr),
+							const dirs = data.dirs,
 								len = dirs.length;
 							for (let i = 0; i < len; i++) {
 								const path = dirs[i][1].combine(url/*, {includePathInRoot: false}*/);
 								try {
-									content = files.readFileSync(path);
+									content = files.readFileSync(path, {encoding});
 									__Internal__.registerBaseDirectory(userDataPtr, path);
 									break;
 								} catch(ex) {
@@ -219,7 +240,7 @@ exports.add = function add(modules) {
 								};
 							};
 						} else {
-							content = files.readFileSync(url);
+							content = files.readFileSync(url, {encoding});
 							__Internal__.registerBaseDirectory(userDataPtr, url);
 						};
 
@@ -230,15 +251,22 @@ exports.add = function add(modules) {
 						};
 
 						let contentPtr = NULL;
+						let contentLen = 0;
 						//let filenamePtr = NULL;
 						try {
-							const contentLen = content.length;
-							contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
+							if (types.isString(content)) {
+								contentLen = clibxml2.lengthBytesUTF8(content);
+								contentPtr = createStrPtr(content, contentLen);
+							} else {
+								contentLen = content.length;
+								contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
+							};
 							content = null; // free memory
 							if (!contentPtr) {
-								throw new types.Error("Failed to allocate buffer file content.");
+								throw new types.Error("Failed to allocate file buffer.");
 							};
-							//filenamePtr = clibxml2.allocate(path.toApiString(), 'i8', clibxml2.ALLOC_NORMAL);
+							//const filename = path.toApiString();
+							//filenamePtr = createStrPtr(filename, clibxml2.lengthBytesUTF8(filename));
 							//if (!filenamePtr) {
 							//	throw new types.Error("Failed to allocate buffer for file name.");
 							//};
@@ -283,12 +311,10 @@ exports.add = function add(modules) {
 			__Internal__.parseWithClibxml2 = function parseWithClibxml2(stream, options) {
 				// NOTE: "parse" is Async
 
-				const clibxml2 = libxml2Loader.get();
-				if (!clibxml2) {
-					throw new types.NotAvailable("The 'libxml2' library is not available.");
-				};
+				const Promise = types.getPromise();
 
-				let clibxml2Cleaned = false,
+				let clibxml2 = null,
+					clibxml2Cleaned = false,
 					allocatedFunctions = null,
 					allocatedEntities = null,
 					sax = NULL,
@@ -304,12 +330,17 @@ exports.add = function add(modules) {
 					saxPlug = NULL,
 					pushParserCtxt = NULL;
 
-				const Promise = types.getPromise();
 				return Promise.create(function parseWithClibxml2Promise(resolve, reject) {
+					clibxml2 = libxml2Loader.get();
+					if (!clibxml2) {
+						throw new types.NotAvailable("The 'libxml2' library is not available.");
+					};
+
 					const nodoc = types.get(options, 'nodoc', false),
 						discardEntities = types.get(options, 'discardEntities', false),
 						entities = types.get(options, 'entities', null),
 						xsd = types.get(options, 'xsd', null),
+						encoding = types.get(options, 'encoding', null),
 						callback = types.get(options, 'callback', null);
 
 					const PTR_LEN = clibxml2._xmlPtrLen();
@@ -556,6 +587,8 @@ exports.add = function add(modules) {
 							throw new types.Error("Failed to create schema parser.");
 						};
 
+						__Internal__.registerOptions(schemaParserCtxt, {encoding});
+
 						clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), NULL);
 
 						schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
@@ -565,7 +598,7 @@ exports.add = function add(modules) {
 
 						clibxml2._free(urlPtr); // free memory
 						urlPtr = NULL;
-						__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+						__Internal__.unregisterParserData(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 						clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
 						schemaParserCtxt = NULL;
 
@@ -621,14 +654,17 @@ exports.add = function add(modules) {
 								throw new types.Error("Failed to allocate string buffer.");
 							};
 							stream = null;
-							const res = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 1);
-							if (res) {
-								throw new types.Error("Failed to parse the XML document. 'xmlParseChunk' has returned '~0~'.", [res]);
+							const parseRes = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 1);
+							let isValid = (parseRes === 0);
+							if (isValid && validCtxt) {
+								const res = clibxml2._xmlSchemaIsValid(validCtxt);
+								isValid = (res > 0);
 							};
-							if (validCtxt) {
-								const isValid = clibxml2._xmlSchemaIsValid(validCtxt);
-								if (isValid <= 0) {
-									throw new types.Error("The XML document is invalid.");
+							if (!isValid) {
+								if (parseRes === libxml2Errors.ParserErrors.XML_ERR_OK) {
+									throw new types.ParseError("Invalid XML document (see above message(s)).");
+								} else {
+									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(parseRes)]);
 								};
 							};
 						} catch(ex) {
@@ -648,11 +684,9 @@ exports.add = function add(modules) {
 							ev.preventDefault();
 							let valuePtr = NULL;
 							try {
+								let parseRes = 0;
 								if (ev.data.raw === io.EOF) {
-									const res = clibxml2._xmlParseChunk(pushParserCtxt, NULL, 0, 1);
-									if (res) {
-										throw new types.Error("Failed to close document. 'xmlParseChunk' has returned '~0~'.", [res]);
-									};
+									parseRes = clibxml2._xmlParseChunk(pushParserCtxt, NULL, 0, 1);
 								} else {
 									const value = ev.data.valueOf();
 									if (types.isString(value)) {
@@ -661,28 +695,29 @@ exports.add = function add(modules) {
 										if (!valuePtr) {
 											throw new types.Error("Failed to allocate string buffer.");
 										};
-										const res = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 0);
-										if (res) {
-											throw new types.Error("Failed to parse chunk. 'xmlParseChunk' has returned '~0~'.", [res]);
-										};
+										parseRes = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 0);
 									} else {
 										// TODO: Non UTF-8
 										valuePtr = clibxml2.allocate(value, 'i8', clibxml2.ALLOC_NORMAL);
 										if (!valuePtr) {
 											throw new types.Error("Failed to allocate value buffer.");
 										};
-										const res = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, value.length, 0);
-										if (res) {
-											throw new types.Error("Failed to parse chunk. 'xmlParseChunk' has returned '~0~'.", [res]);
-										};
+										parseRes = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, value.length, 0);
 									};
 								};
-								if (validCtxt) {
-									const isValid = clibxml2._xmlSchemaIsValid(validCtxt);
-									if (isValid <= 0) {
-										throw new types.Error("The XML document is invalid.");
+								let isValid = (parseRes === 0);
+								if (isValid && validCtxt) {
+									const res = clibxml2._xmlSchemaIsValid(validCtxt);
+									isValid = (res > 0);
+								};
+								if (!isValid) {
+									if (parseRes === libxml2Errors.ParserErrors.XML_ERR_OK) {
+										throw new types.ParseError("Invalid XML document (based on the schema).");
+									} else {
+										throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(parseRes)]);
 									};
 								};
+
 							} finally {
 								if (valuePtr) {
 									clibxml2._free(valuePtr);
@@ -718,7 +753,7 @@ exports.add = function add(modules) {
 
 						if (schemaParserCtxt) {
 							try {
-								__Internal__.unregisterBaseDirectories(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
+								__Internal__.unregisterParserData(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
 							} catch(ex) {
 								// Ignore
 							};
