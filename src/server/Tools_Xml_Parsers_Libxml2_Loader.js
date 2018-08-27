@@ -290,6 +290,7 @@ exports.add = function add(modules) {
 							discardEntities = types.get(options, 'discardEntities', false),
 							entities = types.get(options, 'entities', null),
 							xsd = types.get(options, 'xsd', null),
+							encoding = types.get(options, 'encoding', null),
 							callback = types.get(options, 'callback', null);
 
 						if (!this.available) {
@@ -408,7 +409,7 @@ exports.add = function add(modules) {
 							};
 						}, this.handleError), true);
 
-						this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd: xsdStr}});
+						this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd: xsdStr, encoding}});
 					},
 				}
 			));
