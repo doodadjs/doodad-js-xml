@@ -43,7 +43,7 @@ exports.add = function add(modules) {
 			//===================================
 
 			const doodad = root.Doodad,
-				//types = doodad.Types,
+				types = doodad.Types,
 				tools = doodad.Tools,
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
@@ -56,7 +56,7 @@ exports.add = function add(modules) {
 
 			// <FUTURE> Thread context
 			const __Internal__ = {
-				libxml2: null,
+				clibxml2: null,
 			};
 
 			//===================================
@@ -75,13 +75,33 @@ exports.add = function add(modules) {
 					}
 				//! END_REPLACE()
 				, function get() {
-					if (__Internal__.libxml2) {
-						return __Internal__.libxml2;
+					if (__Internal__.clibxml2) {
+						return __Internal__.clibxml2;
 					};
-					__Internal__.libxml2 = global.libxml2;
+					__Internal__.clibxml2 = global.libxml2;
 					delete global.libxml2;
-					return __Internal__.libxml2;
+					return __Internal__.clibxml2;
 				}));
+
+			libxml2Loader.ADD('isAvailable', function isAvailable() {
+				return !!__Internal__.clibxml2;
+			});
+
+			libxml2Loader.ADD('hasFeatures', function hasFeatures(features) {
+				if (!__Internal__.clibxml2) {
+					return false;
+				};
+
+				// <PRB> libxml2 schema files loader is not Asynchronous so we have to use Workers (when available) or be running on debug mode.
+				const current = {
+					//schemas: libxml2Loader.WorkerWrapper.$isAvailable() || root.getOptions().debug,
+					schemas: root.getOptions().debug,
+				};
+
+				return tools.every(features, function(wanted, name) {
+					return !wanted || types.get(current, name, false);
+				});
+			});
 
 
 			//===================================
