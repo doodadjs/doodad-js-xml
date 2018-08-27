@@ -172,6 +172,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				allocatedEntities = null,
 				waitMsgs = null,
 				waitCb = null,
+				endParse = null,
 				sax = NULL,
 				saxOrg = NULL,
 				saxPtr = NULL,
@@ -417,8 +418,6 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 						parseChunk(msg.data);
 					});
 				};
-
-				let endParse; // no-use-before-define
 
 				const waitNodesAck = function _waitNodesAck(isValid) {
 					wait(['Ack'], function(msg) {
@@ -680,7 +679,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 			} catch(err) {
 				dataPort.postMessage({name: 'Error', type: err.name, message: err.message, stack: err.stack});
 
-				endParse();
+				endParse && endParse();
 
 				if (!clibxml2Cleaned && !types._instanceof(err, AbortError)) {
 					// Lixml2 is unstable because its cleanup has failed, force abort.
