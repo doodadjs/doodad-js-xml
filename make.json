@@ -102,6 +102,13 @@
 				{
 					class: "Make.Generate.Package"
 				},
+
+				{
+					class: "Make.File.Javascript",
+					source: "%SOURCEDIR%/server/Tools_Xml_Parsers_Libxml2_Worker.js",
+					destination: "%BUILDDIR%/server/Tools_Xml_Parsers_Libxml2_Worker.min.js"
+				},
+
 				{
 					class: "Make.Task",
 					name: "install"
