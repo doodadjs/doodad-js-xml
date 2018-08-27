@@ -662,7 +662,7 @@ exports.add = function add(modules) {
 							};
 							if (!isValid) {
 								if (parseRes === libxml2Errors.ParserErrors.XML_ERR_OK) {
-									throw new types.ParseError("Invalid XML document (see above message(s)).");
+									throw new types.ParseError("Invalid XML document (based on the schema).");
 								} else {
 									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(parseRes)]);
 								};
