@@ -206,8 +206,8 @@ exports.add = function add(modules) {
 								this.worker.terminate();
 								this.worker = null;
 								this.channel = null;
-							//} else {
-							//	terminateCb();
+								//} else {
+								//	terminateCb();
 							};
 						};
 					},
@@ -357,7 +357,7 @@ exports.add = function add(modules) {
 									this.channel.port2.postMessage({name: 'Ack'});
 									if (!msg.isValid) {
 										if (msg.retVal === libxml2Errors.ParserErrors.XML_ERR_OK) {
-											throw new types.ParseError("Invalid XML document (see above message(s)).");
+											throw new types.ParseError("Invalid XML document (based on the schema).");
 										} else {
 											throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(msg.retVal)]);
 										};
