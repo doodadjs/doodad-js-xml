@@ -24,5 +24,10 @@
     "url": "https://github.com/doodadjs/doodad-js-xml/issues",
     "email": "doodadjs@gmail.com"
   },
-  "tonicExampleFilename": "tonic.js"
+  "tonicExampleFilename": "tonic.js",
+  "config": {
+    "Doodad.Tools.Xml.Parsers.Libxml2": {
+      "workersCount": 5
+    }
+  }
 }

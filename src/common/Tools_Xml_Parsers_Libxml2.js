@@ -75,6 +75,42 @@ exports.add = function add(modules) {
 			};
 
 			//===================================
+			// Options
+			//===================================
+
+			let __options__ = tools.nullObject({
+				workersCount: 5, // Number of workers
+			});
+
+			__Internal__._setOptions = function setOptions(...args) {
+				const newOptions = tools.nullObject(__options__, ...args);
+
+				newOptions.workersCount = types.toInteger(newOptions.workersCount);
+
+				return newOptions;
+			};
+
+			libxml2.ADD('getOptions', function getOptions() {
+				return __options__;
+			});
+
+			libxml2.ADD('setOptions', function setOptions(...args) {
+				const newOptions = __Internal__._setOptions(...args);
+
+				if (newOptions.secret !== _shared.SECRET) {
+					throw new types.AccessDenied("Secrets mismatch.");
+				};
+
+				delete newOptions.secret;
+
+				__options__ = types.freezeObject(newOptions);
+
+				return __options__;
+			});
+
+			__options__ = types.freezeObject(__Internal__._setOptions(_options));
+
+			//===================================
 			// Libxml2 Parser (single thread)
 			//===================================
 
@@ -150,7 +186,7 @@ exports.add = function add(modules) {
 					what: null,
 				}));
 
-			__Internal__.initClibxml2 = function initClibxml2(options) {
+			__Internal__.initClibxml2 = function initClibxml2(initOpts) {
 				// NOTE: Not Async, but made Async-proof for the future...
 				const Promise = types.getPromise();
 				return Promise.try(function initClibxml2Promise() {
@@ -831,13 +867,14 @@ exports.add = function add(modules) {
 			// Workers (multi-threads)
 			//=========================
 
-			__Internal__.initWorkers = function initWorkers(options) {
+			__Internal__.initWorkers = function initWorkers(initOpts) {
 				// NOTE: Async
 				const Promise = types.getPromise();
 				return Promise.create(function initWorkersPromise(resolve, reject) {
-					const count = types.get(options, 'count', __Internal__.DEFAULT_WORKERS_COUNT);
+					const options = libxml2.getOptions(),
+						count = options.workersCount;
 
-					if ((count <= 0) || !libxml2Loader.WorkerWrapper || !libxml2Loader.WorkerWrapper.$isAvailable()) {
+					if ((count <= 0) || types.isInfinite(count) || !libxml2Loader.WorkerWrapper || !libxml2Loader.WorkerWrapper.$isAvailable()) {
 						resolve();
 						return;
 					};
@@ -1012,14 +1049,9 @@ exports.add = function add(modules) {
 			// Module Init
 			//===================================
 			return function init(/*optional*/options) {
-				const allowWorkers = types.get(options, 'allowWorkers', true);
-
 				return __Internal__.initClibxml2(options)
 					.then(function(dummy) {
-						if (allowWorkers) {
-							return __Internal__.initWorkers(options);
-						};
-						return undefined;
+						return __Internal__.initWorkers(options);
 					})
 					.then(function(dummy) {
 						if (__Internal__.initialized) {
