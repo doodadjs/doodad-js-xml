@@ -38,7 +38,10 @@ exports.add = function add(modules) {
 		dependencies: [
 			'Doodad.Tools.Xml',
 			'Doodad.IO',
-			'Doodad.Tools.Xml.Parsers.Libxml2.Errors',
+			{
+				name: 'Doodad.Tools.Xml.Parsers.Libxml2.Errors',
+				optional: true,
+			},
 		],
 
 		create: function create(root, /*optional*/_options, _shared) {
@@ -56,7 +59,6 @@ exports.add = function add(modules) {
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
-				libxml2Errors = libxml2.Errors,
 				libxml2Loader = libxml2.Loader;
 
 			//===================================
@@ -357,10 +359,10 @@ exports.add = function add(modules) {
 									}, this);
 									this.channel.port2.postMessage({name: 'Ack'});
 									if (!msg.isValid) {
-										if (msg.retVal === libxml2Errors.ParserErrors.XML_ERR_OK) {
+										if (msg.retVal === 0) {
 											throw new types.ParseError("Invalid XML document (based on the schema).");
 										} else {
-											throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(msg.retVal)]);
+											throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(msg.retVal)]);
 										};
 									};
 								}, this.handleError));
@@ -442,9 +444,12 @@ exports.add = function add(modules) {
 					return false;
 				};
 
-				// <PRB> libxml2 schema files loader is not Asynchronous so we have to use Workers (when available) or be running on debug mode.
 				const current = {
-					schemas: libxml2Loader.WorkerWrapper.$isAvailable() || root.getOptions().debug,
+					// <PRB> libxml2 schema files loader is not Asynchronous so we have to use Workers (when available) or be running on debug mode.
+					schemas: !!(libxml2Loader.WorkerWrapper.$isAvailable() || root.getOptions().debug),
+
+					// NOTE: Messages are loaded separatly
+					messages: !!(libxml2.Errors && types.isFunction(libxml2.Errors.getParserMessage)),
 				};
 
 				return tools.every(features, function(wanted, name) {

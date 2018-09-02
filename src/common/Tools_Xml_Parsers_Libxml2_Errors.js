@@ -52,7 +52,11 @@ exports.add = function add(modules) {
 
 			libxml2Errors.ADD('getParserMessage', function(parserError) {
 				// TODO: Proper error messages.
-				return tools.findItem(libxml2Errors.ParserErrors, parserError);
+				const result = tools.findItem(libxml2Errors.ParserErrors, parserError);
+				if (!result) {
+					return "XML_ERR_UNKNOWN";
+				};
+				return result;
 			});
 
 			libxml2Errors.ADD('ParserErrors', types.freezeObject({

@@ -37,8 +37,11 @@ exports.add = function add(modules) {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		dependencies: [
 			'Doodad.Tools.Xml',
-			'Doodad.Tools.Xml.Parsers.Libxml2.Errors',
 			'Doodad.Tools.Xml.Parsers.Libxml2.Loader',
+			{
+				name: 'Doodad.Tools.Xml.Parsers.Libxml2.Errors',
+				optional: true,
+			},
 		],
 
 		create: function create(root, /*optional*/_options, _shared) {
@@ -55,7 +58,6 @@ exports.add = function add(modules) {
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
-				libxml2Errors = libxml2.Errors,
 				libxml2Loader = libxml2.Loader;
 
 			//===================================
@@ -697,10 +699,10 @@ exports.add = function add(modules) {
 								isValid = (res > 0);
 							};
 							if (!isValid) {
-								if (parseRes === libxml2Errors.ParserErrors.XML_ERR_OK) {
+								if (parseRes === 0) {
 									throw new types.ParseError("Invalid XML document (based on the schema).");
 								} else {
-									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(parseRes)]);
+									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(parseRes)]);
 								};
 							};
 						} catch(ex) {
@@ -747,10 +749,10 @@ exports.add = function add(modules) {
 									isValid = (res > 0);
 								};
 								if (!isValid) {
-									if (parseRes === libxml2Errors.ParserErrors.XML_ERR_OK) {
+									if (parseRes === 0) {
 										throw new types.ParseError("Invalid XML document (based on the schema).");
 									} else {
-										throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2Errors.getParserMessage(parseRes)]);
+										throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(parseRes)]);
 									};
 								};
 
@@ -1042,6 +1044,14 @@ exports.add = function add(modules) {
 				};
 
 				return libxml2Loader.hasFeatures(features);
+			});
+
+			libxml2.ADD('getParserMessage', function getParserMessage(parserError) {
+				if (libxml2.Errors && types.isFunction(libxml2.Errors.getParserMessage)) {
+					return libxml2.Errors.getParserMessage(parserError);
+				} else {
+					return types.toString(parserError);
+				};
 			});
 
 
