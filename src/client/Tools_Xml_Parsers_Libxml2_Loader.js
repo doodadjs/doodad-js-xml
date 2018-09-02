@@ -92,10 +92,13 @@ exports.add = function add(modules) {
 					return false;
 				};
 
-				// <PRB> libxml2 schema files loader is not Asynchronous so we have to use Workers (when available) or be running on debug mode.
 				const current = {
-					//schemas: libxml2Loader.WorkerWrapper.$isAvailable() || root.getOptions().debug,
-					schemas: root.getOptions().debug,
+					// <PRB> libxml2 schema files loader is not Asynchronous so we have to use Workers or be running on debug mode.
+					//schemas: !!(libxml2Loader.WorkerWrapper.$isAvailable() || root.getOptions().debug),
+					schemas: !!(root.getOptions().debug),
+
+					// NOTE: Messages are loaded separatly
+					messages: !!(libxml2.Errors && types.isFunction(libxml2.Errors.getParserMessage)),
 				};
 
 				return tools.every(features, function(wanted, name) {
