@@ -1,43 +1,35 @@
-*** xmlschemas.c	2018-06-04 03:14:51.154135525 -0400
---- libxml2-2.9.8/xmlschemas.c	2017-12-02 03:58:10.000000000 -0500
-***************
-*** 639,646 ****
-      xmlSchemaRedefPtr redef; /* Used for redefinitions. */
-      int redefCounter; /* Used for redefinitions. */
-      xmlSchemaItemListPtr attrProhibs;
-- 
--     void * userData; /* Passed to xmlParserCtxt */
-  };
-  
-  /**
---- 639,644 ----
-***************
-*** 10245,10251 ****
-      xmlSchemaSetParserStructuredErrors(newpctxt, pctxt->serror,
-  	pctxt->errCtxt);
-      newpctxt->counter = pctxt->counter;
--     newpctxt->userData = pctxt->userData;
-  
-  
-      res = xmlSchemaParseNewDocWithContext(newpctxt, schema, bucket);
---- 10243,10248 ----
-***************
-*** 10586,10592 ****
-  	    parserCtxt->dict = pctxt->dict;
-  	    xmlDictReference(parserCtxt->dict);
-  	}
--         parserCtxt->_private = pctxt->userData;
-  	if (schemaLocation != NULL) {
-  	    /* Parse from file. */
-  	    doc = xmlCtxtReadFile(parserCtxt, (const char *) schemaLocation,
---- 10583,10588 ----
-***************
-*** 12500,12506 ****
-  	return(NULL);
-      ret->dict = xmlDictCreate();
-      ret->URL = xmlDictLookup(ret->dict, (const xmlChar *) URL, -1);
--     ret->userData = ret; // TODO: Add new argument
-      return (ret);
-  }
-  
---- 12496,12501 ----
+--- xmlschemas.c	2017-12-02 03:58:10.000000000 -0500
++++ ../xmlschemas.c	2018-09-03 17:53:49.154341053 -0400
+@@ -639,6 +639,8 @@
+     xmlSchemaRedefPtr redef; /* Used for redefinitions. */
+     int redefCounter; /* Used for redefinitions. */
+     xmlSchemaItemListPtr attrProhibs;
++
++    void * userData; /* Passed to xmlParserCtxt */
+ };
+ 
+ /**
+@@ -10243,6 +10245,7 @@
+     xmlSchemaSetParserStructuredErrors(newpctxt, pctxt->serror,
+ 	pctxt->errCtxt);
+     newpctxt->counter = pctxt->counter;
++    newpctxt->userData = pctxt->userData;
+ 
+ 
+     res = xmlSchemaParseNewDocWithContext(newpctxt, schema, bucket);
+@@ -10583,6 +10586,7 @@
+ 	    parserCtxt->dict = pctxt->dict;
+ 	    xmlDictReference(parserCtxt->dict);
+ 	}
++        parserCtxt->_private = pctxt->userData;
+ 	if (schemaLocation != NULL) {
+ 	    /* Parse from file. */
+ 	    doc = xmlCtxtReadFile(parserCtxt, (const char *) schemaLocation,
+@@ -12496,6 +12500,7 @@
+ 	return(NULL);
+     ret->dict = xmlDictCreate();
+     ret->URL = xmlDictLookup(ret->dict, (const xmlChar *) URL, -1);
++    ret->userData = ret; // TODO: Add new argument
+     return (ret);
+ }
+ 
