@@ -54,20 +54,20 @@ cd ..
 # Extract the source code of the 'libxml2' C-library.
 tar -xzf libxml2-2.9.8.tar.gz libxml2
 
-# Apply patches
-patch -b libxml2/xmlschemas.c xmlschemas.patch
-
 # Inject "xmljs.c" to source code
 cp xmljs.c libxml2/
 
 # Enter "libxml2"
 cd libxml2
 
+# Apply patches
+patch -b xmlschemas.c ../xmlschemas.patch
+
 # Disable "stat" because we transpile with "NO_FILESYSTEM".
 sed -i.bak "/AC_CHECK_FUNCS.*stat .*)/d" configure.ac
 
-# Disable some features
-emconfigure ./autogen.sh --with-http=no --with-ftp=no --with-python=no --with-threads=no --with-xptr=no --with-regexps=no --with-legacy=no --with-c14n=no --with-catalog=no --with-docbook=no --with-schematron=no --with-iso8859x=no --with-html=no --with-debug=no --without-iconv --without-zlib --without-lzma --without-readline --without-python
+# Disable some features (and rebuild "./configure" with changes on "configure.ac")
+emconfigure ./autogen.sh --with-http=no --with-ftp=no --with-python=no --with-threads=no --with-xptr=no --with-regexps=no --with-legacy=no --with-c14n=no --with-catalog=no --with-docbook=no --with-schematron=no --with-iso8859x=no --with-html=no --with-debug=no --without-iconv --without-zlib --without-lzma --without-readline --without-python --without-modules --without-reader --without-sax1
 
 # Build
 emmake make
