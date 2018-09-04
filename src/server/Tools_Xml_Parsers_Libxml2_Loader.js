@@ -158,6 +158,10 @@ exports.add = function add(modules) {
 
 						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts: root.getOptions()}});
 
+						//const cleanup = function _cleanup() {
+						//	this.worker.removeListener('...', ...);
+						//};
+
 						this.worker.on('error', doodad.Callback(this, this.handleError));
 
 						this.worker.on('exit', doodad.Callback(this, function(exitCode) {
@@ -165,11 +169,23 @@ exports.add = function add(modules) {
 							this.close();
 						}));
 
-						this.worker.on('online', doodad.Callback(this, function() {
+						this.worker.on('message', doodad.Callback(this, function(msg) {
+							if (msg.name === 'Error') {
+								const err = new libxml2Loader.WorkerError(msg.type, msg.message, msg.stack);
+								this.handleError(err);
+							} else if (msg.name === 'Log') {
+								const ev = new types.CustomEvent('log', {detail: {type: msg.type, message: msg.message}});
+								this.dispatchEvent(ev);
+							} else {
+								throw new types.Error("Unexpected message received from the worker.");
+							};
+						}));
+
+						this.worker.once('online', doodad.Callback(this, function() {
 							this.channel = new __Internal__.nodejsWorker.MessageChannel();
 
-							this.wait(['Error'], doodad.Callback(this, function(value) {
-								const err = new libxml2Loader.WorkerError(value.type, value.message, value.stack);
+							this.wait(['Error'], doodad.Callback(this, function(msg) {
+								const err = new libxml2Loader.WorkerError(msg.type, msg.message, msg.stack);
 								this.handleError(err);
 							}));
 
@@ -208,9 +224,10 @@ exports.add = function add(modules) {
 								this.worker.terminate();
 								this.worker = null;
 								this.channel = null;
-								//} else {
-								//	terminateCb();
 							};
+							//} else {
+							//	terminateCb();
+							//};
 						};
 					},
 
@@ -268,7 +285,7 @@ exports.add = function add(modules) {
 						if (this.waitCb) {
 							msgs = types.keys(this.waitMsgs);
 							if (msgs.length <= 0) {
-								this.channel.port2.off('message', this.waitCb);
+								this.channel.port2.removeListener('message', this.waitCb);
 								this.waitCb = null;
 							};
 						};
@@ -279,7 +296,7 @@ exports.add = function add(modules) {
 						this.wait(['Ready'], doodad.Callback(this, function() {
 							this.started = true;
 							this.available = true;
-							this.dispatchEvent(new types.CustomEvent('ready'));
+							this.dispatchEvent(new types.CustomEvent('ready', {detail: {worker: this}}));
 						}, this.handleError));
 					},
 

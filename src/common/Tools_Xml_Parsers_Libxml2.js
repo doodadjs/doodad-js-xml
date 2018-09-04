@@ -116,6 +116,30 @@ exports.add = function add(modules) {
 			// Libxml2 Parser (single thread)
 			//===================================
 
+			__Internal__.ErrorLevelEnum = types.freezeObject(tools.nullObject({
+				XML_ERR_NONE: 0,
+				XML_ERR_WARNING: 1,
+				XML_ERR_ERROR: 2,
+				XML_ERR_FATAL: 3,
+			}));
+
+			__Internal__.ErrorFieldEnum = types.freezeObject(tools.nullObject({
+				XML_SERROR_FIELD_NONE: 0,
+				XML_SERROR_FIELD_DOMAIN: 1,
+				XML_SERROR_FIELD_CODE: 2,
+				XML_SERROR_FIELD_MESSAGE: 3,
+				XML_SERROR_FIELD_LEVEL: 4,
+				XML_SERROR_FIELD_FILE: 5,
+				XML_SERROR_FIELD_LINE: 6,
+				XML_SERROR_FIELD_STR1: 7,
+				XML_SERROR_FIELD_STR2: 8,
+				XML_SERROR_FIELD_STR3: 9,
+				XML_SERROR_FIELD_INT1: 10,
+				XML_SERROR_FIELD_INT2: 11,
+				XML_SERROR_FIELD_CTXT: 12,
+				XML_SERROR_FIELD_NODE: 13,
+			}));
+
 			__Internal__.registerOptions = function _registerOptions(schemaParserCtxt, options) {
 				if (!__Internal__.parserData) {
 					__Internal__.parserData = new types.Map();
@@ -197,6 +221,7 @@ exports.add = function add(modules) {
 						return;
 					};
 
+					// Init Emscripten
 					clibxml2.onExit = function onExit(status) {
 						tools.abortScript(status);
 					};
@@ -205,7 +230,36 @@ exports.add = function add(modules) {
 						throw new libxml2.AbortError(what);
 					};
 
+					// Init library
 					clibxml2._xmlInitParser();
+
+					// Define handlers
+					const errorPtr = clibxml2.addFunction(function _error(ctxPtr, msgPtr, paramsPtr) {
+						let strPtr = NULL;
+						try {
+							strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+							const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
+							if (str) {
+								tools.log(tools.LogLevels.Error, str);
+							};
+						} finally {
+							if (strPtr !== NULL) {
+								clibxml2._xmlFreeEx(strPtr);
+								strPtr = NULL;
+							};
+						};
+					}, 'viii');
+
+					const serrorPtr = clibxml2.addFunction(function _serror(userDataPtr, errorPtr) {
+						const level = clibxml2._xmlGetStructuredErrorField_Int(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_LEVEL);
+						if (level) {
+							const msgPtr = clibxml2._xmlGetStructuredErrorField_Str(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_MESSAGE);
+							const msg = tools.trim(clibxml2.Pointer_stringify(msgPtr), '\n');
+							if (msg) {
+								tools.log(((level === __Internal__.ErrorLevelEnum.XML_ERR_WARNING) ? tools.LogLevels.Warning : tools.LogLevels.Error), msg);
+							};
+						};
+					}, 'vii');
 
 					const matchFuncPtr = clibxml2.addFunction(function matchFunc(filenameStrPtr) {
 						// Force selection of our handlers.
@@ -322,6 +376,10 @@ exports.add = function add(modules) {
 						};
 					}, 'iiii');
 
+					// Init handlers of context-less errors (xmlGenericError, xmlStructuredError)
+					clibxml2._xmlSetGenericErrorFunc(NULL, errorPtr);
+					clibxml2._xmlSetStructuredErrorFunc(NULL, serrorPtr);
+
 					// Disable file system access
 					clibxml2._xmlCleanupInputCallbacks();
 					clibxml2._xmlCleanupOutputCallbacks();
@@ -400,23 +458,61 @@ exports.add = function add(modules) {
 					};
 
 					const SAX_HANDLERS = {
+						fatalError: function fatalError(ctxPtr, msgPtr, paramsPtr) {
+						//	let strPtr = NULL;
+						//	try {
+						//		strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+						//		const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
+						//		if (str) {
+						//			tools.log(tools.LogLevels.Error, str);
+						//		};
+						//	} finally {
+						//		if (strPtr !== NULL) {
+						//			clibxml2._xmlFreeEx(strPtr);
+						//			strPtr = NULL;
+						//		};
+						//	};
+						},
 						error: function error(ctxPtr, msgPtr, paramsPtr) {
-							const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-							const str = clibxml2.Pointer_stringify(strPtr);
-							if (str) {
-								tools.log(tools.LogLevels.Error, tools.trim(str, '\n'));
-							};
+						//	try {
+						//		strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+						//		const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
+						//		if (str) {
+						//			tools.log(tools.LogLevels.Error, str);
+						//		};
+						//	} finally {
+						//		if (strPtr !== NULL) {
+						//			clibxml2._xmlFreeEx(strPtr);
+						//			strPtr = NULL;
+						//		};
+						//	};
 						},
 						warning: function warning(ctxPtr, msgPtr, paramsPtr) {
-							const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-							const str = clibxml2.Pointer_stringify(strPtr);
-							if (str && (str.indexOf("Skipping import of schema") < 0)) {
-								tools.log(tools.LogLevels.Warning, tools.trim(str, '\n'));
+						//	try {
+						//		strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+						//		const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
+						//		if (str && (str.indexOf("Skipping import of schema") < 0)) {
+						//			tools.log(tools.LogLevels.Error, str);
+						//		};
+						//	} finally {
+						//		if (strPtr !== NULL) {
+						//			clibxml2._xmlFreeEx(strPtr);
+						//			strPtr = NULL;
+						//		};
+						//	};
+						},
+						serror: function _serror(userDataPtr, errorPtr) {
+							const level = clibxml2._xmlGetStructuredErrorField_Int(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_LEVEL);
+							if (level) {
+								const msgPtr = clibxml2._xmlGetStructuredErrorField_Str(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_MESSAGE);
+								const msg = tools.trim(clibxml2.Pointer_stringify(msgPtr), '\n');
+								if (msg) {
+									if ((level !== __Internal__.ErrorLevelEnum.XML_ERR_WARNING) || (msg.indexOf("Skipping import of schema") < 0)) {
+										tools.log(((level === __Internal__.ErrorLevelEnum.XML_ERR_WARNING) ? tools.LogLevels.Warning : tools.LogLevels.Error), msg);
+									};
+								};
 							};
 						},
-						//serror: function serror(userDataPtr, errorPtr) {
-						//	types.DEBUGGER();
-						//},
 						//resolveEntity: function resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
 						//	types.DEBUGGER();
 						//},
@@ -596,6 +692,7 @@ exports.add = function add(modules) {
 						allocFunction('comment', 'vii'),
 						allocFunction('warning', 'viii'),
 						allocFunction('error', 'viii'),
+						allocFunction('fatalError', 'viii'),
 						allocFunction('getParameterEntity', 'iii'),
 						allocFunction('cdataBlock', 'viii'),
 						allocFunction('externalSubset', 'viiii'),
@@ -627,7 +724,8 @@ exports.add = function add(modules) {
 
 						__Internal__.registerOptions(schemaParserCtxt, {encoding});
 
-						clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), NULL);
+						clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), userPtr);
+						clibxml2._xmlSchemaSetParserStructuredErrors(schemaParserCtxt, allocFunction('serror', 'vii'), userPtr);
 
 						schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
 						if (!schema) {
@@ -646,6 +744,7 @@ exports.add = function add(modules) {
 						};
 
 						clibxml2._xmlSchemaSetValidErrors(validCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), userPtr);
+						clibxml2._xmlSchemaSetValidStructuredErrors(validCtxt, allocFunction('serror', 'vii'), userPtr);
 
 						saxPtr = clibxml2._malloc(PTR_LEN);
 						if (!saxPtr) {
@@ -753,6 +852,7 @@ exports.add = function add(modules) {
 										throw new types.ParseError("Invalid XML document (based on the schema).");
 									} else {
 										throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(parseRes)]);
+
 									};
 								};
 
@@ -907,7 +1007,6 @@ exports.add = function add(modules) {
 						const worker = new libxml2Loader.WorkerWrapper(number);
 						worker.addEventListener('error', errorCb);
 						worker.addEventListener('ready', readyCb);
-						worker.addEventListener('terminate', terminateCb);
 						return worker;
 					};
 
@@ -918,6 +1017,7 @@ exports.add = function add(modules) {
 
 					readyCb = function _readyCb(ev) {
 						ready++;
+						ev.detail.worker.addEventListener('terminate', terminateCb);
 						if (ready >= count) {
 							detach();
 							resolve();

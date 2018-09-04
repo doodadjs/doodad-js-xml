@@ -72,6 +72,32 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 		// Libxml2 Parser
 		//===================================
 
+		const ErrorLevelEnum = types.freezeObject(tools.nullObject({
+			XML_ERR_NONE: 0,
+			XML_ERR_WARNING: 1,
+			XML_ERR_ERROR: 2,
+			XML_ERR_FATAL: 3,
+		}));
+
+		//libxml2.ADD('ErrorFieldEnum', tools.freezeObject(tools.nullObject({
+		const ErrorFieldEnum = types.freezeObject(tools.nullObject({
+			XML_SERROR_FIELD_NONE: 0,
+			XML_SERROR_FIELD_DOMAIN: 1,
+			XML_SERROR_FIELD_CODE: 2,
+			XML_SERROR_FIELD_MESSAGE: 3,
+			XML_SERROR_FIELD_LEVEL: 4,
+			XML_SERROR_FIELD_FILE: 5,
+			XML_SERROR_FIELD_LINE: 6,
+			XML_SERROR_FIELD_STR1: 7,
+			XML_SERROR_FIELD_STR2: 8,
+			XML_SERROR_FIELD_STR3: 9,
+			XML_SERROR_FIELD_INT1: 10,
+			XML_SERROR_FIELD_INT2: 11,
+			XML_SERROR_FIELD_CTXT: 12,
+			XML_SERROR_FIELD_NODE: 13,
+			//})));
+		}));
+
 		const registerOptions = function _registerOptions(schemaParserCtxt, options) {
 			if (!parserData) {
 				parserData = new types.Map();
@@ -212,24 +238,31 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				};
 
 				const SAX_HANDLERS = {
-					error: function _error(ctxPtr, msgPtr, paramsPtr) {
-						const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-						const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
-						if (str) {
-							pendingLogs.push({name: 'Log', type: 'Error', message: str});
-						};
-					},
-					warning: function _warning(ctxPtr, msgPtr, paramsPtr) {
-						const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-						const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
-						// FUTURE: See if there is a better way to disable that warning ("Skipping import of schema ...")
-						if (str && (str.indexOf("Skipping import of schema") < 0)) {
-							pendingLogs.push({name: 'Log', type: 'Warning', message: str});
-						};
-					},
-					//serror: function _serror(userDataPtr, errorPtr) {
-					//	pendingLogs.push({name: 'Log', type: 'Error', message: .......});
+					//error: function _error(ctxPtr, msgPtr, paramsPtr) {
+					//	const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+					//	const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
+					//	if (str) {
+					//		pendingLogs.push({name: 'Log', type: 'Error', message: str});
+					//	};
 					//},
+					//warning: function _warning(ctxPtr, msgPtr, paramsPtr) {
+					//	const strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
+					//	const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
+					//	// FUTURE: See if there is a better way to disable that warning ("Skipping import of schema ...")
+					//	if (str && (str.indexOf("Skipping import of schema") < 0)) {
+					//		pendingLogs.push({name: 'Log', type: 'Warning', message: str});
+					//	};
+					//},
+					serror: function _serror(userDataPtr, errorPtr) {
+						const level = clibxml2._xmlGetStructuredErrorField_Int(errorPtr, ErrorFieldEnum.XML_SERROR_FIELD_LEVEL);
+						if (level) {
+							const msgPtr = clibxml2._xmlGetStructuredErrorField_Str(errorPtr, ErrorFieldEnum.XML_SERROR_FIELD_MESSAGE);
+							const msg = clibxml2.Pointer_stringify(msgPtr);
+							if ((level !== ErrorLevelEnum.XML_ERR_WARNING) || (msg.indexOf("Skipping import of schema") < 0)) {
+								pendingLogs.push({name: 'Log', type: ((level === ErrorLevelEnum.XML_ERR_WARNING) ? 'Warning' : 'Error'), message: msg});
+							};
+						};
+					},
 					//resolveEntity: function _resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
 					//	types.DEBUGGER();
 					//},
@@ -405,7 +438,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					if (waitCb) {
 						msgs = types.keys(waitMsgs);
 						if (msgs.length <= 0) {
-							dataPort.off('message', waitCb);
+							dataPort.removeListener('message', waitCb);
 							waitCb = null;
 						};
 					};
@@ -624,6 +657,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					registerOptions(schemaParserCtxt, {encoding});
 
 					clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), NULL);
+					clibxml2._xmlSchemaSetParserStructuredErrors(schemaParserCtxt, allocFunction('serror', 'vii'), userPtr);
 
 					schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
 					if (!schema) {
@@ -642,6 +676,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					};
 
 					clibxml2._xmlSchemaSetValidErrors(validCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), userPtr);
+					clibxml2._xmlSchemaSetValidStructuredErrors(validCtxt, allocFunction('serror', 'vii'), userPtr);
 
 					saxPtr = clibxml2._malloc(PTR_LEN);
 					if (!saxPtr) {
@@ -816,4 +851,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 		nodejsWorker.parentPort.once('message', function(value) {
 			listen(value.port);
 		});
+	})
+	.catch(function(err) {
+		nodejsWorker.parentPort.postMessage({name: 'Error', type: err.name, message: err.message, stack: err.stack});
 	});

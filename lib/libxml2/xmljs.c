@@ -69,6 +69,7 @@ xmlSAXHandlerPtr xmlCreateMySAXHandler(
 		    commentSAXFunc comment,
 		    warningSAXFunc warning,
 		    errorSAXFunc error,
+			fatalErrorSAXFunc fatalError,
 		    getParameterEntitySAXFunc getParameterEntity,
 		    cdataBlockSAXFunc cdataBlock,
 		    externalSubsetSAXFunc externalSubset,
@@ -76,7 +77,7 @@ xmlSAXHandlerPtr xmlCreateMySAXHandler(
 		    endElementNsSAX2Func endElementNs,
 		    xmlStructuredErrorFunc serror
 		) {
-	xmlSAXHandlerPtr sax = (xmlSAXHandlerPtr) malloc(sizeof(xmlSAXHandler));
+	xmlSAXHandlerPtr sax = (xmlSAXHandlerPtr) xmlMalloc(sizeof(xmlSAXHandler));
 	if (NULL == sax) {
 		return NULL;
 	};
@@ -84,103 +85,46 @@ xmlSAXHandlerPtr xmlCreateMySAXHandler(
 	//sax->initialized = XML_SAX2_MAGIC;
 	int res = xmlSAXVersion(sax, 2);
 	if (0 != res) {
-		free((void *) sax);
+		xmlFree((void *) sax);
 		sax = NULL;
 		return NULL;
 	};
-	if (NULL != internalSubset) {
-		sax->internalSubset = internalSubset;
-	}
-	if (NULL != isStandalone) {
-		sax->isStandalone = isStandalone;
-	}
-	if (NULL != hasInternalSubset) {
-		sax->hasInternalSubset = hasInternalSubset;
-	}
-	if (NULL != hasExternalSubset) {
-		sax->hasExternalSubset = hasExternalSubset;
-	}
-	if (NULL != resolveEntity) {
-		sax->resolveEntity = resolveEntity;
-	}
-	if (NULL != getEntity) {
-		sax->getEntity = getEntity;
-	}
-	if (NULL != entityDecl) {
-		sax->entityDecl = entityDecl;
-	}
-	if (NULL != notationDecl) {
-		sax->notationDecl = notationDecl;
-	}
-	if (NULL != attributeDecl) {
-		sax->attributeDecl = attributeDecl;
-	}
-	if (NULL != elementDecl) {
-		sax->elementDecl = elementDecl;
-	}
-	if (NULL != unparsedEntityDecl) {
-		sax->unparsedEntityDecl = unparsedEntityDecl;
-	}
-	if (NULL != setDocumentLocator) {
-		sax->setDocumentLocator = setDocumentLocator;
-	}
-	if (NULL != startDocument) {
-		sax->startDocument = startDocument;
-	}
-	if (NULL != endDocument) {
-		sax->endDocument = endDocument;
-	}
-	if (NULL != startElement) {
-		sax->startElement = startElement;
-	}
-	if (NULL != endElement) {
-		sax->endElement = endElement;
-	}
-	if (NULL != reference) {
-		sax->reference = reference;
-	}
-	if (NULL != characters) {
-		sax->characters = characters;
-	}
-	if (NULL != ignorableWhitespace) {
-		sax->ignorableWhitespace = ignorableWhitespace;
-	}
-	if (NULL != processingInstruction) {
-		sax->processingInstruction = processingInstruction;
-	}
-	if (NULL != comment) {
-		sax->comment = comment;
-	}
-	if (NULL != warning) {
-		sax->warning = warning;
-	}
-	if (NULL != error) {
-		sax->error = error;
-	}
-	if (NULL != getParameterEntity) {
-		sax->getParameterEntity = getParameterEntity;
-	}
-	if (NULL != cdataBlock) {
-		sax->cdataBlock = cdataBlock;
-	}
-	if (NULL != externalSubset) {
-		sax->externalSubset = externalSubset;
-	}
-	if (NULL != startElementNs) {
-		sax->startElementNs = startElementNs;
-	}
-	if (NULL != endElementNs) {
-		sax->endElementNs = endElementNs;
-	}
-	if (NULL != serror) {
-		sax->serror = serror;
-	}
+	sax->internalSubset = internalSubset;
+	sax->isStandalone = isStandalone;
+	sax->hasInternalSubset = hasInternalSubset;
+	sax->hasExternalSubset = hasExternalSubset;
+	sax->resolveEntity = resolveEntity;
+	sax->getEntity = getEntity;
+	sax->entityDecl = entityDecl;
+	sax->notationDecl = notationDecl;
+	sax->attributeDecl = attributeDecl;
+	sax->elementDecl = elementDecl;
+	sax->unparsedEntityDecl = unparsedEntityDecl;
+	sax->setDocumentLocator = setDocumentLocator;
+	sax->startDocument = startDocument;
+	sax->endDocument = endDocument;
+	sax->startElement = startElement;
+	sax->endElement = endElement;
+	sax->reference = reference;
+	sax->characters = characters;
+	sax->ignorableWhitespace = ignorableWhitespace;
+	sax->processingInstruction = processingInstruction;
+	sax->comment = comment;
+	sax->warning = warning;
+	sax->error = error;
+	sax->fatalError = fatalError;
+	sax->getParameterEntity = getParameterEntity;
+	sax->cdataBlock = cdataBlock;
+	sax->externalSubset = externalSubset;
+	sax->startElementNs = startElementNs;
+	sax->endElementNs = endElementNs;
+	sax->serror = serror;
 	return sax;
 };
 
 void xmlFreeMySAXHandler(xmlSAXHandlerPtr sax) {
 	if (NULL != sax) {
-		free(sax);
+		xmlFree(sax);
 		sax = NULL;
 	};
 };
@@ -252,9 +196,149 @@ void * xmlGetUserDataFromParserCtxt(xmlParserCtxtPtr parserCtxt) {
 //};
 
 char * xmlFormatGenericError(void * ctx ATTRIBUTE_UNUSED, char * template, ...) {
-	va_list ap;
-	va_start(ap, template); 
-	char * msg = va_arg(ap, char *);
-  	va_end(ap);
-	return msg;
+	va_list args;
+	const size_t MAX_MSG_LEN = 2048;
+	char * msg = xmlMalloc(MAX_MSG_LEN);
+	if (NULL == msg) {
+		return NULL;
+	}
+	va_start(args, template);
+	int count = vsnprintf(msg, MAX_MSG_LEN, template, args); // "\0" is included in "MAX_MSG_LEN"
+  	va_end(args);
+	if (count < 0) {
+		// "vsnprintf" failed.
+		// (also glibc < 2.0.6 returns -1 when string is truncated)
+		xmlFree(msg);
+		msg = NULL;
+		return NULL;
+	}
+	count++; // Now includes "\0" in "count" 
+	char * msg2 = xmlRealloc(msg, count);
+	if (NULL == msg2) {
+		// "xmlRealloc" failed.
+		xmlFree(msg);
+		msg = NULL;
+		return NULL;
+	}
+	int count2 = vsnprintf(msg2, count, template, args); // "\0" is included in "count" 
+	if ((count2 < 0) || (count2 >= count)) {
+		// "vsnprintf" failed again.
+		xmlFree(msg2);
+		msg2 = NULL;
+		return NULL;
+	}
+	return msg2;
+};
+
+typedef enum {
+	XML_SERROR_FIELD_NONE = 0,
+	XML_SERROR_FIELD_DOMAIN = 1,
+	XML_SERROR_FIELD_CODE = 2,
+	XML_SERROR_FIELD_MESSAGE = 3,
+	XML_SERROR_FIELD_LEVEL = 4,
+	XML_SERROR_FIELD_FILE = 5,
+	XML_SERROR_FIELD_LINE = 6,
+	XML_SERROR_FIELD_STR1 = 7,
+	XML_SERROR_FIELD_STR2 = 8,
+	XML_SERROR_FIELD_STR3 = 9,
+	XML_SERROR_FIELD_INT1 = 10,
+	XML_SERROR_FIELD_INT2 = 11,
+	XML_SERROR_FIELD_CTXT = 12,
+	XML_SERROR_FIELD_NODE = 13
+} xmlStructuredErrorField;
+
+int xmlGetStructuredErrorField_Int(xmlErrorPtr error, xmlStructuredErrorField field) {
+	int result = 0;
+	switch (field) {
+		case XML_SERROR_FIELD_DOMAIN:
+			result = error->domain;
+			break;
+		case XML_SERROR_FIELD_CODE:
+			result = error->code;
+			break;
+		//case XML_SERROR_FIELD_MESSAGE:
+		//	result = error->message;
+		//	break;
+		case XML_SERROR_FIELD_LEVEL:
+			result = (int) error->level;
+			break;
+		//case XML_SERROR_FIELD_FILE:
+		//	return error->file;
+		//	break;
+		case XML_SERROR_FIELD_LINE:
+			result = error->line;
+			break;
+		//case XML_SERROR_FIELD_STR1:
+		//	result = error->str1;
+		//	break;
+		//case XML_SERROR_FIELD_STR2:
+		//	result = error->str2;
+		//	break;
+		//case XML_SERROR_FIELD_STR3:
+		//	result = error->str3;
+		//	break;
+		case XML_SERROR_FIELD_INT1:
+			result = error->int1;
+			break;
+		case XML_SERROR_FIELD_INT2:
+			result = error->int2;
+			break;
+		//case XML_SERROR_FIELD_CTXT:
+		//	result = error->ctxt;
+		//	break;
+		//case XML_SERROR_FIELD_NODE:
+		//	result = error->node;
+		//	break;
+		default:
+			break;
+	}
+    return result;
+};
+
+char * xmlGetStructuredErrorField_Str(xmlErrorPtr error, xmlStructuredErrorField field) {
+	char * result = NULL;
+	switch (field) {
+		//case XML_SERROR_FIELD_DOMAIN:
+		//	result = error->domain;
+		//	break;
+		//case XML_SERROR_FIELD_CODE:
+		//	result = error->code;
+		//	break;
+		case XML_SERROR_FIELD_MESSAGE:
+			result = error->message;
+			break;
+		//case XML_SERROR_FIELD_LEVEL:
+		//	result = error->level;
+		//	break;
+		case XML_SERROR_FIELD_FILE:
+			return error->file;
+			break;
+		//case XML_SERROR_FIELD_LINE:
+		//	result = error->line;
+		//	break;
+		case XML_SERROR_FIELD_STR1:
+			result = error->str1;
+			break;
+		case XML_SERROR_FIELD_STR2:
+			result = error->str2;
+			break;
+		case XML_SERROR_FIELD_STR3:
+			result = error->str3;
+			break;
+		//case XML_SERROR_FIELD_INT1:
+		//	result = error->int1;
+		//	break;
+		//case XML_SERROR_FIELD_INT2:
+		//	result = error->int2;
+		//	break;
+		//case XML_SERROR_FIELD_CTXT:
+		//	result = error->ctxt;
+		//	break;
+		//case XML_SERROR_FIELD_NODE:
+		//	result = error->node;
+		//	break;
+		default:
+			break;
+	}
+    return result;
 };
