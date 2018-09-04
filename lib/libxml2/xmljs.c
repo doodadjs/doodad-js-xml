@@ -77,39 +77,104 @@ xmlSAXHandlerPtr xmlCreateMySAXHandler(
 		    xmlStructuredErrorFunc serror
 		) {
 	xmlSAXHandlerPtr sax = (xmlSAXHandlerPtr) malloc(sizeof(xmlSAXHandler));
-	if (NULL != sax) {
-		memset(sax, 0, sizeof(xmlSAXHandler));
-		sax->initialized = XML_SAX2_MAGIC;
-		sax->internalSubset = internalSubset;
-		sax->isStandalone = isStandalone;
-		sax->hasInternalSubset = hasInternalSubset;
-		sax->hasExternalSubset = hasExternalSubset;
-		sax->resolveEntity = resolveEntity;
-		sax->getEntity = getEntity;
-		sax->entityDecl = entityDecl;
-		sax->notationDecl = notationDecl;
-		sax->attributeDecl = attributeDecl;
-		sax->elementDecl = elementDecl;
-		sax->unparsedEntityDecl = unparsedEntityDecl;
-		sax->setDocumentLocator = setDocumentLocator;
-		sax->startDocument = startDocument;
-		sax->endDocument = endDocument;
-		sax->startElement = startElement;
-		sax->endElement = endElement;
-		sax->reference = reference;
-		sax->characters = characters;
-		sax->ignorableWhitespace = ignorableWhitespace;
-		sax->processingInstruction = processingInstruction;
-		sax->comment = comment;
-		sax->warning = warning;
-		sax->error = error;
-		sax->getParameterEntity = getParameterEntity;
-		sax->cdataBlock = cdataBlock;
-		sax->externalSubset = externalSubset;
-		sax->startElementNs = startElementNs;
-		sax->endElementNs = endElementNs;
-		sax->serror = serror;
+	if (NULL == sax) {
+		return NULL;
 	};
+	memset(sax, 0, sizeof(xmlSAXHandler));
+	//sax->initialized = XML_SAX2_MAGIC;
+	int res = xmlSAXVersion(sax, 2);
+	if (0 != res) {
+		free((void *) sax);
+		sax = NULL;
+		return NULL;
+	};
+	if (NULL != internalSubset) {
+		sax->internalSubset = internalSubset;
+	}
+	if (NULL != isStandalone) {
+		sax->isStandalone = isStandalone;
+	}
+	if (NULL != hasInternalSubset) {
+		sax->hasInternalSubset = hasInternalSubset;
+	}
+	if (NULL != hasExternalSubset) {
+		sax->hasExternalSubset = hasExternalSubset;
+	}
+	if (NULL != resolveEntity) {
+		sax->resolveEntity = resolveEntity;
+	}
+	if (NULL != getEntity) {
+		sax->getEntity = getEntity;
+	}
+	if (NULL != entityDecl) {
+		sax->entityDecl = entityDecl;
+	}
+	if (NULL != notationDecl) {
+		sax->notationDecl = notationDecl;
+	}
+	if (NULL != attributeDecl) {
+		sax->attributeDecl = attributeDecl;
+	}
+	if (NULL != elementDecl) {
+		sax->elementDecl = elementDecl;
+	}
+	if (NULL != unparsedEntityDecl) {
+		sax->unparsedEntityDecl = unparsedEntityDecl;
+	}
+	if (NULL != setDocumentLocator) {
+		sax->setDocumentLocator = setDocumentLocator;
+	}
+	if (NULL != startDocument) {
+		sax->startDocument = startDocument;
+	}
+	if (NULL != endDocument) {
+		sax->endDocument = endDocument;
+	}
+	if (NULL != startElement) {
+		sax->startElement = startElement;
+	}
+	if (NULL != endElement) {
+		sax->endElement = endElement;
+	}
+	if (NULL != reference) {
+		sax->reference = reference;
+	}
+	if (NULL != characters) {
+		sax->characters = characters;
+	}
+	if (NULL != ignorableWhitespace) {
+		sax->ignorableWhitespace = ignorableWhitespace;
+	}
+	if (NULL != processingInstruction) {
+		sax->processingInstruction = processingInstruction;
+	}
+	if (NULL != comment) {
+		sax->comment = comment;
+	}
+	if (NULL != warning) {
+		sax->warning = warning;
+	}
+	if (NULL != error) {
+		sax->error = error;
+	}
+	if (NULL != getParameterEntity) {
+		sax->getParameterEntity = getParameterEntity;
+	}
+	if (NULL != cdataBlock) {
+		sax->cdataBlock = cdataBlock;
+	}
+	if (NULL != externalSubset) {
+		sax->externalSubset = externalSubset;
+	}
+	if (NULL != startElementNs) {
+		sax->startElementNs = startElementNs;
+	}
+	if (NULL != endElementNs) {
+		sax->endElementNs = endElementNs;
+	}
+	if (NULL != serror) {
+		sax->serror = serror;
+	}
 	return sax;
 };
 
