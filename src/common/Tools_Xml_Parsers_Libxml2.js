@@ -54,7 +54,7 @@ exports.add = function add(modules) {
 				tools = doodad.Tools,
 				io = doodad.IO,
 				ioMixIns = io.MixIns,
-				files = tools.Files,
+				//files = tools.Files,
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
@@ -316,20 +316,20 @@ exports.add = function add(modules) {
 						stream.listen();
 					};
 				})
-				.nodeify(function(err, result) {
-					try {
-						types.DESTROY(parser);
-					} catch(ex) {
-						// Emscripten is now unstable !
-						throw new libxml2.AbortError("'xmljs' parser cleanup failed.");
-					};
+					.nodeify(function(err, result) {
+						try {
+							types.DESTROY(parser);
+						} catch(ex) {
+							// Emscripten is now unstable !
+							throw new libxml2.AbortError("'xmljs' parser cleanup failed.");
+						};
 
-					if (err) {
-						throw err;
-					};
+						if (err) {
+							throw err;
+						};
 
-					return result;
-				});
+						return result;
+					});
 			};
 
 			//=========================

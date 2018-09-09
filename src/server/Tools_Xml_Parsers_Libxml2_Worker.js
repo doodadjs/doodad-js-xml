@@ -69,9 +69,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 		const Worker = {
 			dataPort: null,
-
 			options: null,
-			dataPort: null,
 
 			waitMsgs: null,
 			waitHandlerCb: null,
@@ -106,7 +104,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				this.reset();
 
 				const outputHandlerCb = doodad.Callback(this, this.outputHandler);
-				this.parser = new xmljsParser(options, outputHandlerCb)
+				this.parser = new xmljsParser(options, outputHandlerCb);
 
 				this.waitChunk();
 
