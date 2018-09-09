@@ -64,15 +64,11 @@ exports.add = function add(modules) {
 			// Internal
 			//===================================
 
-			const NULL = 0;
-
 			const __Internal__ = {
 				initialized: false,
-				ready: false,
-				createStrPtr: null,
-				parserData: null,
 
-				DEFAULT_WORKERS_COUNT: 5,
+				xmljsParser: null,
+
 				workers: null,
 			};
 
@@ -113,88 +109,8 @@ exports.add = function add(modules) {
 			__options__ = types.freezeObject(__Internal__._setOptions(_options));
 
 			//===================================
-			// Libxml2 Parser (single thread)
+			// Classes
 			//===================================
-
-			__Internal__.ErrorLevelEnum = types.freezeObject(tools.nullObject({
-				XML_ERR_NONE: 0,
-				XML_ERR_WARNING: 1,
-				XML_ERR_ERROR: 2,
-				XML_ERR_FATAL: 3,
-			}));
-
-			__Internal__.ErrorFieldEnum = types.freezeObject(tools.nullObject({
-				XML_SERROR_FIELD_NONE: 0,
-				XML_SERROR_FIELD_DOMAIN: 1,
-				XML_SERROR_FIELD_CODE: 2,
-				XML_SERROR_FIELD_MESSAGE: 3,
-				XML_SERROR_FIELD_LEVEL: 4,
-				XML_SERROR_FIELD_FILE: 5,
-				XML_SERROR_FIELD_LINE: 6,
-				XML_SERROR_FIELD_STR1: 7,
-				XML_SERROR_FIELD_STR2: 8,
-				XML_SERROR_FIELD_STR3: 9,
-				XML_SERROR_FIELD_INT1: 10,
-				XML_SERROR_FIELD_INT2: 11,
-				XML_SERROR_FIELD_CTXT: 12,
-				XML_SERROR_FIELD_NODE: 13,
-			}));
-
-			__Internal__.registerOptions = function _registerOptions(schemaParserCtxt, options) {
-				if (!__Internal__.parserData) {
-					__Internal__.parserData = new types.Map();
-				};
-				if (__Internal__.parserData.has(schemaParserCtxt)) {
-					const data = __Internal__.parserData.get(schemaParserCtxt);
-					data.options = options;
-				} else {
-					__Internal__.parserData.set(schemaParserCtxt, {options});
-				};
-			};
-
-			__Internal__.registerBaseDirectory = function _registerBaseDirectory(schemaParserCtxt, url) {
-				if (!__Internal__.parserData) {
-					__Internal__.parserData = new types.Map();
-				};
-				const directory = url.set({file: ''});
-				const directoryStr = directory.toApiString();
-				if (__Internal__.parserData.has(schemaParserCtxt)) {
-					const data = __Internal__.parserData.get(schemaParserCtxt);
-					let dirs = data.dirs;
-					if (!dirs) {
-						dirs = [];
-						data.dirs = dirs;
-					};
-					const len = dirs.length;
-					let found = false;
-					for (let i = 0; i < len; i++) {
-						const dir = dirs[i];
-						if (dir[0] === directoryStr) {
-							found = true;
-							break;
-						};
-					};
-					if (!found) {
-						dirs.push([directoryStr, directory]);
-					};
-				} else {
-					__Internal__.parserData.set(schemaParserCtxt, {dirs: [[directoryStr, directory]]});
-				};
-			};
-
-			__Internal__.unregisterParserData = function unregisterParserData(schemaParserCtxt) {
-				if (!__Internal__.parserData || !__Internal__.parserData.has(schemaParserCtxt)) {
-					throw new types.Error("Data not registered on schema parser '~0~'.", [schemaParserCtxt]);
-				};
-				__Internal__.parserData.delete(schemaParserCtxt);
-			};
-
-			__Internal__.getParserData = function getParserData(schemaParserCtxt) {
-				if (__Internal__.parserData) {
-					return __Internal__.parserData.get(schemaParserCtxt);
-				};
-				return undefined;
-			};
 
 			libxml2.REGISTER(types.ScriptAbortedError.$inherit(
 				/*typeProto*/
@@ -212,397 +128,105 @@ exports.add = function add(modules) {
 					what: null,
 				}));
 
+			//=========================
+			// Libxml2 (single thread)
+			//=========================
+
+			__Internal__.genericOutputCb = function genericOutputCb(msg) {
+				if (msg.name === 'Log') {
+					tools.log((msg.type === 'Warning') ? tools.LogLevels.Warning : tools.LogLevels.Error, msg.message);
+				};
+			};
+
 			__Internal__.initClibxml2 = function initClibxml2(initOpts) {
-				// NOTE: Not Async, but made Async-proof for the future...
 				const Promise = types.getPromise();
 				return Promise.try(function initClibxml2Promise() {
-					const clibxml2 = libxml2Loader.get();
-					if (!clibxml2) {
-						return;
-					};
+					const libs = libxml2Loader.get();
 
-					// Init Emscripten
-					clibxml2.onExit = function onExit(status) {
-						tools.abortScript(status);
-					};
-
-					clibxml2.onAbort = function onAbort(what) {
-						throw new libxml2.AbortError(what);
-					};
-
-					// Init library
-					clibxml2._xmlInitParser();
-
-					// Define handlers
-					const errorPtr = clibxml2.addFunction(function _error(ctxPtr, msgPtr, paramsPtr) {
-						let strPtr = NULL;
-						try {
-							strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-							const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
-							if (str) {
-								tools.log(tools.LogLevels.Error, str);
-							};
-						} finally {
-							if (strPtr !== NULL) {
-								clibxml2._xmlFreeEx(strPtr);
-								strPtr = NULL;
-							};
-						};
-					}, 'viii');
-
-					const serrorPtr = clibxml2.addFunction(function _serror(userDataPtr, errorPtr) {
-						const level = clibxml2._xmlGetStructuredErrorField_Int(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_LEVEL);
-						if (level) {
-							const msgPtr = clibxml2._xmlGetStructuredErrorField_Str(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_MESSAGE);
-							const msg = tools.trim(clibxml2.Pointer_stringify(msgPtr), '\n');
-							if (msg) {
-								tools.log(((level === __Internal__.ErrorLevelEnum.XML_ERR_WARNING) ? tools.LogLevels.Warning : tools.LogLevels.Error), msg);
-							};
-						};
-					}, 'vii');
-
-					const matchFuncPtr = clibxml2.addFunction(function matchFunc(filenameStrPtr) {
-						// Force selection of our handlers.
-						return 1;
-					}, 'ii');
-
-					const openFuncPtr = clibxml2.addFunction(function openFunc(filenameStrPtr) {
-						// Disable file system access
-						return NULL;
-					}, 'ii');
-
-					const readFuncPtr = clibxml2.addFunction(function readFunc(inputContextPtr, bufferPtr, bufferLen) {
-						// Disable file system access
-						return 0;
-					}, 'iiii');
-
-					const writeFuncPtr = clibxml2.addFunction(function writeFunc(inputContextPtr, bufferPtr, bufferLen) {
-						// Disable file system access
-						return bufferLen;
-					}, 'iiii');
-
-					const closeFuncPtr = clibxml2.addFunction(function closeFunc(inputContextPtr) {
-						// Disable file system access
-						return 0;
-					}, 'ii');
-
-					//const readExternalFunPtr = clibxml2.addFunction(function readExternalFunc(readContextPtr, bufferPtr, bufferLen) {
-					//	types.DEBUGGER();
-					//}, 'viii');
-
-					//const closeExternalFuncPtr = clibxml2.addFunction(function closeExternalFunc(readContextPtr) {
-					//	clibxml2._free(readContextPtr);
-					//	readContextPtr = NULL;
-					//}, 'vi');
-
-					//const externalLoaderPtr = clibxml2.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
-					//	const path = xsd.set({file: null}).combine(clibxml2.Pointer_stringify(urlStrPtr));
-					//	const readContextPtr = clibxml2._malloc(....);
-					//	const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, readContextPtr, readExternalFuncPtr, closeExternalFuncPtr);
-					//	return inputPtr;
-					//}, 'iiii');
-
-					const externalLoaderPtr = clibxml2.addFunction(function externalLoader(urlStrPtr, idStrPtr, parserCtxtPtr) {
-						// TODO: Read and store base directory from/to "userDataPtr" when "xmlSchemaNewParserCtxt" will accept a "userData" argument.
-
-						const url = files.parseLocation(clibxml2.Pointer_stringify(urlStrPtr));
-
-						const userDataPtr = clibxml2._xmlGetUserDataFromParserCtxt(parserCtxtPtr);
-						if (!userDataPtr) {
-							throw new types.Error("The 'libxml2' C library needs some modifications before its build.");
-						};
-
-						let content = null;
-						const data = __Internal__.getParserData(userDataPtr);
-						const encoding = types.get(data.options, 'encoding', null);
-
-						if (url.isRelative) {
-							const dirs = data.dirs,
-								len = dirs.length;
-							for (let i = 0; i < len; i++) {
-								const path = dirs[i][1].combine(url/*, {includePathInRoot: false}*/);
-								try {
-									content = files.readFileSync(path, {encoding});
-									__Internal__.registerBaseDirectory(userDataPtr, path);
-									break;
-								} catch(ex) {
-									if (ex.code !== 'ENOENT') {
-										throw ex;
-									};
-								};
-							};
-						} else {
-							content = files.readFileSync(url, {encoding});
-							__Internal__.registerBaseDirectory(userDataPtr, url);
-						};
-
-						//console.log(path.toApiString());
-
-						if (!content) {
-							return NULL;
-						};
-
-						let contentPtr = NULL;
-						let contentLen = 0;
-						//let filenamePtr = NULL;
-						try {
-							if (types.isString(content)) {
-								contentLen = clibxml2.lengthBytesUTF8(content);
-								contentPtr = __Internal__.createStrPtr(content, contentLen);
-							} else {
-								contentLen = content.length;
-								contentPtr = clibxml2.allocate(content, 'i8', clibxml2.ALLOC_NORMAL);
-							};
-							content = null; // free memory
-							if (!contentPtr) {
-								throw new types.Error("Failed to allocate file buffer.");
-							};
-							//const filename = path.toApiString();
-							//filenamePtr = createStrPtr(filename, clibxml2.lengthBytesUTF8(filename));
-							//if (!filenamePtr) {
-							//	throw new types.Error("Failed to allocate buffer for file name.");
-							//};
-							const inputPtr = clibxml2._xmlCreateMyParserInput(parserCtxtPtr, contentPtr, contentLen/*, filenamePtr*/);
-							return inputPtr;
-						} finally {
-							//if (filenamePtr) {
-							//	clibxml2._free(filenamePtr);
-							//	filenamePtr = NULL;
-							//};
-							if (contentPtr) {
-								clibxml2._free(contentPtr);
-								contentPtr = NULL;
-							};
-						};
-					}, 'iiii');
-
-					// Init handlers of context-less errors (xmlGenericError, xmlStructuredError)
-					clibxml2._xmlSetGenericErrorFunc(NULL, errorPtr);
-					clibxml2._xmlSetStructuredErrorFunc(NULL, serrorPtr);
-
-					// Disable file system access
-					clibxml2._xmlCleanupInputCallbacks();
-					clibxml2._xmlCleanupOutputCallbacks();
-					clibxml2._xmlRegisterInputCallbacks(matchFuncPtr, openFuncPtr, readFuncPtr, closeFuncPtr);
-					clibxml2._xmlRegisterOutputCallbacks(matchFuncPtr, openFuncPtr, writeFuncPtr, closeFuncPtr);
-
-					// Set our external loader.
-					clibxml2._xmlSetExternalEntityLoader(externalLoaderPtr);
-
-					__Internal__.createStrPtr = function _createStrPtr(str, /*optional*/len) {
-						if (types.isNothing(len)) {
-							len = clibxml2.lengthBytesUTF8(str);
-						};
-						const ptr = clibxml2._malloc(len + 1);
-						if (ptr) {
-							clibxml2.stringToUTF8(str, ptr, len + 1);
-						};
-						return ptr;
-					};
+					__Internal__.xmljsParser = libs.xmljs.load(root, __Internal__.genericOutputCb).Parser;
 
 					__Internal__.initialized = true;
 				});
 			};
 
 			__Internal__.parseWithClibxml2 = function parseWithClibxml2(stream, options) {
-				// NOTE: "parse" is Async
-
 				const Promise = types.getPromise();
 
-				let clibxml2 = null,
-					clibxml2Cleaned = false,
-					allocatedFunctions = null,
-					allocatedEntities = null,
-					sax = NULL,
-					saxOrg = NULL,
-					saxPtr = NULL,
-					userPtr = NULL,
-					userPtrOrg = NULL,
-					userPtrPtr = NULL,
-					urlPtr = NULL,
-					schemaParserCtxt = NULL,
-					schema = NULL,
-					validCtxt = NULL,
-					saxPlug = NULL,
-					pushParserCtxt = NULL;
+				let parser = null;
 
 				return Promise.create(function parseWithClibxml2Promise(resolve, reject) {
-					clibxml2 = libxml2Loader.get();
-					if (!clibxml2) {
-						throw new types.NotAvailable("The 'libxml2' library is not available.");
+					if (!__Internal__.xmljsParser) {
+						throw new types.NotAvailable("The 'libxml2' parser is not available.");
 					};
 
 					const nodoc = types.get(options, 'nodoc', false),
 						discardEntities = types.get(options, 'discardEntities', false),
 						entities = types.get(options, 'entities', null),
-						xsd = types.get(options, 'xsd', null),
-						encoding = types.get(options, 'encoding', null),
+						//xsd = types.get(options, 'xsd', null),
+						//encoding = types.get(options, 'encoding', null),
 						callback = types.get(options, 'callback', null);
-
-					const PTR_LEN = clibxml2._xmlPtrLen();
-					const XML_INTERNAL_GENERAL_ENTITY = 1;
-					const XML_INTERNAL_PREDEFINED_ENTITY = 6;
-
-					let currentNode = null;
 
 					const doc = (nodoc ? null : new xml.Document());
 
-					const getStrFromXmlCharAr = function _getStrFromXmlCharAr(ptr, index, /*optional*/end) {
-						if (types.isNothing(end)) {
-							return clibxml2.Pointer_stringify(clibxml2.getValue(ptr + (PTR_LEN * index), '*'));
-						} else {
-							const startPtr = clibxml2.getValue(ptr + (PTR_LEN * index), '*');
-							const endPtr = clibxml2.getValue(ptr + (PTR_LEN * end), '*');
-							return clibxml2.Pointer_stringify(startPtr, endPtr - startPtr);
-						};
+					if (!nodoc && !discardEntities) {
+						const nodes = doc.getEntities();
+						tools.forEach(entities, function(value, name) {
+							const node = new xml.Entity(name, value);
+							nodes.append(node);
+						});
 					};
 
-					const SAX_HANDLERS = {
-						fatalError: function fatalError(ctxPtr, msgPtr, paramsPtr) {
-						//	let strPtr = NULL;
-						//	try {
-						//		strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-						//		const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
-						//		if (str) {
-						//			tools.log(tools.LogLevels.Error, str);
-						//		};
-						//	} finally {
-						//		if (strPtr !== NULL) {
-						//			clibxml2._xmlFreeEx(strPtr);
-						//			strPtr = NULL;
-						//		};
-						//	};
-						},
-						error: function error(ctxPtr, msgPtr, paramsPtr) {
-						//	try {
-						//		strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-						//		const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
-						//		if (str) {
-						//			tools.log(tools.LogLevels.Error, str);
-						//		};
-						//	} finally {
-						//		if (strPtr !== NULL) {
-						//			clibxml2._xmlFreeEx(strPtr);
-						//			strPtr = NULL;
-						//		};
-						//	};
-						},
-						warning: function warning(ctxPtr, msgPtr, paramsPtr) {
-						//	try {
-						//		strPtr = clibxml2._xmlFormatGenericError(ctxPtr, msgPtr, paramsPtr);
-						//		const str = tools.trim(clibxml2.Pointer_stringify(strPtr), '\n');
-						//		if (str && (str.indexOf("Skipping import of schema") < 0)) {
-						//			tools.log(tools.LogLevels.Error, str);
-						//		};
-						//	} finally {
-						//		if (strPtr !== NULL) {
-						//			clibxml2._xmlFreeEx(strPtr);
-						//			strPtr = NULL;
-						//		};
-						//	};
-						},
-						serror: function _serror(userDataPtr, errorPtr) {
-							const level = clibxml2._xmlGetStructuredErrorField_Int(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_LEVEL);
-							if (level) {
-								const msgPtr = clibxml2._xmlGetStructuredErrorField_Str(errorPtr, __Internal__.ErrorFieldEnum.XML_SERROR_FIELD_MESSAGE);
-								const msg = tools.trim(clibxml2.Pointer_stringify(msgPtr), '\n');
-								if (msg) {
-									if ((level !== __Internal__.ErrorLevelEnum.XML_ERR_WARNING) || (msg.indexOf("Skipping import of schema") < 0)) {
-										tools.log(((level === __Internal__.ErrorLevelEnum.XML_ERR_WARNING) ? tools.LogLevels.Warning : tools.LogLevels.Error), msg);
-									};
+					let currentNode = doc;
+
+					const outputCb = function _outputCb(msg) {
+						if (msg.name === 'Log') {
+							tools.log((msg.type === 'Warning') ? tools.LogLevels.Warning : tools.LogLevels.Error, msg.message);
+
+						} else if (msg.name === 'Node') {
+							if (msg.type === 'DocumentType') {
+								const node = new xml.DocumentType(msg.docType);
+								//node.fileLine = parser.line + 1;
+								//node.fileColumn = parser.column + 1;
+								if (nodoc) {
+									callback(node);
+								} else {
+									doc.setDocumentType(node);
 								};
-							};
-						},
-						//resolveEntity: function resolveEntity(ctxPtr, publicIdStrPtr, systemIdStrPtr) {
-						//	types.DEBUGGER();
-						//},
-						getEntity: function getEntity(ctxPtr, namePtr) {
-							const name = clibxml2.Pointer_stringify(namePtr);
-							if (name === '__proto__') {
-								return NULL;
-							};
-							if (!allocatedEntities) {
-								allocatedEntities = tools.nullObject();
-							};
-							const ptr = types.get(allocatedEntities, name);
-							if (ptr) {
-								return ptr;
-							};
-							const entity = types.get(entities, name);
-							if (!entity) {
-								return NULL;
-							};
-							let newNamePtr = NULL,
-								strPtr = NULL;
-							try {
-								newNamePtr = __Internal__.createStrPtr(name);
-								if (!newNamePtr) {
-									throw new types.Error("Failed to allocate string buffer.");
+
+							} else if (msg.type === 'ProcessingInstruction') {
+								const node = new xml.ProcessingInstruction(msg.instruction, msg.value);
+								//node.fileLine = parser.line + 1;
+								//node.fileColumn = parser.column + 1;
+								if (nodoc) {
+									callback(node);
+								} else {
+									doc.getInstructions().append(node);
 								};
-								strPtr = __Internal__.createStrPtr(entity);
-								if (!strPtr) {
-									throw new types.Error("Failed to allocate string buffer.");
+
+							} else if (msg.type === 'Comment') {
+								const node = new xml.Comment(msg.comment);
+								//node.fileLine = parser.line + 1;
+								//node.fileColumn = parser.column + 1;
+								if (nodoc) {
+									callback(node);
+								} else {
+									currentNode.getChildren().append(node);
 								};
-								const entityPtr = clibxml2._xmlNewEntity(NULL, newNamePtr, (discardEntities ? XML_INTERNAL_PREDEFINED_ENTITY : XML_INTERNAL_GENERAL_ENTITY), NULL, NULL, strPtr);
-								if (!entityPtr) {
-									throw new types.Error("Failed to allocate a new entity.");
+
+							} else if (msg.type === 'Element') {
+								const node = new xml.Element(msg.tag, msg.prefix, msg.uri);
+								//node.fileLine = parser.line + 1;
+								//node.fileColumn = parser.column + 1;
+								if (nodoc) {
+									callback(node);
+								} else {
+									currentNode.getChildren().append(node);
+									currentNode = node;
 								};
-								allocatedEntities[name] = entityPtr;
-								return entityPtr;
-							} finally {
-								if (newNamePtr) {
-									clibxml2._free(newNamePtr);
-								};
-								if (strPtr) {
-									clibxml2._free(strPtr);
-								};
-							};
-						},
-						externalSubset: function externalSubset(ctxPtr, namePtr, externalIDPtr, systemIDPtr) {
-							const node = new xml.DocumentType(clibxml2.Pointer_stringify(namePtr));
-							//node.fileLine = parser.line + 1;
-							//node.fileColumn = parser.column + 1;
-							if (nodoc) {
-								callback(node);
-							} else {
-								doc.setDocumentType(node);
-							};
-						},
-						processingInstruction: function processingInstruction(ctxPtr, targetPtr, dataPtr) {
-							const node = new xml.ProcessingInstruction(clibxml2.Pointer_stringify(targetPtr), clibxml2.Pointer_stringify(dataPtr));
-							//node.fileLine = parser.line + 1;
-							//node.fileColumn = parser.column + 1;
-							if (nodoc) {
-								callback(node);
-							} else {
-								doc.getInstructions().append(node);
-							};
-						},
-						comment: function comment(ctxPtr, valuePtr) {
-							const node = new xml.Comment(clibxml2.Pointer_stringify(valuePtr));
-							//node.fileLine = parser.line + 1;
-							//node.fileColumn = parser.column + 1;
-							if (nodoc) {
-								callback(node);
-							} else {
-								currentNode.getChildren().append(node);
-							};
-						},
-						startElementNs: function startElementNs(ctxPtr, localnameStrPtr, prefixStrPtr, uriStrPtr, nb_namespaces, namespacesPtrStrPtr, nb_attributes, nb_defaulted, attributesPtrStrPtr) {
-							const node = new xml.Element(clibxml2.Pointer_stringify(localnameStrPtr), clibxml2.Pointer_stringify(prefixStrPtr), clibxml2.Pointer_stringify(uriStrPtr));
-							//node.fileLine = parser.line + 1;
-							//node.fileColumn = parser.column + 1;
-							if (nodoc) {
-								callback(node);
-							} else {
-								currentNode.getChildren().append(node);
-								currentNode = node;
-							};
-							const attrs = (nodoc ? null : currentNode.getAttrs());
-							for (let i = 0; i < nb_attributes; i++) {
-								// localname/prefix/URI/value/end
-								const ptr = attributesPtrStrPtr + (PTR_LEN * 5 * i);
-								const node = new xml.Attribute(/*name*/getStrFromXmlCharAr(ptr, 0), /*value*/getStrFromXmlCharAr(ptr, 3, 4), /*prefix*/getStrFromXmlCharAr(ptr, 1), /*uri*/getStrFromXmlCharAr(ptr, 2));
+
+							} else if (msg.type === 'Attribute') {
+								const attrs = (nodoc ? null : currentNode.getAttrs());
+								const node = new xml.Attribute(msg.key, msg.value, msg.prefix, msg.uri);
 								//node.fileLine = line + 1;
 								//node.fileColumn = column + 1;
 								if (nodoc) {
@@ -610,208 +234,71 @@ exports.add = function add(modules) {
 								} else {
 									attrs.append(node);
 								};
-							};
-						},
-						characters: function characters(ctxPtr, chPtr, len) {
-							const node = new xml.Text(clibxml2.Pointer_stringify(chPtr, len));
-							//node.fileLine = parser.line + 1;
-							//node.fileColumn = parser.column + 1;
-							if (nodoc) {
-								callback(node);
+
+							} else if (msg.type === 'Text') {
+								const node = new xml.Text(msg.text);
+								//node.fileLine = parser.line + 1;
+								//node.fileColumn = parser.column + 1;
+								if (nodoc) {
+									callback(node);
+								} else {
+									currentNode.getChildren().append(node);
+								};
+
+							} else if (msg.type === 'CDATASection') {
+								const node = new xml.CDATASection(msg.data);
+								//node.fileLine = parser.line + 1;
+								//node.fileColumn = parser.column + 1;
+								if (nodoc) {
+									callback(node);
+								} else {
+									currentNode.getChildren().append(node);
+								};
+
+							} else if (msg.type === 'EndElement') {
+								if (!nodoc) {
+									currentNode = currentNode.getParent();
+								};
+
 							} else {
-								currentNode.getChildren().append(node);
+								// Missing Node type.
+								types.DEBUGGER();
+
 							};
-						},
-						cdataBlock: function cdataBlock(ctxPtr, valuePtr, len) {
-							const node = new xml.CDATASection(clibxml2.Pointer_stringify(valuePtr, len));
-							//node.fileLine = parser.line + 1;
-							//node.fileColumn = parser.column + 1;
-							if (nodoc) {
-								callback(node);
-							} else {
-								currentNode.getChildren().append(node);
-							};
-						},
-						endElementNs: function endElementNs(ctxPtr, localnameStrPtr, prefixStrPtr, uriStrPtr) {
-							if (!nodoc) {
-								currentNode = currentNode.getParent();
-							};
-						},
-						endDocument: function endDocument(ctxPtr) {
-							if (nodoc) {
-								callback(null);
-							};
-							resolve(doc);
-							if (stream) {
-								stream.stopListening();
-								stream = null;
-							};
-						},
-					};
 
-					const allocFunction = function _allocFunction(name, sig) {
-						if (!allocatedFunctions) {
-							allocatedFunctions = tools.nullObject();
-						};
-						if (name in allocatedFunctions) {
-							return allocatedFunctions[name];
-						};
-						const fn = types.get(SAX_HANDLERS, name, null);
-						let ptr = NULL;
-						if (fn) {
-							ptr = clibxml2.addFunction(fn, sig);
-							if (!ptr) {
-								throw new types.Error("Failed to allocate function '~0~' for the SAXHandler.", [name]);
-							};
-							allocatedFunctions[name] = ptr;
-						};
-						return ptr;
-					};
-
-					sax = clibxml2._xmlCreateMySAXHandler(
-						allocFunction('internalSubset', 'viiii'),
-						allocFunction('isStandalone', 'ii'),
-						allocFunction('hasInternalSubset', 'ii'),
-						allocFunction('hasExternalSubset', 'ii'),
-						allocFunction('resolveEntity', 'iiii'),
-						allocFunction('getEntity', 'iii'),
-						allocFunction('entityDecl', 'viiiiii'),
-						allocFunction('notationDecl', 'viiii'),
-						allocFunction('attributeDecl', 'viiiiiii'),
-						allocFunction('elementDecl', 'viiii'),
-						allocFunction('unparsedEntityDecl', 'viiiii'),
-						allocFunction('setDocumentLocator', 'vii'),
-						allocFunction('startDocument', 'vi'),
-						allocFunction('endDocument', 'vi'),
-						allocFunction('startElement', 'viii'),
-						allocFunction('endElement', 'vii'),
-						allocFunction('reference', 'vii'),
-						allocFunction('characters', 'viii'),
-						allocFunction('ignorableWhitespace', 'viii'),
-						allocFunction('processingInstruction', 'viii'),
-						allocFunction('comment', 'vii'),
-						allocFunction('warning', 'viii'),
-						allocFunction('error', 'viii'),
-						allocFunction('fatalError', 'viii'),
-						allocFunction('getParameterEntity', 'iii'),
-						allocFunction('cdataBlock', 'viii'),
-						allocFunction('externalSubset', 'viiii'),
-						allocFunction('startElementNs', 'viiiiiiiii'),
-						allocFunction('endElementNs', 'viiii'),
-						allocFunction('serror', 'vii')
-					);
-					if (!sax) {
-						throw new types.Error("Failed to create SAXHandler.");
-					};
-					saxOrg = sax;
-
-					userPtr = clibxml2._malloc(4);
-					if (!userPtr) {
-						throw new types.Error("Failed to create user context.");
-					};
-					userPtrOrg = userPtr;
-					clibxml2.setValue(userPtr, 0, 'i32');
-
-					if (xsd) {
-						urlPtr = __Internal__.createStrPtr(xsd.toApiString());
-						if (!urlPtr) {
-							throw new types.Error("Failed to allocate URL string.");
-						};
-						schemaParserCtxt = clibxml2._xmlSchemaNewParserCtxt(urlPtr /*, userPtr WHEN POSSIBLE. FOR NOW, IT IS EQUAL TO schemaParserCtxt */);
-						if (!schemaParserCtxt) {
-							throw new types.Error("Failed to create schema parser.");
-						};
-
-						__Internal__.registerOptions(schemaParserCtxt, {encoding});
-
-						clibxml2._xmlSchemaSetParserErrors(schemaParserCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), userPtr);
-						clibxml2._xmlSchemaSetParserStructuredErrors(schemaParserCtxt, allocFunction('serror', 'vii'), userPtr);
-
-						schema = clibxml2._xmlSchemaParse(schemaParserCtxt);
-						if (!schema) {
-							throw new types.Error("Failed to parse schema.");
-						};
-
-						clibxml2._free(urlPtr); // free memory
-						urlPtr = NULL;
-						__Internal__.unregisterParserData(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
-						clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
-						schemaParserCtxt = NULL;
-
-						validCtxt = clibxml2._xmlSchemaNewValidCtxt(schema);
-						if (!validCtxt) {
-							throw new types.Error("Failed to create schema validator.");
-						};
-
-						clibxml2._xmlSchemaSetValidErrors(validCtxt, allocFunction('error', 'viii'), allocFunction('warning', 'viii'), userPtr);
-						clibxml2._xmlSchemaSetValidStructuredErrors(validCtxt, allocFunction('serror', 'vii'), userPtr);
-
-						saxPtr = clibxml2._malloc(PTR_LEN);
-						if (!saxPtr) {
-							throw new types.Error("Failed to create SAX pointer.");
-						};
-						clibxml2.setValue(saxPtr, sax, '*');
-						userPtrPtr = clibxml2._malloc(PTR_LEN);
-						if (!userPtrPtr) {
-							throw new types.Error("Failed to create user context pointer.");
-						};
-						clibxml2.setValue(userPtrPtr, userPtr, '*');
-						saxPlug = clibxml2._xmlSchemaSAXPlug(validCtxt, saxPtr, userPtrPtr);
-						if (!saxPlug) {
-							throw new types.Error("Failed to plug schema with SAX.");
-						};
-						sax = clibxml2.getValue(saxPtr, '*');
-						userPtr = clibxml2.getValue(userPtrPtr, '*');
-					};
-
-					if (!nodoc && !discardEntities) {
-						tools.forEach(entities, function(value, name) {
-							const node = new xml.Entity(name, value);
-							if (nodoc) {
-								callback(node);
-							} else {
-								doc.getEntities().append(node);
-							};
-						});
-					};
-
-					currentNode = doc;
-
-					pushParserCtxt = clibxml2._xmlCreatePushParserCtxt(sax, userPtr, NULL, 0, NULL);
-					if (!pushParserCtxt) {
-						throw new types.Error("Failed to create push parser.");
-					};
-
-					if (types.isString(stream)) {
-						let valuePtr = NULL;
-						try {
-							const len = clibxml2.lengthBytesUTF8(stream);
-							valuePtr = __Internal__.createStrPtr(stream, len);
-							if (!valuePtr) {
-								throw new types.Error("Failed to allocate string buffer.");
-							};
-							stream = null;
-							const parseRes = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 1);
-							let isValid = (parseRes === 0);
-							if (isValid && validCtxt) {
-								const res = clibxml2._xmlSchemaIsValid(validCtxt);
-								isValid = (res > 0);
-							};
-							if (!isValid) {
-								if (parseRes === 0) {
+						} else if (msg.name === 'Result') {
+							if (!msg.isValid) {
+								if (msg.retVal === 0) {
 									throw new types.ParseError("Invalid XML document (based on the schema).");
 								} else {
-									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(parseRes)]);
+									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(msg.retVal)]);
 								};
 							};
-						} catch(ex) {
-							reject(ex);
-						} finally {
-							if (valuePtr) {
-								clibxml2._free(valuePtr);
-								valuePtr = NULL;
+
+							if (msg.ended) {
+								if (nodoc) {
+									callback(null);
+								};
+
+								resolve(doc);
+
+								if (!types.isString(stream)) {
+									stream.stopListening();
+								};
 							};
+
+						} else {
+							// Missing message handler.
+							types.DEBUGGER();
+
 						};
+					};
+
+					parser = new __Internal__.xmljsParser(options, outputCb);
+
+					if (types.isString(stream)) {
+						parser.parse(stream);
+						parser.end();
 					} else {
 						stream.onError.attachOnce(null, function(ev) {
 							ev.preventDefault();
@@ -819,150 +306,30 @@ exports.add = function add(modules) {
 						});
 						stream.onReady.attach(null, function(ev) {
 							ev.preventDefault();
-							let valuePtr = NULL;
-							try {
-								let parseRes = 0;
-								if (ev.data.raw === io.EOF) {
-									parseRes = clibxml2._xmlParseChunk(pushParserCtxt, NULL, 0, 1);
-								} else {
-									const value = ev.data.valueOf();
-									if (types.isString(value)) {
-										const len = clibxml2.lengthBytesUTF8(value);
-										valuePtr = __Internal__.createStrPtr(value, len);
-										if (!valuePtr) {
-											throw new types.Error("Failed to allocate string buffer.");
-										};
-										parseRes = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, len, 0);
-									} else {
-										// TODO: Non UTF-8
-										valuePtr = clibxml2.allocate(value, 'i8', clibxml2.ALLOC_NORMAL);
-										if (!valuePtr) {
-											throw new types.Error("Failed to allocate value buffer.");
-										};
-										parseRes = clibxml2._xmlParseChunk(pushParserCtxt, valuePtr, value.length, 0);
-									};
-								};
-								let isValid = (parseRes === 0);
-								if (isValid && validCtxt) {
-									const res = clibxml2._xmlSchemaIsValid(validCtxt);
-									isValid = (res > 0);
-								};
-								if (!isValid) {
-									if (parseRes === 0) {
-										throw new types.ParseError("Invalid XML document (based on the schema).");
-									} else {
-										throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(parseRes)]);
-
-									};
-								};
-
-							} finally {
-								if (valuePtr) {
-									clibxml2._free(valuePtr);
-									valuePtr = NULL;
-								};
+							if (ev.data.raw === io.EOF) {
+								parser.end();
+							} else {
+								const value = ev.data.valueOf();
+								parser.parse(value);
 							};
 						});
 						stream.listen();
 					};
 				})
-					.nodeify(function(err, result) {
-						if (pushParserCtxt) {
-							clibxml2._xmlFreeParserCtxt(pushParserCtxt);
-							pushParserCtxt = NULL;
-						};
+				.nodeify(function(err, result) {
+					try {
+						types.DESTROY(parser);
+					} catch(ex) {
+						// Emscripten is now unstable !
+						throw new libxml2.AbortError("'xmljs' parser cleanup failed.");
+					};
 
-						if (saxPlug) {
-							clibxml2._xmlSchemaSAXUnplug(saxPlug);
-							saxPlug = NULL;
-							//sax = NULL;  <PRB> Code commented because "sax" returned from "xmlSchemaSAXPlug" is not freed by "xmlSchemaSAXUnplug".
-							userPtr = NULL; // OK
-						};
-
-						if (validCtxt) {
-							clibxml2._xmlSchemaFreeValidCtxt(validCtxt);
-							validCtxt = NULL;
-						};
-
-						if (schema) {
-							clibxml2._xmlSchemaFree(schema);
-							schema = NULL;
-						};
-
-						if (schemaParserCtxt) {
-							try {
-								__Internal__.unregisterParserData(schemaParserCtxt); // Use userPtrOrg   WHEN POSSIBLE
-							} catch(ex) {
-								// Ignore
-							};
-							clibxml2._xmlSchemaFreeParserCtxt(schemaParserCtxt);
-							schemaParserCtxt = NULL;
-						};
-
-						if (urlPtr) {
-							clibxml2._free(urlPtr);
-							urlPtr = NULL;
-						};
-
-						if (allocatedFunctions) {
-							tools.forEach(allocatedFunctions, function(ptr, name) {
-								clibxml2.removeFunction(ptr);
-							});
-							allocatedFunctions = null;
-						};
-
-						if (allocatedEntities) {
-							tools.forEach(allocatedEntities, function(ptr) {
-								clibxml2._xmlFreeEntity(ptr);
-							});
-							allocatedEntities = null;
-						};
-
-						if (saxPtr) {
-							clibxml2._free(saxPtr);
-							saxPtr = NULL;
-						};
-
-						if (sax && (sax !== saxOrg)) {
-							clibxml2._xmlFreeEx(sax);
-							sax = NULL;
-						};
-
-						if (saxOrg) {
-							clibxml2._xmlFreeMySAXHandler(saxOrg);
-							saxOrg = NULL;
-						};
-
-						if (userPtrPtr) {
-							clibxml2._free(userPtrPtr);
-							userPtrPtr = NULL;
-						};
-
-						if (userPtr && (userPtr !== userPtrOrg)) {
-							clibxml2._xmlFreeEx(userPtr);
-							userPtr = NULL;
-						};
-
-						if (userPtrOrg) {
-							clibxml2._free(userPtrOrg);
-							userPtrOrg = NULL;
-						};
-
-						clibxml2Cleaned = true;
-
-						if (err) {
-							throw err;
-						} else {
-							return result;
-						};
-					})
-					.catch(function(err) {
-						if (!clibxml2Cleaned && !types._instanceof(err, libxml2.AbortError)) {
-							// Lixml2 is unstable because its cleanup has failed, force abort.
-							throw new libxml2.AbortError(err);
-						};
+					if (err) {
 						throw err;
-					});
+					};
+
+					return result;
+				});
 			};
 
 			//=========================
@@ -1068,10 +435,12 @@ exports.add = function add(modules) {
 						terminateCb = null;
 
 					const cleanup = function cleanup() {
-						worker.removeEventListener('error', errorCb);
-						worker.removeEventListener('log', logCb);
-						worker.removeEventListener('finish', finishCb);
-						worker.removeEventListener('terminate', terminateCb);
+						if (!types.DESTROYED(worker)) {
+							worker.removeEventListener('error', errorCb);
+							worker.removeEventListener('log', logCb);
+							worker.removeEventListener('finish', finishCb);
+							worker.removeEventListener('terminate', terminateCb);
+						};
 					};
 
 					worker.addEventListener('error', errorCb = function(ev) {
@@ -1116,8 +485,12 @@ exports.add = function add(modules) {
 					//const encoding = types.get(options, 'encoding', 'utf-8');
 
 					if (xsd) {
-						if (!types._instanceof(xsd, [files.Url, files.Path])) {
-							xsd = files.parseLocation(xsd);
+						if (!types.isString(xsd)) {
+							if (types.isNothing(xsd)) {
+								xsd = '';
+							} else {
+								xsd = types.toString(xsd);
+							};
 							options = tools.extend(options, {xsd});
 						};
 

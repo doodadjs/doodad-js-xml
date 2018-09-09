@@ -75,8 +75,9 @@ exports.add = function add(modules) {
 
 			// <FUTURE> Thread context
 			const __Internal__ = {
-				nodejsWorker: null,
+				nodejsWorker: null, // optional
 				clibxml2: null,
+				xmljs: null,
 
 				workerPath: files.parsePath(__dirname).combine(root.getOptions().fromSource ? './Tools_Xml_Parsers_Libxml2_Worker.js' : './Tools_Xml_Parsers_Libxml2_Worker.min.js').toApiString(),
 			};
@@ -94,7 +95,7 @@ exports.add = function add(modules) {
 					[types.ConstructorSymbol](type, message, stack) {
 						this.innerName = type;
 						this.innerStack = stack;
-						return ["XML Worker error '~0~'.", [message]];
+						return ["XML Worker error: ~0~.", [message]];
 					}
 				},
 				/*instanceProto*/
@@ -121,7 +122,10 @@ exports.add = function add(modules) {
 					worker: null,
 					channel: null,
 
+					parseOptions: null,
+					document: null,
 					currentNode: null,
+					stream: null,
 
 					waitMsgs: null,
 					waitCb: null,
@@ -145,6 +149,12 @@ exports.add = function add(modules) {
 						this.start();
 					}),
 
+					_delete: types.SUPER(function _super() {
+						this.close();
+
+						this._super();
+					}),
+
 					handleError: function handleError(err) {
 						this.dispatchEvent(new types.CustomEvent('error', {detail: err}));
 						this.stopWaiting();
@@ -156,7 +166,9 @@ exports.add = function add(modules) {
 
 						this.started = true;
 
-						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts: root.getOptions()}});
+						const startupOpts = root.getOptions();
+
+						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: !startupOpts.debug, stderr: !startupOpts.debug, workerData: {number: this.number, startupOpts}});
 
 						//const cleanup = function _cleanup() {
 						//	this.worker.removeListener('...', ...);
@@ -204,31 +216,33 @@ exports.add = function add(modules) {
 					},
 
 					close: function close() {
-						if (this.started) {
-							this.started = false;
-							this.available = false;
+						this.started = false;
+						this.available = false;
 
-							this.stopWaiting();
+						this.stopWaiting();
 
-							//const channel = this.channel;
+						//const channel = this.channel;
 
-							//const terminateCb = doodad.Callback(this, function() {
-							//	if (channel) {
-							//		channel.port1.close();
-							//		channel.port2.close();
-							//	};
-							//});
+						//const terminateCb = doodad.Callback(this, function() {
+						//	if (channel) {
+						//		channel.port1.close();
+						//		channel.port2.close();
+						//	};
+						//});
 
-							if (this.worker) {
-								//this.worker.terminate(terminateCb);
-								this.worker.terminate();
-								this.worker = null;
-								this.channel = null;
-							};
-							//} else {
-							//	terminateCb();
-							//};
+						if (this.worker) {
+							//this.worker.terminate(terminateCb);
+							this.worker.terminate();
+							this.worker = null;
+							this.channel = null;
 						};
+						//} else {
+						//	terminateCb();
+						//};
+
+						this.currentNode = null;
+						this.document = null;
+						this.parseOptions = null;
 					},
 
 					wait: function wait(msgs, callback) {
@@ -300,135 +314,177 @@ exports.add = function add(modules) {
 						}, this.handleError));
 					},
 
-					sendChunk: function sendChunk(chunk) {
-						this.channel.port2.postMessage({name: 'Chunk', data: chunk});
+					sendChunk: function sendChunk(chunk, end) {
+						this.channel.port2.postMessage({name: 'Chunk', data: chunk, end: !!end});
+					},
+
+					waitResult: function waitResult(nodeCb, doneCb) {
+						this.wait(['Result'], doodad.Callback(this, function(msg) {
+							tools.forEach(msg.logs, function(msg) {
+								root.DD_ASSERT && root.DD_ASSERT(msg.name === 'Log');
+
+								this.dispatchEvent(new types.CustomEvent('log', {detail: {type: msg.type, message: msg.message}}));
+							}, this);
+
+							tools.forEach(msg.nodes, function(msg) {
+								root.DD_ASSERT && root.DD_ASSERT(msg.name === 'Node');
+
+								if (msg.type === 'DocumentType') {
+									const node = new xml.DocumentType(msg.docType);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.document.setDocumentType(node);
+									};
+								} else if (msg.type === 'ProcessingInstruction') {
+									const node = new xml.ProcessingInstruction(msg.instruction, msg.value);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.document.getInstructions().append(node);
+									};
+								} else if (msg.type === 'Comment') {
+									const node = new xml.Comment(msg.comment);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.currentNode.getChildren().append(node);
+									};
+								} else if (msg.type === 'Element') {
+									const node = new xml.Element(msg.tag, msg.prefix, msg.uri);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.currentNode.getChildren().append(node);
+										this.currentNode = node;
+									};
+								} else if (msg.type === 'Attribute') {
+									const node = new xml.Attribute(msg.key, msg.value, msg.prefix, msg.uri);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.currentNode.getAttrs().append(node);
+									};
+								} else if (msg.type === 'Text') {
+									const node = new xml.Text(msg.text);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.currentNode.getChildren().append(node);
+									};
+								} else if (msg.type === 'CDATASection') {
+									const node = new xml.CDATASection(msg.data);
+									if (nodeCb) {
+										nodeCb(node);
+									} else {
+										this.currentNode.getChildren().append(node);
+									};
+								} else if (msg.type === 'EndElement') {
+									if (!nodeCb) {
+										this.currentNode = this.currentNode.getParent();
+									};
+								} else {
+									throw new types.ValueError("Invalid XML node type '~0~'.", [msg.type]);
+								};
+							}, this);
+
+							if (!msg.isValid) {
+								if (msg.retVal === 0) {
+									throw new types.ParseError("Invalid XML document (based on the schema).");
+								} else {
+									throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(msg.retVal)]);
+								};
+							};
+
+							if (msg.ended) {
+								this.endParse();
+							};
+
+							//this.channel.port2.postMessage({name: 'Ack'});
+
+							doneCb && doneCb();
+						}, this.handleError));
+					},
+
+					waitParseAckHandler: function waitParseAckHandler() {
+						const nodoc = types.get(this.parseOptions, 'nodoc', false),
+							discardEntities = types.get(this.parseOptions, 'discardEntities', false),
+							entities = types.get(this.parseOptions, 'entities', null),
+							//xsd = types.get(this.parseOptions, 'xsd', ''),
+							//encoding = types.get(this.parseOptions, 'encoding', null),
+							callback = (nodoc ? types.get(this.parseOptions, 'callback', null) : null);
+
+						this.document = (nodoc ? null : new xml.Document());
+
+						if (!nodoc && !discardEntities) {
+							const nodes = this.document.getEntities();
+							tools.forEach(entities, function(value, name) {
+								const node = new xml.Entity(name, value);
+								nodes.append(node);
+							});
+						};
+
+						this.currentNode = this.document;
+
+						if (types.isString(this.stream)) {
+							this.waitResult(callback, null);
+							this.sendChunk(this.stream, true);
+						} else {
+							this.stream.onError.attachOnce(this, function(ev) {
+								ev.preventDefault();
+								this.handleError(ev.error);
+							});
+							this.stream.onReady.attach(this, function(ev) {
+								ev.preventDefault();
+								const end = (ev.data.raw === io.EOF);
+								const chunk = ev.data.valueOf();
+								const deferredCb = ev.data.defer();
+								this.waitResult(callback, deferredCb);
+								this.sendChunk(chunk, end);
+							});
+							this.stream.listen();
+						};
+
+						this.stream = null; // free memory
+					},
+
+					endParse: function endParse() {
+						this.started = false;
+
+						this.stopWaiting();
+						this.waitReady();
+						this.dispatchEvent(new types.CustomEvent('finish', {detail: this.document}));
+
+						this.stream = null;
+						this.currentNode = null;
+						this.document = null;
+						this.parseOptions = null;
 					},
 
 					parse: function parse(stream, /*optional*/options) {
 						const nodoc = types.get(options, 'nodoc', false),
 							discardEntities = types.get(options, 'discardEntities', false),
 							entities = types.get(options, 'entities', null),
-							xsd = types.get(options, 'xsd', null),
+							xsd = types.get(options, 'xsd', ''),
 							encoding = types.get(options, 'encoding', null),
-							callback = types.get(options, 'callback', null);
+							callback = (nodoc ? types.get(options, 'callback', null) : null);
 
 						if (!this.available) {
 							throw types.NotAvailable("The worker thread is not available.");
 						};
 
-						// TODO: MemoryStream to replace strings
-						root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
-
-						const xsdStr = (xsd ? xsd.toApiString() : '');
+						if (root.DD_ASSERT) {
+							root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
+							root.DD_ASSERT(types.isNothing(xsd) || types.isString(xsd), "Invalid 'xsd' option.");
+						};
 
 						this.available = false;
+						this.stream = stream;
+						this.parseOptions = {nodoc, discardEntities, entities, xsd, encoding, callback};
 
-						this.wait(['Ack'], doodad.Callback(this, function() {
-							const doc = (nodoc ? null : new xml.Document());
-							let attrs = null;
+						this.wait(['AckParse'], doodad.Callback(this, this.waitParseAckHandler, this.handleError), true);
 
-							if (!nodoc && !discardEntities) {
-								tools.forEach(entities, function(value, name) {
-									const node = new xml.Entity(name, value);
-									doc.getEntities().append(node);
-								});
-							};
-
-							this.currentNode = doc;
-
-							const waitNodes = function _waitNodes() {
-								this.wait(['Nodes'], doodad.Callback(this, function(msg) {
-									tools.forEach(msg.logs, function(msg) {
-										this.dispatchEvent(new types.CustomEvent('log', {detail: {type: msg.type, message: msg.message}}));
-									}, this);
-									tools.forEach(msg.nodes, function(msgNode) {
-										root.DD_ASSERT && root.DD_ASSERT(msgNode.name === 'Node');
-										if (msgNode.type === 'EndElement') {
-											this.currentNode = this.currentNode.getParent();
-										} else {
-											const type = xml[msgNode.type];
-											if (!types.baseof(xml.Node, type)) {
-												throw new types.ValueError("Invalid XML node type '~0~'.", [msgNode.type]);
-											};
-											const args = msgNode.args || [];
-											if (!types.isArray(args)) {
-												throw new types.ValueError("Invalid XML node type arguments.");
-											};
-											const node = new type(...args);
-											if (nodoc) {
-												callback && callback(node);
-											} else {
-												if (types._instanceof(node, xml.ProcessingInstruction)) {
-													doc.getInstructions().append(node);
-												} else if (types._instanceof(node, xml.DocumentType)) {
-													doc.setDocumentType(node);
-												} else if (types._instanceof(node, xml.Element)) {
-													this.currentNode.getChildren().append(node);
-													this.currentNode = node;
-													attrs = this.currentNode.getAttrs();
-												} else if (types._instanceof(node, xml.Attribute)) {
-													attrs.append(node);
-												} else {
-													this.currentNode.getChildren().append(node);
-												};
-											};
-										};
-									}, this);
-									this.channel.port2.postMessage({name: 'Ack'});
-									if (!msg.isValid) {
-										if (msg.retVal === 0) {
-											throw new types.ParseError("Invalid XML document (based on the schema).");
-										} else {
-											throw new types.ParseError("Invalid XML document: '~0~'.", [libxml2.getParserMessage(msg.retVal)]);
-										};
-									};
-								}, this.handleError));
-							};
-
-							waitNodes.call(this);
-
-							if (types.isString(stream)) {
-								this.wait(['Ack'], doodad.Callback(this, function() {
-									this.wait(['Ack'], doodad.Callback(this, function() {
-										this.stopWaiting();
-										this.waitReady();
-										this.dispatchEvent(new types.CustomEvent('finish', {detail: doc}));
-									}));
-									waitNodes.call(this);
-									this.sendChunk(null);
-								}, this.handleError));
-								this.sendChunk(stream);
-							} else {
-								stream.onError.attachOnce(this, function(ev) {
-									ev.preventDefault();
-									this.handleError(ev.error);
-								});
-								stream.onReady.attach(this, function(ev) {
-									ev.preventDefault();
-									const deferredCb = ev.data.defer();
-									if (ev.data.raw === io.EOF) {
-										this.wait(['Ack'], doodad.Callback(this, function() {
-											this.stopWaiting();
-											this.waitReady();
-											this.dispatchEvent(new types.CustomEvent('finish', {detail: doc}));
-											deferredCb();
-										}, this.handleError));
-										this.sendChunk(null);
-									} else {
-										const chunk = ev.data.valueOf();
-										// console.log(io.TextData.$decode(chunk, 'utf-8'))
-										this.wait(['Ack'], doodad.Callback(this, function() {
-											waitNodes.call(this);
-											deferredCb();
-										}, this.handleError));
-										this.sendChunk(chunk);
-									};
-								});
-								stream.listen();
-							};
-						}, this.handleError), true);
-
-						this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd: xsdStr, encoding}});
+						this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd, encoding}});
 					},
 				}
 			));
@@ -442,22 +498,29 @@ exports.add = function add(modules) {
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 						author: "Claude Petit",
-						revision: 1,
+						revision: 2,
 						params: null,
 						returns: 'object',
 						description: "Returns parser from the libxml2 library when available. Otherwise, returns 'null'.",
 					}
 				//! END_REPLACE()
 				, function get() {
-					return __Internal__.clibxml2;
+					if (!__Internal__.clibxml2 || !__Internal__.xmljs) {
+						return null;
+					};
+
+					return {
+						clibxml2: __Internal__.clibxml2,
+						xmljs: __Internal__.xmljs,
+					};
 				}));
 
 			libxml2Loader.ADD('isAvailable', function isAvailable() {
-				return !!__Internal__.clibxml2;
+				return !!(__Internal__.clibxml2 && __Internal__.xmljs);
 			});
 
 			libxml2Loader.ADD('hasFeatures', function hasFeatures(features) {
-				if (!__Internal__.clibxml2) {
+				if (!__Internal__.clibxml2 || !__Internal__.xmljs) {
 					return false;
 				};
 
@@ -478,20 +541,24 @@ exports.add = function add(modules) {
 			// Init
 			//===================================
 			return function init(/*optional*/options) {
-				let unhandledListeners,
-					handledListeners;
-				return modules.import('worker_threads')
+				const Promise = types.getPromise();
+
+				// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
+				const unhandledListeners = process.listeners('unhandledRejection');
+				const handledListeners = process.listeners('rejectionHandled');
+
+				// Start all imports
+				const workersPromise = modules.import('worker_threads');
+				const clibxml2Promise = modules.import('@doodad-js/xml/lib/libxml2/libxml2.min.js');
+				const xmljsPromise = modules.import('@doodad-js/xml/lib/libxml2/xmljs.js');
+
+				return workersPromise
 					.nodeify(function(err, exports) {
 						if (!err) {
 							// Optional
 							__Internal__.nodejsWorker = exports.default;
 						};
-
-						// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
-						unhandledListeners = process.listeners('unhandledRejection');
-						handledListeners = process.listeners('rejectionHandled');
-
-						return modules.import('@doodad-js/xml/lib/libxml2/libxml2.min.js');
+						return Promise.all([clibxml2Promise, xmljsPromise]);
 					})
 					.then(function(exports) {
 						// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
@@ -506,7 +573,8 @@ exports.add = function add(modules) {
 							};
 						});
 
-						__Internal__.clibxml2 = exports.default;
+						__Internal__.clibxml2 = exports[0].default;
+						__Internal__.xmljs = exports[1].default;
 					});
 			};
 		},
