@@ -168,7 +168,7 @@ exports.add = function add(modules) {
 
 						const startupOpts = root.getOptions();
 
-						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: !startupOpts.debug, stderr: !startupOpts.debug, workerData: {number: this.number, startupOpts}});
+						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts}});
 
 						//const cleanup = function _cleanup() {
 						//	this.worker.removeListener('...', ...);
