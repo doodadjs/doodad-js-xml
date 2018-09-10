@@ -22,8 +22,6 @@
 	//	limitations under the License.
 //! END_REPLACE()
 
-/* eslint camelcase: "off", id-match: "off" */  // Mixing C and JS
-
 /* import {default as nodejsAssert} from 'assert'; */
 /* import {default as nodejsWorker} from 'worker_threads'; */
 /* import {default as doodadjs} from '@doodad-js/core'; */
