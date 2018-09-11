@@ -57,6 +57,7 @@ exports.add = function add(modules) {
 			// <FUTURE> Thread context
 			const __Internal__ = {
 				clibxml2: null,
+				xmljs: null,
 			};
 
 			//===================================
@@ -68,32 +69,35 @@ exports.add = function add(modules) {
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 						author: "Claude Petit",
-						revision: 0,
+						revision: 1,
 						params: null,
 						returns: 'object',
-						description: "Returns parser from the libxml2 library when available. Otherwise, returns 'undefined'.",
+						description: "Returns parser from the libxml2 library when available. Otherwise, returns 'null'.",
 					}
 				//! END_REPLACE()
 				, function get() {
-					if (__Internal__.clibxml2) {
-						return __Internal__.clibxml2;
+					if (!__Internal__.clibxml2 || !__Internal__.xmljs) {
+						return null;
 					};
-					__Internal__.clibxml2 = global.libxml2;
-					delete global.libxml2;
-					return __Internal__.clibxml2;
+
+					return {
+						clibxml2: __Internal__.clibxml2,
+						xmljs: __Internal__.xmljs,
+					};
 				}));
 
 			libxml2Loader.ADD('isAvailable', function isAvailable() {
-				return !!__Internal__.clibxml2;
+				return !!(__Internal__.clibxml2 && __Internal__.xmljs);
 			});
 
 			libxml2Loader.ADD('hasFeatures', function hasFeatures(features) {
-				if (!__Internal__.clibxml2) {
+				if (!__Internal__.clibxml2 || !__Internal__.xmljs) {
 					return false;
 				};
 
 				const current = {
 					// <PRB> libxml2 schema files loader is not Asynchronous so we have to use Workers or be running on debug mode.
+					// TODO: Use WebWorkers
 					//schemas: !!(libxml2Loader.WorkerWrapper.$isAvailable() || root.getOptions().debug),
 					schemas: !!(root.getOptions().debug),
 
@@ -110,8 +114,13 @@ exports.add = function add(modules) {
 			//===================================
 			// Init
 			//===================================
-			//return function init(/*optional*/options) {
-			//};
+			return function init(/*optional*/options) {
+				__Internal__.clibxml2 = global.libxml2;
+				delete global.libxml2;
+
+				__Internal__.xmljs = global.xmljs;
+				delete global.xmljs;
+			};
 		},
 	};
 	return modules;
