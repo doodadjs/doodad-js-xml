@@ -27,7 +27,7 @@
   "tonicExampleFilename": "tonic.js",
   "config": {
     "Doodad.Tools.Xml.Parsers.Libxml2": {
-      "workersCount": 5
+      "workersCount": 0
     }
   }
 }
