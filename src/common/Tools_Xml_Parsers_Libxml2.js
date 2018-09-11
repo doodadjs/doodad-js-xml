@@ -294,7 +294,7 @@ exports.add = function add(modules) {
 						};
 					};
 
-					parser = new __Internal__.xmljsParser(options, outputCb);
+					parser = new __Internal__.xmljsParser(tools.extend({}, options, {outputCb}));
 
 					if (types.isString(stream)) {
 						parser.parse(stream);

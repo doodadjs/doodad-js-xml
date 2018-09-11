@@ -101,8 +101,8 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 				this.reset();
 
-				const outputHandlerCb = doodad.Callback(this, this.outputHandler);
-				this.parser = new xmljsParser(options, outputHandlerCb);
+				const outputCb = doodad.Callback(this, this.outputHandler);
+				this.parser = new xmljsParser(tools.extend({}, options, {outputCb}));
 
 				this.waitChunk();
 
