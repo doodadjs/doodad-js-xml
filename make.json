@@ -103,8 +103,8 @@
 			operations: [
 				// Appended to normal operation of "lint"...
 				{
-					"class": "Make.ESLint.Check",
-					"source": "%PACKAGEDIR%/lib/libxml2/xmljs.js"
+					class: "Make.ESLint.Check",
+					source: "%PACKAGEDIR%/lib/libxml2/xmljs.js"
 				}
 			]
 		},
@@ -158,6 +158,16 @@
 					class: "Make.File.Copy",
 					source: "%PACKAGEDIR%/lib/libxml2/libxml2.min.js",
 					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/libxml2.min.js"
+				},
+				{
+					class: "Make.File.Copy",
+					source: "%PACKAGEDIR%/lib/libxml2/xmljs.js",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/xmljs.js"
+				},
+				{
+					class: "Make.File.Javascript",
+					source: "%PACKAGEDIR%/lib/libxml2/xmljs.js",
+					destination: "%INSTALLDIR%/%PACKAGENAME%/lib/libxml2/xmljs.min.js"
 				},
 				{
 					class: "Make.File.Copy",
