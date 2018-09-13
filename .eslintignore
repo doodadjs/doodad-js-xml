@@ -3,8 +3,11 @@
 browserify
 build
 dist
-lib
+lib/*
 test
+
+# Excepted "xmljs.js"
+!lib/libxml2/xmljs.js
 
 *.inc.js
 *.templ.js

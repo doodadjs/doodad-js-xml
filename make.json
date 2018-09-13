@@ -99,6 +99,15 @@
 		},
 	],
 	tasks: {
+		lint: {
+			operations: [
+				// Appended to normal operation of "lint"...
+				{
+					"class": "Make.ESLint.Check",
+					"source": "%PACKAGEDIR%/lib/libxml2/xmljs.js"
+				}
+			]
+		},
 		make: {
 			operations: [
 				{
