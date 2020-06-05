@@ -78,7 +78,7 @@ exports.add = function add(modules) {
 
 					_new: types.SUPER(function _new(nodesList) {
 						this._super();
-						types.setAttribute(this, '__nodes', types.clone(nodesList.__nodes));
+						types.setJsAttribute(this, '__nodes', types.clone(nodesList.__nodes));
 					}),
 
 					next: function next() {
@@ -241,7 +241,7 @@ exports.add = function add(modules) {
 			));
 
 			if (_shared.Natives.symbolIterator) {
-				types.setAttribute(xml.NodesList.prototype, _shared.Natives.symbolIterator, function() {
+				types.setJsAttribute(xml.NodesList.prototype, _shared.Natives.symbolIterator, function() {
 					return this.items();
 				}, {});
 			};
