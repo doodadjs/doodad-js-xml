@@ -43,6 +43,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 	.then(function thenLoadModules(root) {
 		return root.Doodad.Modules.load([{module: '@doodad-js/xml'}], {"Doodad.Tools.Xml.Parsers.Libxml2": {workersCount: 0}});
 	})
+	.toDDPromise()
 	.thenCreate(function thenRun(root, resolve, reject) {
 		//===================================
 		// Namespaces
