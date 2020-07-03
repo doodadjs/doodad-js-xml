@@ -91,7 +91,7 @@
 		},
 		// That file is not necessary
 		{
-			src: "common/Tools_Xml_Parsers_Libxml2_Errors.js",
+			src: "common/res/Tools_Xml_Parsers_Libxml2_Errors.js",
 			client: true,
 			server: true,
 			browserify: true,
