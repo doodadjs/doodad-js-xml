@@ -88,13 +88,13 @@ exports.add = function add(modules) {
 				//	.catch(function(err) {
 				//		// Do nothing.
 				//	});
-				return modules.import('sax')
+				return modules.loadFiles([{module: 'sax'}])
 					.catch(function(err) {
 						// <PRB> NPM doesn't flatten packages
-						return modules.import('@doodad-js/xml/node_modules/sax');
+						return modules.loadFiles([{path: '@doodad-js/xml/node_modules/sax'}]);
 					})
-					.then(function(exports) {
-						__Internal__.saxlib = exports.default;
+					.then(function(files) {
+						__Internal__.saxlib = files[0].exports.default;
 					})
 					.catch(function(err) {
 						// Do nothing.

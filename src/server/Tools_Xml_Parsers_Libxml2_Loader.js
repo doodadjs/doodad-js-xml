@@ -548,19 +548,8 @@ exports.add = function add(modules) {
 				const handledListeners = process.listeners('rejectionHandled');
 
 				// Start all imports
-				const workersPromise = modules.import('worker_threads');
-				const clibxml2Promise = modules.import('@doodad-js/xml/lib/libxml2/libxml2.min.js');
-				const xmljsPromise = modules.import('@doodad-js/xml/lib/libxml2/xmljs.js');
-
-				return workersPromise
-					.nodeify(function(err, exports) {
-						if (!err) {
-							// Optional
-							__Internal__.nodejsWorker = exports.default;
-						};
-						return Promise.all([clibxml2Promise, xmljsPromise]);
-					})
-					.then(function(exports) {
+				return modules.loadFiles([{path: 'worker_threads', optional: true}, {path: '@doodad-js/xml/lib/libxml2/libxml2.min.js'}, {path: '@doodad-js/xml/lib/libxml2/xmljs.js'}])
+					.then(function(files) {
 						// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
 						process.listeners('unhandledRejection').forEach(function(listener) {
 							if (tools.indexOf(unhandledListeners, listener) < 0) {
@@ -573,8 +562,11 @@ exports.add = function add(modules) {
 							};
 						});
 
-						__Internal__.clibxml2 = exports[0].default;
-						__Internal__.xmljs = exports[1].default;
+						if (files[0].exports) {
+							__Internal__.nodejsWorker = files[0].exports.default;
+						};
+						__Internal__.clibxml2 = files[1].exports.default;
+						__Internal__.xmljs = files[2].exports.default;
 					});
 			};
 		},
