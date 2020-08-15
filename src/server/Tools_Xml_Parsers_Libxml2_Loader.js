@@ -25,10 +25,17 @@
 //! END_REPLACE()
 
 //! IF_SET("mjs")
+	//! INJECT("import {default as nodejsWorker} from 'worker_threads';")
 
 //! ELSE()
 	"use strict";
 
+	let nodejsWorker = null;
+	try {
+		nodejsWorker = require('worker_threads'); // optional
+	} catch(ex) {
+		// Do nothing
+	};
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -75,7 +82,6 @@ exports.add = function add(modules) {
 
 			// <FUTURE> Thread context
 			const __Internal__ = {
-				nodejsWorker: null, // optional
 				clibxml2: null,
 				xmljs: null,
 
@@ -110,7 +116,7 @@ exports.add = function add(modules) {
 					$TYPE_NAME: 'WorkerWrapper',
 
 					$isAvailable: function $isAvailable() {
-						return !!__Internal__.nodejsWorker;
+						return !!nodejsWorker;
 					},
 				},
 				/*instanceProto*/
@@ -168,7 +174,7 @@ exports.add = function add(modules) {
 
 						const startupOpts = root.getOptions();
 
-						this.worker = new __Internal__.nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts}});
+						this.worker = new nodejsWorker.Worker(__Internal__.workerPath, {stdout: true, stderr: true, workerData: {number: this.number, startupOpts}});
 
 						//const cleanup = function _cleanup() {
 						//	this.worker.removeListener('...', ...);
@@ -194,7 +200,7 @@ exports.add = function add(modules) {
 						}));
 
 						this.worker.once('online', doodad.Callback(this, function() {
-							this.channel = new __Internal__.nodejsWorker.MessageChannel();
+							this.channel = new nodejsWorker.MessageChannel();
 
 							this.wait(['Error'], doodad.Callback(this, function(msg) {
 								const err = new libxml2Loader.WorkerError(msg.type, msg.message, msg.stack);
@@ -548,7 +554,7 @@ exports.add = function add(modules) {
 				const handledListeners = process.listeners('rejectionHandled');
 
 				// Start all imports
-				return modules.loadFiles([{path: 'worker_threads', optional: true}, {path: '@doodad-js/xml/lib/libxml2/libxml2.min.js'}, {path: '@doodad-js/xml/lib/libxml2/xmljs.js'}])
+				return modules.loadFiles([{module: '@doodad-js/xml', path: 'lib/libxml2/libxml2.min.js'}, {module: '@doodad-js/xml', path: 'lib/libxml2/xmljs.js'}])
 					.then(function(files) {
 						// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
 						process.listeners('unhandledRejection').forEach(function(listener) {
@@ -562,11 +568,8 @@ exports.add = function add(modules) {
 							};
 						});
 
-						if (files[0].exports) {
-							__Internal__.nodejsWorker = files[0].exports.default;
-						};
-						__Internal__.clibxml2 = files[1].exports.default;
-						__Internal__.xmljs = files[2].exports.default;
+						__Internal__.clibxml2 = files[0].exports.default;
+						__Internal__.xmljs = files[1].exports.default;
 					});
 			};
 		},
