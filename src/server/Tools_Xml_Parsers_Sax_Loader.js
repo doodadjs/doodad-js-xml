@@ -49,7 +49,6 @@ exports.add = function add(modules) {
 			const doodad = root.Doodad,
 				//types = doodad.Types,
 				tools = doodad.Tools,
-				modules = doodad.Modules,
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				sax = xmlParsers.Sax,
@@ -60,8 +59,8 @@ exports.add = function add(modules) {
 			//===================================
 
 			// <FUTURE> Thread context
-			const __Internal__ = {
-			};
+			//const __Internal__ = {
+			//};
 
 			//===================================
 			// SAX Parser

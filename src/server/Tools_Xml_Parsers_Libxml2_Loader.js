@@ -32,6 +32,7 @@
 
 	let nodejsWorker = null;
 	try {
+		/* eslint global-require: "off" */
 		nodejsWorker = require('worker_threads'); // optional
 	} catch(ex) {
 		// Do nothing
@@ -547,7 +548,7 @@ exports.add = function add(modules) {
 			// Init
 			//===================================
 			return function init(/*optional*/options) {
-				const Promise = types.getPromise();
+				//const Promise = types.getPromise();
 
 				// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
 				const unhandledListeners = process.listeners('unhandledRejection');
