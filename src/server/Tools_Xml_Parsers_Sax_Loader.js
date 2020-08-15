@@ -25,8 +25,12 @@
 //! END_REPLACE()
 
 //! IF_SET("mjs")
+	//! INJECT("import {default as saxLib} from 'sax';");
+
 //! ELSE()
 	"use strict";
+
+	const saxLib = require('sax');
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -57,7 +61,6 @@ exports.add = function add(modules) {
 
 			// <FUTURE> Thread context
 			const __Internal__ = {
-				saxlib: null,
 			};
 
 			//===================================
@@ -76,30 +79,15 @@ exports.add = function add(modules) {
 					}
 				//! END_REPLACE()
 				, function get() {
-					return __Internal__.saxlib;
+					return saxLib;
 				}));
 
 
 			//===================================
 			// Init
 			//===================================
-			return function init(/*optional*/options) {
-				//return modules.import('sax')
-				//	.catch(function(err) {
-				//		// Do nothing.
-				//	});
-				return modules.loadFiles([{module: 'sax'}])
-					.catch(function(err) {
-						// <PRB> NPM doesn't flatten packages
-						return modules.loadFiles([{path: '@doodad-js/xml/node_modules/sax'}]);
-					})
-					.then(function(files) {
-						__Internal__.saxlib = files[0].exports.default;
-					})
-					.catch(function(err) {
-						// Do nothing.
-					});
-			};
+			//return function init(/*optional*/options) {
+			//};
 		},
 	};
 	return modules;
