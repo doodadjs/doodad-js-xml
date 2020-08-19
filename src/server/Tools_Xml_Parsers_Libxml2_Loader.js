@@ -555,7 +555,7 @@ exports.add = function add(modules) {
 				const handledListeners = process.listeners('rejectionHandled');
 
 				// Start all imports
-				return modules.loadFiles([{module: '@doodad-js/xml', path: 'lib/libxml2/libxml2.min.js'}, {module: '@doodad-js/xml', path: 'lib/libxml2/xmljs.js'}])
+				return modules.loadFiles([{module: '@doodad-js/xml', path: 'lib/libxml2/libxml2.min.js'}, {module: '@doodad-js/xml', path: 'lib/libxml2/xmljs.js', dontForceMin: true}])
 					.then(function(files) {
 						// <PRB> Emscripten calls "process.exit" on "unhandledRejection" !!!
 						process.listeners('unhandledRejection').forEach(function(listener) {
