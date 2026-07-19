@@ -127,7 +127,6 @@ exports.add = function add(modules) {
 					started: false,
 					available: false,
 					worker: null,
-					channel: null,
 
 					parseOptions: null,
 					document: null,
@@ -195,30 +194,13 @@ exports.add = function add(modules) {
 							} else if (msg.name === 'Log') {
 								const ev = new types.CustomEvent('log', {detail: {type: msg.type, message: msg.message}});
 								this.dispatchEvent(ev);
-							} else {
-								throw new types.Error("Unexpected message received from the worker.");
 							};
 						}));
 
 						this.worker.once('online', doodad.Callback(this, function() {
-							this.channel = new nodejsWorker.MessageChannel();
-
-							this.wait(['Error'], doodad.Callback(this, function(msg) {
-								const err = new libxml2Loader.WorkerError(msg.type, msg.message, msg.stack);
-								this.handleError(err);
-							}));
-
-							/* ???? "close" gets always raised
-							const onCloseCb = doodad.Callback(this, function() {
-								this.close();
-							});
-							this.channel.port1.on('close', onCloseCb);
-							this.channel.port2.on('close', onCloseCb);
-							*/
-
 							this.waitReady();
 
-							this.worker.postMessage({port: this.channel.port1}, [this.channel.port1]);
+							this.worker.postMessage({});
 						}, this.handleError));
 					},
 
@@ -228,24 +210,10 @@ exports.add = function add(modules) {
 
 						this.stopWaiting();
 
-						//const channel = this.channel;
-
-						//const terminateCb = doodad.Callback(this, function() {
-						//	if (channel) {
-						//		channel.port1.close();
-						//		channel.port2.close();
-						//	};
-						//});
-
 						if (this.worker) {
-							//this.worker.terminate(terminateCb);
 							this.worker.terminate();
 							this.worker = null;
-							this.channel = null;
 						};
-						//} else {
-						//	terminateCb();
-						//};
 
 						this.currentNode = null;
 						this.document = null;
@@ -276,7 +244,7 @@ exports.add = function add(modules) {
 									cb(msg);
 								}, this);
 							}, this.handleError);
-							this.channel.port2.on('message', this.waitCb);
+							this.worker.on('message', this.waitCb);
 						};
 					},
 
@@ -306,7 +274,7 @@ exports.add = function add(modules) {
 						if (this.waitCb) {
 							msgs = types.keys(this.waitMsgs);
 							if (msgs.length <= 0) {
-								this.channel.port2.removeListener('message', this.waitCb);
+								this.worker.removeListener('message', this.waitCb);
 								this.waitCb = null;
 							};
 						};
@@ -322,7 +290,7 @@ exports.add = function add(modules) {
 					},
 
 					sendChunk: function sendChunk(chunk, end) {
-						this.channel.port2.postMessage({name: 'Chunk', data: chunk, end: !!end});
+						this.worker.postMessage({name: 'Chunk', data: chunk, end: !!end});
 					},
 
 					waitResult: function waitResult(nodeCb, doneCb) {
@@ -407,7 +375,7 @@ exports.add = function add(modules) {
 								this.endParse();
 							};
 
-							//this.channel.port2.postMessage({name: 'Ack'});
+							//this.worker.postMessage({name: 'Ack'});
 
 							doneCb && doneCb();
 						}, this.handleError));
@@ -482,7 +450,7 @@ exports.add = function add(modules) {
 
 						if (root.DD_ASSERT) {
 							root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
-							root.DD_ASSERT(types.isNothing(xsd) || types.isString(xsd), "Invalid 'xsd' option.");
+							root.DD_ASSERT(types.isString(xsd), "Invalid 'xsd' option.");
 						};
 
 						this.available = false;
@@ -491,7 +459,7 @@ exports.add = function add(modules) {
 
 						this.wait(['AckParse'], doodad.Callback(this, this.waitParseAckHandler, this.handleError), true);
 
-						this.channel.port2.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd, encoding}});
+						this.worker.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd, encoding}});
 					},
 				}
 			));
