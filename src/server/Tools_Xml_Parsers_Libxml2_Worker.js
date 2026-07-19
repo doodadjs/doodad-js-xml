@@ -39,7 +39,11 @@ const doodadjs = require('@doodad-js/core');
 
 // Workflow: [out]Ready ==> [in]Parse(options) ==> [out]AckParse ==> [in]Chunk(data) ==> [out]Result ==> [in]Chunk(data) ==> [out]Result ==> [in]Chunk(end: true) ==> [out]Result(ended: true) ==> [out]Ready
 
-doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug ? 'dev' : null)})
+const handleError = function (err) {
+	nodejsWorker.parentPort.postMessage({name: 'Error', type: err.name, message: err.message, stack: err.stack});
+};
+
+doodadjs.createRoot(null, {startup: nodejsWorker.workerData.startupOpts, node_env: (nodejsWorker.workerData.startupOpts.debug ? 'dev' : null)})
 	.then(function thenLoadModules(root) {
 		return root.Doodad.Modules.load([{module: '@doodad-js/xml'}], {"Doodad.Tools.Xml.Parsers.Libxml2": {workersCount: 0}});
 	})
@@ -57,7 +61,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 			libxml2 = xmlParsers.Libxml2,
 			libxml2Loader = libxml2.Loader;
 
-		tools.trapUnhandledErrors();
+		tools.trapUnhandledErrors(handleError);
 
 		const genericOutputCb = function _genericOutputCb(msg) {
 			nodejsWorker.parentPort.postMessage(msg);
@@ -67,7 +71,6 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 			xmljsParser = libs.xmljs.load(root, genericOutputCb).Parser;
 
 		const Worker = {
-			dataPort: null,
 			options: null,
 
 			waitMsgs: null,
@@ -78,18 +81,14 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 			logs: null,
 			nodes: null,
 
-			init() {
+			init: doodad.Callback(null, function init() {
 				// Wait for the data port from the main thread.
 				nodejsWorker.parentPort.once('message', doodad.Callback(this, function onMessageInitHandler(msg) {
-					root.DD_ASSERT && root.DD_ASSERT(msg.port instanceof nodejsWorker.MessagePort);
-
-					this.dataPort = msg.port;
-
 					this.listen();
-				}));
-			},
+				}, handleError));
+			}, handleError),
 
-			startParse(options) {
+			startParse: doodad.Callback(null, function startParse(options) {
 				const xsd = types.get(options, 'xsd', '');
 
 				if (root.DD_ASSERT) {
@@ -102,15 +101,15 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 
 				this.reset();
 
-				const outputCb = doodad.Callback(this, this.outputHandler);
+				const outputCb = types.bind(this, this.outputHandler);
 				this.parser = new xmljsParser(tools.extend({}, options, {outputCb}));
 
 				this.waitChunk();
 
-				this.dataPort.postMessage({name: 'AckParse'});
-			},
+				nodejsWorker.parentPort.postMessage({name: 'AckParse'});
+			}, handleError),
 
-			outputHandler(msg) {
+			outputHandler: doodad.Callback(null, function outputHandler(msg) {
 				if (msg.name === 'Log') {
 					if (!this.logs) {
 						this.logs = [];
@@ -126,7 +125,7 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					this.nodes.push(msg);
 
 				} else if (msg.name === 'Result') {
-					this.dataPort.postMessage(tools.extend({}, msg, {nodes: this.nodes, logs: this.logs}));
+					nodejsWorker.parentPort.postMessage(tools.extend({}, msg, {nodes: this.nodes, logs: this.logs}));
 
 					this.reset();
 
@@ -135,17 +134,17 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					};
 
 				} else {
-					this.dataPort.postMessage(msg);
+					nodejsWorker.parentPort.postMessage(msg);
 
 				};
-			},
+			}, handleError),
 
-			reset() {
+			reset: doodad.Callback(null, function reset() {
 				this.logs = null;
 				this.nodes = null;
-			},
+			}, handleError),
 
-			stopWaiting(/*optional*/msgs, /*optional*/callback) {
+			stopWaiting: doodad.Callback(null, function stopWaiting(/*optional*/msgs, /*optional*/callback) {
 				if (this.waitMsgs) {
 					if (!msgs && callback) {
 						msgs = types.keys(this.waitMsgs);
@@ -174,16 +173,16 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					msgs = types.keys(this.waitMsgs);
 
 					if (msgs.length <= 0) {
-						this.dataPort.removeListener('message', this.waitHandlerCb);
+						nodejsWorker.parentPort.removeListener('message', this.waitHandlerCb);
 						this.waitHandlerCb = null;
 					};
 				};
-			},
+			}, handleError),
 
-			waitHandler(msg) {
+			waitHandler: doodad.Callback(null, function waitHandler(msg) {
 				const cbs = types.get(this.waitMsgs, msg.name);
 
-				if (!cbs) {
+				if (!types.isArray(cbs)) {
 					throw new types.Error("Invalid message '~0~'. Expected '~1~'.", [msg.name, types.keys(this.waitMsgs).join(',')]);
 				};
 
@@ -193,9 +192,9 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 					this.stopWaiting(null, cb);
 					cb(msg);
 				}, this);
-			},
+			}, handleError),
 
-			wait(msgs, callback) {
+			wait: doodad.Callback(null, function wait(msgs, callback) {
 				if (!this.waitMsgs) {
 					this.waitMsgs = new tools.nullObject();
 				};
@@ -210,12 +209,12 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				}, this);
 
 				if (!this.waitHandlerCb) {
-					this.waitHandlerCb = doodad.Callback(this, this.waitHandler);
-					this.dataPort.on('message', this.waitHandlerCb);
+					this.waitHandlerCb = types.bind(this, this.waitHandler);
+					nodejsWorker.parentPort.on('message', this.waitHandlerCb);
 				};
-			},
+			}, handleError),
 
-			endParse() {
+			endParse: doodad.Callback(null, function endParse() {
 				this.stopWaiting();
 
 				if (this.parser) {
@@ -226,9 +225,9 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				this.options = null;
 
 				this.listen();
-			},
+			}, handleError),
 
-			parseChunk(chunk, end) {
+			parseChunk: doodad.Callback(null, function parseChunk(chunk, end) {
 				if (!end) {
 					this.waitChunk();
 				};
@@ -240,29 +239,23 @@ doodadjs.createRoot(null, {node_env: (nodejsWorker.workerData.startupOpts.debug 
 				if (end) {
 					this.parser.end();
 				};
-			},
+			}, handleError),
 
-			waitChunk() {
-				this.wait(['Chunk'], doodad.Callback(this, function chunkHandler(msg) {
+			waitChunk: doodad.Callback(null, function waitChunk() {
+				this.wait(['Chunk'], types.bind(this, function chunkHandler(msg) {
 					this.parseChunk(msg.data, msg.end);
 				}));
-			},
+			}, handleError),
 
-			listen() {
-				this.dataPort.once('message', doodad.Callback(this, function onMessageHandler(msg) {
-					if (msg.name === 'Parse') {
-						this.startParse(msg.options);
-					} else {
-						throw new types.Error("Unexpected received message '~0~'.", [msg.name]);
-					};
+			listen: doodad.Callback(null, function listen() {
+				this.wait(['Parse'], types.bind(this, function chunkHandler(msg) {
+					this.startParse(msg.options);
 				}));
 
-				this.dataPort.postMessage({name: 'Ready'});
-			},
+				nodejsWorker.parentPort.postMessage({name: 'Ready'});
+			}, handleError),
 		};
 
 		return Worker.init();
 	})
-	.catch(function catchError(err) {
-		nodejsWorker.parentPort.postMessage({name: 'Error', type: err.name, message: err.message, stack: err.stack});
-	});
+	.catch(handleError);
