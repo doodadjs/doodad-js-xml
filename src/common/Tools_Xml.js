@@ -757,11 +757,14 @@ exports.add = function add(modules) {
 				__Internal__.parsers = tools.unique(__Internal__.parsers, [parser]);
 			});
 
+			xml.ADD('unregisterParser', function registerParser(parser) {
+				__Internal__.parsers = tools.filter(__Internal__.parsers, function(p) {return p !== parser});
+			});
+
 			xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
 				// NOTE: 'parse' is "async".
 				const Promise = types.getPromise();
 				return Promise.try(function tryParsePromise() {
-					// TODO: MemoryStream for Strings
 					const needSchemas = !!types.get(options, 'xsd', '');
 					if (parser) {
 						if ((tools.indexOf(__Internal__.parsers, parser) < 0)) {
