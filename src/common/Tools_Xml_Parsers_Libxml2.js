@@ -336,6 +336,13 @@ exports.add = function add(modules) {
 			// Workers (multi-threads)
 			//=========================
 
+			__Internal__.shutdownWorkers = function shutdownWorkers() {
+				tools.forEach(__Internal__.workers, function forEachWorker(worker) {
+					worker.close();
+				});
+				__Internal__.workers = null;
+			};
+
 			__Internal__.initWorkers = function initWorkers(initOpts) {
 				// NOTE: Async
 				const Promise = types.getPromise();
@@ -355,21 +362,6 @@ exports.add = function add(modules) {
 						readyCb = null,
 						terminateCb = null;
 
-					const detach = function _detach() {
-						tools.forEach(__Internal__.workers, function forEachWorker(worker) {
-							worker.removeEventListener('error', errorCb);
-							worker.removeEventListener('ready', readyCb);
-						});
-					};
-
-					const shutdown = function _shutdown() {
-						detach();
-						tools.forEach(__Internal__.workers, function forEachWorker(worker) {
-							worker.close();
-						});
-						__Internal__.workers = null;
-					};
-
 					const create = function _create(number) {
 						const worker = new libxml2Loader.WorkerWrapper(number);
 						worker.addEventListener('error', errorCb);
@@ -377,8 +369,17 @@ exports.add = function add(modules) {
 						return worker;
 					};
 
+					const detachWorkers = function detachWorkers()  {
+						tools.forEach(__Internal__.workers, function forEachWorker(worker) {
+							worker.removeEventListener('error', errorCb);
+							worker.removeEventListener('ready', readyCb);
+							worker.removeEventListener('terminate', terminateCb);
+						});
+					};
+
 					errorCb = function _errorCb(ev) {
-						shutdown();
+						detachWorkers();
+						libxml2.unload();
 						reject(ev.detail);
 					};
 
@@ -386,7 +387,7 @@ exports.add = function add(modules) {
 						ready++;
 						ev.detail.worker.addEventListener('terminate', terminateCb);
 						if (ready >= count) {
-							detach();
+							detachWorkers();
 							resolve();
 							__Internal__.initialized = true;
 						};
@@ -527,6 +528,17 @@ exports.add = function add(modules) {
 				};
 			});
 
+			libxml2.ADD('unload', function unload() {
+				const Promise = types.getPromise();
+				return Promise.try(function unloadPromise() {
+						return __Internal__.shutdownWorkers();
+					})
+					.then(function () {
+						return xml.unregisterParser(libxml2);
+					});
+			});
+
+
 
 			//===================================
 			// Module Init
@@ -542,6 +554,16 @@ exports.add = function add(modules) {
 						};
 					});
 			};
+		},
+
+		destroy: function destroy(root) {
+			const doodad = root.Doodad,
+				tools = doodad.Tools,
+				xml = tools.Xml,
+				xmlParsers = xml.Parsers,
+				libxml2 = xmlParsers.Libxml2;
+
+			return libxml2.unload();
 		},
 	};
 	return modules;
