@@ -531,8 +531,8 @@ exports.add = function add(modules) {
 			libxml2.ADD('unload', function unload() {
 				const Promise = types.getPromise();
 				return Promise.try(function unloadPromise() {
-						return __Internal__.shutdownWorkers();
-					})
+					return __Internal__.shutdownWorkers();
+				})
 					.then(function () {
 						return xml.unregisterParser(libxml2);
 					});

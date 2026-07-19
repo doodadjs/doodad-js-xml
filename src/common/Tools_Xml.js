@@ -758,7 +758,7 @@ exports.add = function add(modules) {
 			});
 
 			xml.ADD('unregisterParser', function registerParser(parser) {
-				__Internal__.parsers = tools.filter(__Internal__.parsers, function(p) {return p !== parser});
+				__Internal__.parsers = tools.filter(__Internal__.parsers, function(p) { return p !== parser; });
 			});
 
 			xml.ADD('parse', function parse(stream, /*optional*/options, /*optional*/parser) {
