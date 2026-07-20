@@ -43,7 +43,7 @@ exports.add = function add(modules) {
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
-				//namespaces = doodad.Namespaces,
+				modules = doodad.Modules,
 				xml = tools.Xml;
 			//xmlParsers = xml.Parsers;
 
@@ -788,6 +788,9 @@ exports.add = function add(modules) {
 				});
 			});
 
+			xml.ADD('locateResourceFile', function locateResourceFile(url) {
+				return modules.resolve(url, {isResource: true});
+			});
 
 			//===================================
 			// Init

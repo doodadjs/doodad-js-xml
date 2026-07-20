@@ -54,7 +54,6 @@ exports.add = function add(modules) {
 				tools = doodad.Tools,
 				io = doodad.IO,
 				ioMixIns = io.MixIns,
-				//files = tools.Files,
 				xml = tools.Xml,
 				xmlParsers = xml.Parsers,
 				libxml2 = xmlParsers.Libxml2,
@@ -538,6 +537,9 @@ exports.add = function add(modules) {
 					});
 			});
 
+			libxml2.ADD('locateResourceFile', function locateResourceFile(url) {
+				return xml.locateResourceFile(url);
+			});
 
 
 			//===================================
