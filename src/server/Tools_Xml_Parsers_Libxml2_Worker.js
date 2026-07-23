@@ -89,10 +89,12 @@ doodadjs.createRoot(null, {startup: nodejsWorker.workerData.startupOpts, node_en
 			}, handleError),
 
 			startParse: doodad.Callback(null, function startParse(options) {
-				const xsd = types.get(options, 'xsd', '');
+				const xsdRoot = types.get(options, 'xsdRoot', ''),
+					xsd = types.get(options, 'xsd', '');
 
 				if (root.DD_ASSERT) {
-					root.DD_ASSERT(types.isString(xsd), "Invalid 'xsd' option.");
+					root.DD_ASSERT(types.isNothing(xsdRoot) || types.isString(xsdRoot), "Invalid 'xsdRoot' option.");
+					root.DD_ASSERT(types.isNothing(xsd) || types.isString(xsd), "Invalid 'xsd' option.");
 				};
 
 				this.options = options;
