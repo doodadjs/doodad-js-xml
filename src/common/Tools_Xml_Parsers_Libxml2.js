@@ -161,7 +161,6 @@ exports.add = function add(modules) {
 					const nodoc = types.get(options, 'nodoc', false),
 						discardEntities = types.get(options, 'discardEntities', false),
 						entities = types.get(options, 'entities', null),
-						//xsd = types.get(options, 'xsd', null),
 						//encoding = types.get(options, 'encoding', null),
 						callback = types.get(options, 'callback', null);
 
@@ -481,22 +480,10 @@ exports.add = function add(modules) {
 					// TODO: MemoryStream to replace strings
 					root.DD_ASSERT && root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
 
-					let xsd = types.get(options, 'xsd', '');
-					//const encoding = types.get(options, 'encoding', 'utf-8');
+					const xsd = types.get(options, 'xsd', '');
 
-					if (xsd) {
-						if (!types.isString(xsd)) {
-							if (types.isNothing(xsd)) {
-								xsd = '';
-							} else {
-								xsd = types.toString(xsd);
-							};
-							options = tools.extend(options, {xsd});
-						};
-
-						if (__Internal__.workers) {
-							return __Internal__.parseWithWorker(stream, options);
-						};
+					if (xsd && __Internal__.workers) {
+						return __Internal__.parseWithWorker(stream, options);
 					};
 
 					return __Internal__.parseWithClibxml2(stream, options);
