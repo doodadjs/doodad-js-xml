@@ -86,7 +86,7 @@ exports.add = function add(modules) {
 				clibxml2: null,
 				xmljs: null,
 
-				workerPath: files.parsePath(__dirname).combine(root.getOptions().fromSource ? './Tools_Xml_Parsers_Libxml2_Worker.js' : './Tools_Xml_Parsers_Libxml2_Worker.min.js').toApiString(),
+				workerPath: files.parsePath(__dirname, {isFolder: true}).combine(root.getOptions().fromSource ? 'Tools_Xml_Parsers_Libxml2_Worker.js' : 'Tools_Xml_Parsers_Libxml2_Worker.min.js').toApiString(),
 			};
 
 
@@ -385,7 +385,6 @@ exports.add = function add(modules) {
 						const nodoc = types.get(this.parseOptions, 'nodoc', false),
 							discardEntities = types.get(this.parseOptions, 'discardEntities', false),
 							entities = types.get(this.parseOptions, 'entities', null),
-							//xsd = types.get(this.parseOptions, 'xsd', ''),
 							//encoding = types.get(this.parseOptions, 'encoding', null),
 							callback = (nodoc ? types.get(this.parseOptions, 'callback', null) : null);
 
@@ -440,6 +439,7 @@ exports.add = function add(modules) {
 						const nodoc = types.get(options, 'nodoc', false),
 							discardEntities = types.get(options, 'discardEntities', false),
 							entities = types.get(options, 'entities', null),
+							xsdRoot = types.get(options, 'xsd', null),
 							xsd = types.get(options, 'xsd', ''),
 							encoding = types.get(options, 'encoding', null),
 							callback = (nodoc ? types.get(options, 'callback', null) : null);
@@ -450,16 +450,17 @@ exports.add = function add(modules) {
 
 						if (root.DD_ASSERT) {
 							root.DD_ASSERT(types._implements(stream, ioMixIns.TextInput) || types.isString(stream), "Invalid stream.");
-							root.DD_ASSERT(types.isString(xsd), "Invalid 'xsd' option.");
+							root.DD_ASSERT(types.isNothing(xsdRoot) || types.isString(xsdRoot) || types._instanceof(xsdRoot, [files.Path, files.Url]), "Invalid 'xsdRoot' option.");
+							root.DD_ASSERT(types.isNothing(xsd) || types.isString(xsd), "Invalid 'xsd' option.");
 						};
 
 						this.available = false;
 						this.stream = stream;
-						this.parseOptions = {nodoc, discardEntities, entities, xsd, encoding, callback};
+						this.parseOptions = {nodoc, discardEntities, entities, xsdRoot, xsd, encoding, callback};
 
 						this.wait(['AckParse'], doodad.Callback(this, this.waitParseAckHandler, this.handleError), true);
 
-						this.worker.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsd, encoding}});
+						this.worker.postMessage({name: 'Parse', options: {nodoc, discardEntities, entities, xsdRoot: xsdRoot.toString(), xsd, encoding}});
 					},
 				}
 			));
